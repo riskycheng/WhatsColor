@@ -1,0 +1,296 @@
+:root {
+    --bg-color: #f0f0f0;
+    --device-color: #8db568; /* Greenish body */
+    --panel-color: #333;
+    --lcd-color: #222;
+    --text-color: #fff;
+    
+    /* Colors from manual: Red, Green, Orange, Blue, Yellow, Purple, Cyan */
+    --color-red: #ff3b30;
+    --color-green: #4cd964;
+    --color-orange: #ff9500;
+    --color-blue: #007aff;
+    --color-yellow: #ffcc00;
+    --color-purple: #af52de;
+    --color-cyan: #5ac8fa;
+    --color-black: #000;
+    --color-white: #fff;
+    --color-gray: #888;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+#game-container {
+    text-align: center;
+}
+
+#device {
+    background-color: var(--device-color);
+    width: 380px;
+    padding: 30px;
+    border-radius: 40px 40px 10px 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+#antenna {
+    width: 80px;
+    height: 30px;
+    background: #555;
+    margin: -40px auto 10px;
+    border-radius: 15px 15px 0 0;
+}
+
+#board {
+    background-color: var(--panel-color);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.row-indicator {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    color: #666;
+    font-size: 12px;
+}
+
+#grid {
+    display: flex;
+    flex-direction: column-reverse; 
+    gap: 12px;
+    flex-grow: 1;
+}
+
+.row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    position: relative;
+}
+
+.slots-container {
+    display: flex;
+    gap: 10px;
+}
+
+.slot {
+    width: 40px;
+    height: 40px;
+    background-color: #222;
+    border-radius: 6px;
+    border: 1px solid #444;
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.slot.filled {
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
+
+.feedback-container {
+    display: grid;
+    grid-template-columns: repeat(2, 12px);
+    grid-template-rows: repeat(2, 12px);
+    gap: 4px;
+    margin-left: auto; /* Push to right */
+    padding-left: 20px;
+}
+
+.dot-hint {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: #111;
+    border: 1px solid #333;
+}
+
+#panel {
+    background-color: var(--device-color);
+}
+
+#range-indicator {
+    background: #000;
+    padding: 10px;
+    border-bottom: 5px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.range-label {
+    color: #fff;
+    font-size: 10px;
+}
+
+#active-colors {
+    display: flex;
+    gap: 5px;
+}
+
+.range-color {
+    width: 12px;
+    height: 6px;
+    border-radius: 1px;
+}
+
+#status-display {
+    background: #1a1a1a;
+    color: #ff3b30; /* Red LCD color often used for timers */
+    font-family: 'Courier New', Courier, monospace;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 3px solid #222;
+    box-shadow: inset 0 0 10px #000;
+}
+
+#level-num {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-shadow: 0 0 5px rgba(255, 59, 48, 0.5);
+}
+
+#message {
+    color: #aaa;
+    font-size: 14px;
+}
+
+#controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+#current-input {
+    display: flex;
+    gap: 10px;
+}
+
+.input-slot {
+    width: 50px;
+    height: 50px;
+    background: #222;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.input-slot.active {
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+#knob-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#knob {
+    width: 80px;
+    height: 80px;
+    background: #ff6b6b; /* Reddish knob */
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #cc5555, 0 8px 15px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+}
+
+#knob-marker {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 15px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 2px;
+}
+
+#knob:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #cc5555, 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Color Picker Popup */
+#color-picker {
+    position: fixed;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.95);
+    padding: 15px;
+    border-radius: 15px;
+    border: 3px solid #555;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+
+#color-picker.hidden {
+    display: none;
+}
+
+#color-options {
+    display: flex;
+    gap: 12px;
+}
+
+.color-option {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: white;
+}
+
+#mode-selector {
+    margin: 20px 0;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 0 5px;
+}
+
+button.active {
+    background: var(--device-color);
+    color: white;
+}
+
+#new-game {
+    margin-top: 20px;
+    background: #333;
+    color: white;
+}
