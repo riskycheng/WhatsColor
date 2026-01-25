@@ -35,10 +35,6 @@ struct DeviceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Mode selector
-            ModeSelectorView(viewModel: viewModel)
-                .padding(.bottom, 10)
-
             // Main device body - takes available space
             VStack(spacing: 0) {
                 // Antenna (visual decoration)

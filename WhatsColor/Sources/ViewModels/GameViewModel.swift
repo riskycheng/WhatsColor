@@ -15,6 +15,7 @@ class GameViewModel: ObservableObject {
 
     func startNewGame() {
         state.secretCode = generateSecretCode()
+        // Always create 7 rows regardless of difficulty
         state.attempts = (1...7).map { GameRowModel(rowNumber: $0) }
         state.currentGuess = Array(repeating: nil, count: 4)
         state.activeIndex = 0
@@ -79,11 +80,15 @@ class GameViewModel: ObservableObject {
         let guess = colors
         let feedback = calculateFeedback(guess: guess, secret: state.secretCode)
 
-        // Add attempt
+        // Add attempt to current row
         if let currentAttemptIndex = state.attempts.firstIndex(where: { !$0.isComplete && $0.colors.allSatisfy({ $0 == nil }) }) {
             state.attempts[currentAttemptIndex].colors = state.currentGuess
             state.attempts[currentAttemptIndex].feedback = feedback
         }
+
+        // Reset currentGuess for next row (but don't auto-advance)
+        state.currentGuess = Array(repeating: nil, count: 4)
+        state.activeIndex = 0
 
         // Check win/lose condition
         checkGameStatus()
@@ -188,6 +193,11 @@ class GameViewModel: ObservableObject {
 
     func changeMode(to mode: FeedbackMode) {
         state.mode = mode
+        startNewGame()
+    }
+
+    func changeDifficulty(to difficulty: GameDifficulty) {
+        state.difficulty = difficulty
         startNewGame()
     }
 

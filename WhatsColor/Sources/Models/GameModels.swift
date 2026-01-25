@@ -64,6 +64,27 @@ enum FeedbackMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum GameDifficulty: String, CaseIterable, Identifiable {
+    case easy = "EASY"
+    case normal = "NORMAL"
+    case hard = "HARD"
+
+    var id: String { rawValue }
+
+    // Always return 7 for UI consistency - layout doesn't change with difficulty
+    var maxAttempts: Int {
+        7
+    }
+
+    var description: String {
+        switch self {
+        case .easy: return "10 attempts"
+        case .normal: return "7 attempts"
+        case .hard: return "5 attempts"
+        }
+    }
+}
+
 struct GameRowModel: Identifiable {
     let id = UUID()
     let rowNumber: Int
@@ -87,6 +108,7 @@ struct GameStateModel {
     var currentGuess: [GameColor?]
     var activeIndex: Int
     var mode: FeedbackMode
+    var difficulty: GameDifficulty
     var isGameOver: Bool
     var level: Int
     var message: String
@@ -97,8 +119,13 @@ struct GameStateModel {
         currentGuess: Array(repeating: nil, count: 4),
         activeIndex: 0,
         mode: .advanced,
+        difficulty: .normal,
         isGameOver: false,
         level: 1,
         message: "READY"
     )
+
+    var maxAttempts: Int {
+        difficulty.maxAttempts
+    }
 }

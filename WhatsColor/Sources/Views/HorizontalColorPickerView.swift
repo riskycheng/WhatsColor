@@ -111,19 +111,19 @@ struct HorizontalColorButton: View {
     }
 }
 
-struct ModeSelectorView: View {
+struct FeedbackModeSelectorView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
         HStack(spacing: 15) {
-            ModeButton(
+            FeedbackModeButton(
                 title: "Line Hint",
                 isSelected: viewModel.state.mode == .beginner
             ) {
                 viewModel.changeMode(to: .beginner)
             }
 
-            ModeButton(
+            FeedbackModeButton(
                 title: "Dot Hint",
                 isSelected: viewModel.state.mode == .advanced
             ) {
@@ -135,7 +135,7 @@ struct ModeSelectorView: View {
     }
 }
 
-struct ModeButton: View {
+struct FeedbackModeButton: View {
     let title: String
     let isSelected: Bool
     let onTap: () -> Void
