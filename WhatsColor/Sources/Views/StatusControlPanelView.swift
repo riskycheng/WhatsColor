@@ -14,7 +14,7 @@ struct StatusControlPanelView: View {
                 .frame(maxWidth: .infinity)
 
             // Controls row
-            HStack(spacing: 20) {
+            HStack(spacing: 15) {
                 // Left: Difficulty selector
                 DifficultySelectorView(viewModel: viewModel)
 
@@ -30,7 +30,7 @@ struct StatusControlPanelView: View {
                 // Right: Mode selector
                 ModeSelectorView(viewModel: viewModel)
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 5)
         }
         .padding(.horizontal, 20)
     }
@@ -40,28 +40,28 @@ struct RangeIndicatorView: View {
     var body: some View {
         HStack(spacing: 8) {
             Text("Range")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white.opacity(0.7))
-                .frame(width: 45, alignment: .leading)
+                .frame(width: 50, alignment: .leading)
 
             Spacer()
 
-            // Color blocks
-            HStack(spacing: 4) {
+            // Color blocks - larger
+            HStack(spacing: 6) {
                 ForEach(GameColor.allCases) { color in
-                    Rectangle()
+                    RoundedRectangle(cornerRadius: 3)
                         .fill(color.color)
-                        .frame(width: 12, height: 12)
-                        .cornerRadius(2)
+                        .frame(width: 18, height: 18)
+                        .shadow(color: color.color.opacity(0.4), radius: 1, x: 0, y: 1)
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .background(Color.black)
-        .cornerRadius(8)
+        .cornerRadius(10)
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10)
                 .stroke(Color.gray.opacity(0.4), lineWidth: 1)
         )
     }
@@ -72,27 +72,27 @@ struct StatusDisplayView: View {
 
     var body: some View {
         HStack {
-            // Level number
+            // Level number - larger
             Text(viewModel.currentLevelString)
-                .font(.system(size: 36, weight: .bold, design: .monospaced))
+                .font(.system(size: 42, weight: .bold, design: .monospaced))
                 .foregroundColor(.gameRed)
-                .shadow(color: .gameRed.opacity(0.5), radius: 3, x: 0, y: 0)
-                .frame(width: 80, alignment: .leading)
+                .shadow(color: .gameRed.opacity(0.5), radius: 4, x: 0, y: 0)
+                .frame(width: 100, alignment: .leading)
 
             Spacer()
 
             // Message
             Text(viewModel.state.message)
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                .font(.system(size: 16, weight: .medium, design: .monospaced))
                 .foregroundColor(.gray.opacity(0.9))
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .background(Color.black)
-        .cornerRadius(8)
+        .cornerRadius(10)
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 10)
                 .stroke(Color.gray.opacity(0.4), lineWidth: 1)
         )
     }
@@ -185,7 +185,7 @@ struct DifficultySelectorView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             SkeuomorphicButton(
                 title: "EASY",
                 isSelected: viewModel.state.difficulty == .easy,
@@ -204,10 +204,11 @@ struct DifficultySelectorView: View {
                 onTap: { viewModel.changeDifficulty(to: .hard) }
             )
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 4)
+        .frame(minWidth: 80)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 6)
         .background(Color.black.opacity(0.5))
-        .cornerRadius(8)
+        .cornerRadius(10)
     }
 }
 
@@ -215,7 +216,7 @@ struct ModeSelectorView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             SkeuomorphicButton(
                 title: "SOLO",
                 isSelected: viewModel.state.mode == .advanced,
@@ -228,10 +229,11 @@ struct ModeSelectorView: View {
                 onTap: { viewModel.changeMode(to: .beginner) }
             )
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 4)
+        .frame(minWidth: 80)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 6)
         .background(Color.black.opacity(0.5))
-        .cornerRadius(8)
+        .cornerRadius(10)
     }
 }
 
@@ -249,13 +251,13 @@ struct SkeuomorphicButton: View {
         }) {
             ZStack {
                 // Button shadow/depth
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(isPressed ? Color.gray.opacity(0.3) : Color.gray.opacity(0.6))
-                    .frame(height: 28)
+                    .frame(height: 38)
                     .offset(y: isPressed ? 0 : 2)
 
                 // Button face
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(
                         LinearGradient(
                             colors: isSelected ?
@@ -265,14 +267,14 @@ struct SkeuomorphicButton: View {
                             endPoint: .bottom
                         )
                     )
-                    .frame(height: 26)
+                    .frame(height: 36)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: 8)
                             .stroke(isSelected ? Color.white.opacity(0.3) : Color.clear, lineWidth: 1)
                     )
 
                 // Highlight
-                RoundedRectangle(cornerRadius: 5)
+                RoundedRectangle(cornerRadius: 6)
                     .fill(
                         LinearGradient(
                             colors: [
@@ -283,16 +285,17 @@ struct SkeuomorphicButton: View {
                             endPoint: .center
                         )
                     )
-                    .frame(height: 13)
-                    .mask(RoundedRectangle(cornerRadius: 5))
+                    .frame(height: 18)
+                    .mask(RoundedRectangle(cornerRadius: 6))
 
                 // Text
                 Text(title)
-                    .font(.system(size: isSelected ? 11 : 10, weight: .bold))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                    .font(.system(size: isSelected ? 14 : 13, weight: .bold))
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.7))
                     .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
+                    .frame(minWidth: 70)
             }
-            .frame(height: 28)
+            .frame(height: 38)
         }
         .buttonStyle(PlainButtonStyle())
         .offset(y: isPressed ? 2 : 0)
