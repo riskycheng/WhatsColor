@@ -10,13 +10,11 @@ struct ContentView: View {
                 Color.launchBackground
                     .ignoresSafeArea()
 
-                // Main game device - full screen
-                VStack(spacing: 0) {
-                    DeviceView(viewModel: viewModel)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .frame(maxHeight: .infinity)
-                }
+                // Main game device - vertically centered
+                DeviceView(viewModel: viewModel)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .frame(maxHeight: .infinity)
 
                 // Color picker dialog (centered overlay)
                 if viewModel.showColorPicker {
@@ -35,7 +33,7 @@ struct DeviceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Main device body - takes available space
+            // Main device body
             VStack(spacing: 0) {
                 // Antenna (visual decoration)
                 Rectangle()
@@ -44,15 +42,15 @@ struct DeviceView: View {
                     .cornerRadius(15, corners: [.bottomLeft, .bottomRight])
                     .offset(y: 15)
 
-                // Game board area - larger portion
+                // Game board area
                 GameBoardView(viewModel: viewModel)
                     .padding(.horizontal, 20)
-                    .padding(.top, 10)
+                    .padding(.top, 8)
 
                 // Bottom panel - status and knob only
                 StatusControlPanelView(viewModel: viewModel)
-                    .padding(.top, 15)
-                    .padding(.bottom, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, 15)
             }
             .background(Color.deviceGreen)
             .cornerRadius(40)

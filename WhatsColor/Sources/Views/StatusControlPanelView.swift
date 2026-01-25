@@ -40,21 +40,24 @@ struct RangeIndicatorView: View {
     var body: some View {
         HStack(spacing: 8) {
             Text("Range")
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.white.opacity(0.7))
                 .frame(width: 45, alignment: .leading)
 
+            Spacer()
+
+            // Color blocks
             HStack(spacing: 4) {
                 ForEach(GameColor.allCases) { color in
                     Rectangle()
                         .fill(color.color)
-                        .frame(width: 12, height: 6)
-                        .cornerRadius(1)
+                        .frame(width: 12, height: 12)
+                        .cornerRadius(2)
                 }
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
         .background(Color.black)
         .cornerRadius(8)
         .overlay(
