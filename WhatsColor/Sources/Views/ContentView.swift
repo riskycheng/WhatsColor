@@ -22,6 +22,27 @@ struct ContentView: View {
                         .transition(.opacity)
                         .animation(.easeInOut(duration: 0.2), value: viewModel.showColorPicker)
                 }
+
+                // Pause/Restart confirmation dialog
+                if viewModel.showPauseDialog {
+                    PauseDialogView(viewModel: viewModel)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.showPauseDialog)
+                }
+
+                // Settings dialog for time limit selection
+                if viewModel.showSettingsDialog {
+                    SettingsDialogView(viewModel: viewModel)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.showSettingsDialog)
+                }
+
+                // Secret code selection dialog
+                if viewModel.showSecretCodeDialog {
+                    SecretCodeSelectionView(viewModel: viewModel)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.showSecretCodeDialog)
+                }
             }
         }
         .preferredColorScheme(.dark)
@@ -36,7 +57,7 @@ struct DeviceView: View {
             // Top toolbar with reset button - aligned with game board
             HStack(alignment: .center) {
                 ResetButtonView(onTap: {
-                    viewModel.startNewGame()
+                    viewModel.pauseGame()
                 })
                 Spacer()
             }
@@ -138,6 +159,332 @@ struct ResetButtonView: View {
         }
         .buttonStyle(PlainButtonStyle())
         .offset(y: isPressed ? 2 : 0)
+        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+    }
+}
+
+// MARK: - Pause Dialog
+
+struct PauseDialogView: View {
+    @ObservedObject var viewModel: GameViewModel
+
+    var body: some View {
+        ZStack {
+            // Semi-transparent overlay
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+
+            // Dialog content
+            VStack(spacing: 20) {
+                Text("PAUSED")
+                    .font(.system(size: 28, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .padding(.top, 20)
+
+                Text("Restart game?")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.gray.opacity(0.9))
+
+                // Buttons
+                VStack(spacing: 12) {
+                    DialogButton(title: "RESUME", action: {
+                        viewModel.resumeGame()
+                    })
+
+                    DialogButton(title: "RESTART", action: {
+                        viewModel.confirmRestart()
+                    })
+                }
+                .padding(.top, 10)
+                .padding(.bottom, 20)
+            }
+            .padding(.horizontal, 30)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(red: 0.15, green: 0.15, blue: 0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 2)
+                    )
+            )
+            .frame(width: 300)
+            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+        }
+    }
+}
+
+struct DialogButton: View {
+    let title: String
+    let action: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            action()
+        }) {
+            Text(title)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.4, green: 0.6, blue: 0.4),
+                                    Color(red: 0.3, green: 0.5, blue: 0.3)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .offset(y: isPressed ? 2 : 0)
+        .animation(.easeInOut(duration: 0.1), value: isPressed)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+    }
+}
+
+// MARK: - Settings Dialog
+
+struct SettingsDialogView: View {
+    @ObservedObject var viewModel: GameViewModel
+    @State private var selectedTime: Int = 60
+
+    var body: some View {
+        ZStack {
+            // Semi-transparent overlay
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+
+            // Dialog content
+            VStack(spacing: 16) {
+                Text("SET TIME LIMIT")
+                    .font(.system(size: 22, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .padding(.top, 20)
+
+                // Time picker - vertical wheel style with 10-second steps
+                HStack(spacing: 0) {
+                    Picker("Time", selection: $selectedTime) {
+                        Text("0").tag(0)
+                        Text("10").tag(10)
+                        Text("20").tag(20)
+                        Text("30").tag(30)
+                        Text("40").tag(40)
+                        Text("50").tag(50)
+                        Text("60").tag(60)
+                        Text("70").tag(70)
+                        Text("80").tag(80)
+                        Text("90").tag(90)
+                        Text("100").tag(100)
+                        Text("110").tag(110)
+                        Text("120").tag(120)
+                        Text("130").tag(130)
+                        Text("140").tag(140)
+                        Text("150").tag(150)
+                        Text("160").tag(160)
+                        Text("170").tag(170)
+                        Text("180").tag(180)
+                        Text("190").tag(190)
+                        Text("200").tag(200)
+                        Text("210").tag(210)
+                        Text("220").tag(220)
+                        Text("230").tag(230)
+                        Text("240").tag(240)
+                        Text("250").tag(250)
+                        Text("260").tag(260)
+                        Text("270").tag(270)
+                        Text("280").tag(280)
+                        Text("290").tag(290)
+                        Text("300").tag(300)
+                    }
+                    .pickerStyle(WheelPickerStyle())
+                    .frame(width: 100)
+                    .clipped()
+                    .colorScheme(.dark)
+                    .compositingGroup()
+                }
+                .frame(height: 150)
+                .background(Color.gray.opacity(0.15))
+                .cornerRadius(12)
+
+                Text("\(selectedTime) SECONDS")
+                    .font(.system(size: 18, weight: .bold, design: .monospaced))
+                    .foregroundColor(.gameGreen)
+                    .padding(.vertical, 8)
+
+                // Start button
+                DialogButton(title: "NEXT: SET CODE", action: {
+                    viewModel.timeRemaining = selectedTime
+                    viewModel.applySettingsAndRestart(timeLimit: selectedTime)
+                })
+                .padding(.horizontal, 40)
+                .padding(.bottom, 20)
+            }
+            .padding(.horizontal, 30)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(red: 0.15, green: 0.15, blue: 0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 2)
+                    )
+            )
+            .frame(width: 320)
+            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+        }
+    }
+}
+
+// MARK: - Secret Code Selection Dialog
+
+struct SecretCodeSelectionView: View {
+    @ObservedObject var viewModel: GameViewModel
+
+    var body: some View {
+        ZStack {
+            // Semi-transparent overlay
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+
+            // Dialog content
+            VStack(spacing: 20) {
+                Text("SET SECRET CODE")
+                    .font(.system(size: 20, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .padding(.top, 20)
+
+                Text("Select 4 colors in order")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.gray.opacity(0.8))
+
+                // Selected colors display
+                HStack(spacing: 12) {
+                    ForEach(0..<4, id: \.self) { index in
+                        if index < viewModel.selectedSecretCode.count {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(viewModel.selectedSecretCode[index].color)
+                                .frame(width: 50, height: 50)
+                                .shadow(color: viewModel.selectedSecretCode[index].color.opacity(0.5), radius: 3, x: 0, y: 2)
+                        } else {
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.5), lineWidth: 2)
+                                .frame(width: 50, height: 50)
+                        }
+                    }
+                }
+                .padding(.vertical, 20)
+
+                // Color selection buttons - single line, smaller
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(GameColor.allCases, id: \.self) { color in
+                            ColorButton(color: color, action: {
+                                viewModel.selectSecretColor(color)
+                            })
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                }
+                .frame(height: 48)
+                .padding(.vertical, 12)
+
+                // Action buttons
+                HStack(spacing: 20) {
+                    // Cancel button
+                    Button(action: {
+                        viewModel.cancelSecretCodeSelection()
+                    }) {
+                        Text("CANCEL")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white.opacity(0.7))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.gray.opacity(0.3))
+                            )
+                    }
+
+                    // Start button - disabled until 4 colors selected
+                    let startGradient = LinearGradient(
+                        colors: viewModel.isSecretCodeComplete ?
+                            [Color(red: 0.4, green: 0.6, blue: 0.4), Color(red: 0.3, green: 0.5, blue: 0.3)] :
+                            [Color.gray.opacity(0.3), Color.gray.opacity(0.3)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+
+                    Button(action: {
+                        viewModel.finishSecretCodeSelection()
+                    }) {
+                        Text("START GAME")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(startGradient)
+                            )
+                    }
+                    .disabled(!viewModel.isSecretCodeComplete)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+            }
+            .padding(.horizontal, 20)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(red: 0.15, green: 0.15, blue: 0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 2)
+                    )
+            )
+            .frame(width: 340)
+            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+        }
+    }
+}
+
+struct ColorButton: View {
+    let color: GameColor
+    let action: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            action()
+        }) {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(color.color)
+                .frame(width: 40, height: 40)
+                .shadow(color: color.color.opacity(0.6), radius: 3, x: 0, y: 2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
+        .scaleEffect(isPressed ? 0.9 : 1.0)
         .animation(.easeInOut(duration: 0.1), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
