@@ -6,21 +6,135 @@ class GameViewModel: ObservableObject {
     @Published var state: GameStateModel
     @Published var showColorPicker: Bool = false
 
+    // Dialog states
+    @Published var showPauseDialog: Bool = false
+    @Published var showSettingsDialog: Bool = false
+    @Published var showSecretCodeDialog: Bool = false
+
+    // Secret code selection state
+    @Published var selectedSecretCode: [GameColor] = []
+    @Published var currentSecretSlot: Int = 0
+
+    // Timer state
+    @Published var timeRemaining: Int = 60 // Default 60 seconds
+    @Published var isTimerActive: Bool = false
+    private var timer: Timer?
+
     init() {
         self.state = GameStateModel.initial
         startNewGame()
     }
 
+    // MARK: - Timer Management
+
+    func startTimer() {
+        stopTimer()
+        isTimerActive = true
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.tickTimer()
+        }
+    }
+
+    func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+        isTimerActive = false
+    }
+
+    func tickTimer() {
+        if timeRemaining > 0 {
+            timeRemaining -= 1
+        } else {
+            // Timer expired - end game
+            stopTimer()
+            state.isGameOver = true
+            state.message = "TIME'S UP!"
+        }
+    }
+
+    func setTimeLimit(seconds: Int) {
+        timeRemaining = seconds
+    }
+
+    var timerDisplay: String {
+        String(format: "%03d", timeRemaining)
+    }
+
+    // MARK: - Secret Code Selection
+
+    func startSecretCodeSelection() {
+        showSettingsDialog = false
+        showSecretCodeDialog = true
+        selectedSecretCode = []
+        currentSecretSlot = 0
+    }
+
+    func selectSecretColor(_ color: GameColor) {
+        guard currentSecretSlot < 4 else { return }
+        selectedSecretCode.append(color)
+        currentSecretSlot += 1
+    }
+
+    func finishSecretCodeSelection() {
+        guard selectedSecretCode.count == 4 else { return }
+        showSecretCodeDialog = false
+        state.secretCode = selectedSecretCode
+        startNewGame()
+    }
+
+    func cancelSecretCodeSelection() {
+        showSecretCodeDialog = false
+        showSettingsDialog = true
+        selectedSecretCode = []
+        currentSecretSlot = 0
+    }
+
+    var isSecretCodeComplete: Bool {
+        selectedSecretCode.count == 4
+    }
+
     // MARK: - Game Logic
 
     func startNewGame() {
-        state.secretCode = generateSecretCode()
+        // Use selected secret code if available, otherwise generate random
+        if selectedSecretCode.count == 4 {
+            state.secretCode = selectedSecretCode
+        } else {
+            state.secretCode = generateSecretCode()
+        }
         // Always create 7 rows regardless of difficulty
         state.attempts = (1...7).map { GameRowModel(rowNumber: $0) }
         state.currentGuess = Array(repeating: nil, count: 4)
         state.activeIndex = 0
         state.isGameOver = false
         state.message = "READY"
+        // Start timer if enabled
+        if timeRemaining > 0 {
+            startTimer()
+        }
+    }
+
+    func pauseGame() {
+        stopTimer()
+        showPauseDialog = true
+    }
+
+    func resumeGame() {
+        showPauseDialog = false
+        if timeRemaining > 0 {
+            startTimer()
+        }
+    }
+
+    func confirmRestart() {
+        showPauseDialog = false
+        showSettingsDialog = true
+    }
+
+    func applySettingsAndRestart(timeLimit: Int) {
+        showSettingsDialog = false
+        timeRemaining = timeLimit
+        startSecretCodeSelection()
     }
 
     func startNextLevel() {
@@ -163,6 +277,7 @@ class GameViewModel: ObservableObject {
             if correctCount == 4 {
                 state.isGameOver = true
                 state.message = "UNLOCKED!"
+                stopTimer()
                 return
             }
         } else {
@@ -177,6 +292,7 @@ class GameViewModel: ObservableObject {
             if allCorrect {
                 state.isGameOver = true
                 state.message = "UNLOCKED!"
+                stopTimer()
                 return
             }
         }
@@ -186,6 +302,7 @@ class GameViewModel: ObservableObject {
         if completedAttempts >= 7 {
             state.isGameOver = true
             state.message = "LOCKED! FAILED"
+            stopTimer()
         } else {
             state.message = "TRY AGAIN"
         }
@@ -258,5 +375,9 @@ class GameViewModel: ObservableObject {
 
     var errorMessage: String? {
         hasError ? state.message : nil
+    }
+
+    deinit {
+        stopTimer()
     }
 }
