@@ -1,0 +1,36 @@
+name: WhatsColor
+options:
+  bundleIdPrefix: com.whatscolor
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  WhatsColor:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: WhatsColor/Sources
+        type: group
+      - path: WhatsColor/Resources
+        type: group
+    settings:
+      base:
+        INFOPLIST_FILE: WhatsColor/Resources/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.whatscolor.app
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: true
+        CODE_SIGN_IDENTITY: "Apple Development"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
