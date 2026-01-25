@@ -43,7 +43,6 @@ struct DeviceView: View {
             .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 4)
-            .frame(height: 50)
 
             // Main device body
             VStack(spacing: 0) {
@@ -85,27 +84,27 @@ struct ResetButtonView: View {
             HStack(spacing: 8) {
                 // Reset icon
                 Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white.opacity(0.9))
 
                 // Reset text label
                 Text("RESET")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white.opacity(0.9))
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
 
-            // Skeuomorphic layered background
+            // Layered background
             .overlay(
                 ZStack {
-                    // Button depth/shadow layer
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(isPressed ? Color.gray.opacity(0.3) : Color.gray.opacity(0.6))
-                        .offset(y: isPressed ? 0 : 3)
+                    // Shadow layer at bottom
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.6))
+                        .offset(y: 2)
 
-                    // Button face with gradient
-                    RoundedRectangle(cornerRadius: 10)
+                    // Button face
+                    RoundedRectangle(cornerRadius: 8)
                         .fill(
                             LinearGradient(
                                 colors: [
@@ -118,11 +117,11 @@ struct ResetButtonView: View {
                         )
 
                     // Border
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.white.opacity(0.25), lineWidth: 1)
 
                     // Highlight
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 7)
                         .fill(
                             LinearGradient(
                                 colors: [
@@ -133,13 +132,12 @@ struct ResetButtonView: View {
                                 endPoint: .center
                             )
                         )
-                        .padding(2)
+                        .padding(1)
                 }
             )
-            .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
-        .offset(y: isPressed ? 3 : 0)
+        .offset(y: isPressed ? 2 : 0)
         .animation(.easeInOut(duration: 0.1), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)

@@ -110,15 +110,14 @@ struct SubmitKnobView: View {
             onTap()
         }) {
             ZStack {
-                // Outer shadow/depth - fixed size, doesn't change
+                // Outer shadow/depth layer - fixed, creates depth
                 Circle()
                     .fill(Color(red: 0.65, green: 0.15, blue: 0.15))
                     .frame(width: 84, height: 84)
-                    .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 4)
 
-                // Inner content - this scales when pressed
+                // Inner circle - scales when pressed
                 ZStack {
-                    // Main button
+                    // Main button face
                     Circle()
                         .fill(
                             LinearGradient(
@@ -133,9 +132,9 @@ struct SubmitKnobView: View {
                         .frame(width: 80, height: 80)
                         .shadow(
                             color: Color(red: 0.5, green: 0.1, blue: 0.1).opacity(0.5),
-                            radius: 5,
+                            radius: 4,
                             x: 0,
-                            y: 3
+                            y: 2
                         )
 
                     // Highlight
@@ -143,7 +142,7 @@ struct SubmitKnobView: View {
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    Color.white.opacity(0.3),
+                                    Color.white.opacity(0.25),
                                     Color.white.opacity(0.0)
                                 ],
                                 center: .top,
@@ -151,8 +150,8 @@ struct SubmitKnobView: View {
                                 endRadius: 35
                             )
                         )
-                        .frame(width: 75, height: 75)
-                        .offset(y: -25)
+                        .frame(width: 76, height: 76)
+                        .offset(y: -22)
 
                     // Marker
                     VStack {
@@ -165,7 +164,7 @@ struct SubmitKnobView: View {
                     .frame(width: 70, height: 70)
                     .offset(y: -10)
                 }
-                .scaleEffect(isPressed ? 0.9 : 1.0)
+                .scaleEffect(isPressed ? 0.92 : 1.0)
             }
         }
         .buttonStyle(PlainButtonStyle())
@@ -250,13 +249,12 @@ struct SkeuomorphicButton: View {
             onTap()
         }) {
             ZStack {
-                // Button shadow/depth
+                // Bottom shadow layer (always visible, creates depth)
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isPressed ? Color.gray.opacity(0.3) : Color.gray.opacity(0.6))
-                    .frame(height: 38)
-                    .offset(y: isPressed ? 0 : 2)
+                    .fill(Color.gray.opacity(0.6))
+                    .offset(y: 2)
 
-                // Button face
+                // Main button face
                 RoundedRectangle(cornerRadius: 8)
                     .fill(
                         LinearGradient(
@@ -267,14 +265,13 @@ struct SkeuomorphicButton: View {
                             endPoint: .bottom
                         )
                     )
-                    .frame(height: 36)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(isSelected ? Color.white.opacity(0.3) : Color.clear, lineWidth: 1)
                     )
 
-                // Highlight
-                RoundedRectangle(cornerRadius: 6)
+                // Highlight on top half
+                RoundedRectangle(cornerRadius: 7)
                     .fill(
                         LinearGradient(
                             colors: [
@@ -285,8 +282,7 @@ struct SkeuomorphicButton: View {
                             endPoint: .center
                         )
                     )
-                    .frame(height: 18)
-                    .mask(RoundedRectangle(cornerRadius: 6))
+                    .padding(1)
 
                 // Text
                 Text(title)
@@ -295,11 +291,11 @@ struct SkeuomorphicButton: View {
                     .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
                     .frame(minWidth: 70)
             }
-            .frame(height: 38)
+            .frame(height: 40)
+            .offset(y: isPressed ? 2 : 0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
         }
         .buttonStyle(PlainButtonStyle())
-        .offset(y: isPressed ? 2 : 0)
-        .animation(.easeInOut(duration: 0.1), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in isPressed = true }
