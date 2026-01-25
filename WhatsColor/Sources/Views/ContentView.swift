@@ -33,8 +33,8 @@ struct DeviceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top toolbar with reset button
-            HStack {
+            // Top toolbar with reset button - aligned with game board
+            HStack(alignment: .center) {
                 ResetButtonView(onTap: {
                     viewModel.startNewGame()
                 })
@@ -43,6 +43,7 @@ struct DeviceView: View {
             .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 4)
+            .frame(height: 50)
 
             // Main device body
             VStack(spacing: 0) {
@@ -82,47 +83,63 @@ struct ResetButtonView: View {
             onTap()
         }) {
             HStack(spacing: 8) {
-                // Reset icon - larger
+                // Reset icon
                 Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white.opacity(0.95))
-
-                // Reset text label - larger
-                Text("RESET")
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white.opacity(0.95))
+                    .foregroundColor(.white.opacity(0.9))
+
+                // Reset text label
+                Text("RESET")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white.opacity(0.9))
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+
+            // Skeuomorphic layered background
+            .overlay(
                 ZStack {
-                    // Button shadow/depth
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(isPressed ? Color.gray.opacity(0.3) : Color.gray.opacity(0.7))
-                        .offset(y: isPressed ? 0 : 4)
+                    // Button depth/shadow layer
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(isPressed ? Color.gray.opacity(0.3) : Color.gray.opacity(0.6))
+                        .offset(y: isPressed ? 0 : 3)
 
                     // Button face with gradient
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 10)
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.gray.opacity(0.65),
-                                    Color.gray.opacity(0.45)
+                                    Color.gray.opacity(0.55),
+                                    Color.gray.opacity(0.35)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+
+                    // Border
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
+
+                    // Highlight
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.12),
+                                    Color.white.opacity(0.0)
+                                ],
+                                startPoint: .top,
+                                endPoint: .center
+                            )
                         )
+                        .padding(2)
                 }
             )
-            .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 3)
+            .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
-        .offset(y: isPressed ? 4 : 0)
+        .offset(y: isPressed ? 3 : 0)
         .animation(.easeInOut(duration: 0.1), value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
