@@ -44,11 +44,7 @@ class GameViewModel: ObservableObject {
         guard !state.isGameOver else { return }
 
         state.currentGuess[state.activeIndex] = color
-
-        // Auto-advance to next slot
-        if state.activeIndex < 3 {
-            moveToNextSlot()
-        }
+        // Do not auto-advance to next slot - stay on current slot
     }
 
     func moveToNextSlot() {
@@ -207,6 +203,43 @@ class GameViewModel: ObservableObject {
 
     var isCurrentGuessComplete: Bool {
         state.currentGuess.allSatisfy { $0 != nil }
+    }
+
+    var isCurrentRowActive: Bool {
+        !state.isGameOver
+    }
+
+    func getCurrentRowNumber() -> Int {
+        // Find the first incomplete row
+        if let currentRow = state.attempts.first(where: { !$0.isComplete }) {
+            return currentRow.rowNumber
+        }
+        // If all rows are complete, return the last row number
+        return 7
+    }
+
+    func selectSlot(at index: Int) {
+        guard !state.isGameOver else { return }
+        state.activeIndex = index
+    }
+
+    func cycleColor(at slotIndex: Int, direction: Int) {
+        guard !state.isGameOver else { return }
+
+        // Get current color index
+        let currentColor = state.currentGuess[slotIndex]
+        var currentIndex = currentColor?.rawValue ?? -1
+
+        // Calculate next color index
+        var nextIndex = currentIndex + direction
+        if nextIndex < 0 {
+            nextIndex = GameColor.allCases.count - 1
+        } else if nextIndex >= GameColor.allCases.count {
+            nextIndex = 0
+        }
+
+        // Set new color
+        state.currentGuess[slotIndex] = GameColor(rawValue: nextIndex)
     }
 
     var hasError: Bool {

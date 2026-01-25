@@ -7,20 +7,25 @@ struct GameBoardView: View {
         VStack(spacing: 0) {
             // Board panel
             HStack(spacing: 15) {
-                // Row numbers
+                // Row numbers - top to bottom
                 VStack(spacing: 12) {
-                    ForEach((1...7).reversed(), id: \.self) { rowNum in
-                        Text("\(rowNum)")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.gray.opacity(0.6))
-                            .frame(width: 15)
+                    ForEach(1...7, id: \.self) { rowNum in
+                        RowNumberView(
+                            number: rowNum,
+                            isActive: viewModel.isCurrentRowActive && viewModel.getCurrentRowNumber() == rowNum
+                        )
                     }
                 }
 
-                // Game grid
+                // Game grid - top to bottom to match row numbers
                 VStack(spacing: 12) {
-                    ForEach(viewModel.state.attempts.reversed()) { row in
-                        GameRowView(row: row, mode: viewModel.state.mode)
+                    ForEach(viewModel.state.attempts) { row in
+                        GameRowView(
+                            row: row,
+                            mode: viewModel.state.mode,
+                            isActive: viewModel.isCurrentRowActive && viewModel.getCurrentRowNumber() == row.rowNumber,
+                            viewModel: viewModel
+                        )
                     }
                 }
             }
@@ -32,16 +37,52 @@ struct GameBoardView: View {
     }
 }
 
+struct RowNumberView: View {
+    let number: Int
+    let isActive: Bool
+
+    var body: some View {
+        Text("\(number)")
+            .font(.system(size: 12, weight: .medium))
+            .foregroundColor(isActive ? .white : .gray.opacity(0.6))
+            .frame(width: 15, height: 40)
+    }
+}
+
 struct GameRowView: View {
     let row: GameRowModel
     let mode: FeedbackMode
+    let isActive: Bool
+    @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
         HStack(spacing: 0) {
             // Color slots
             HStack(spacing: 10) {
                 ForEach(0..<4, id: \.self) { index in
-                    SlotView(color: row.colors[index])
+                    SlotView(
+                        // For active row, show currentGuess; for others, show row.colors
+                        color: isActive ? viewModel.state.currentGuess[index] : row.colors[index],
+                        isActive: isActive,
+                        slotIndex: index,
+                        rowNumber: row.rowNumber,
+                        onTap: {
+                            if isActive {
+                                viewModel.selectSlot(at: index)
+                                viewModel.showColorPicker = true
+                            }
+                        },
+                        onSwipeLeft: {
+                            if isActive {
+                                viewModel.cycleColor(at: index, direction: -1)
+                            }
+                        },
+                        onSwipeRight: {
+                            if isActive {
+                                viewModel.cycleColor(at: index, direction: 1)
+                            }
+                        }
+                    )
                 }
             }
 
@@ -55,6 +96,15 @@ struct GameRowView: View {
 
 struct SlotView: View {
     let color: GameColor?
+    let isActive: Bool
+    let slotIndex: Int
+    let rowNumber: Int
+    let onTap: () -> Void
+    let onSwipeLeft: () -> Void
+    let onSwipeRight: () -> Void
+
+    @State private var dragOffset: CGFloat = 0
+    @State private var startLocation: CGPoint = .zero
 
     var body: some View {
         ZStack {
@@ -64,7 +114,7 @@ struct SlotView: View {
                 .frame(width: 40, height: 40)
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3), lineWidth: isActive ? 2 : 1)
                 )
 
             // Filled slot
@@ -74,7 +124,51 @@ struct SlotView: View {
                     .frame(width: 40, height: 40)
                     .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 0)
             }
+
+            // Tap indicator for active slots
+            if isActive {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.clear)
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.white.opacity(0.8), lineWidth: 2)
+                    )
+            }
         }
+        .offset(x: dragOffset)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    if isActive {
+                        if startLocation == .zero {
+                            startLocation = value.location
+                        }
+                        dragOffset = value.location.x - startLocation.x
+                    }
+                }
+                .onEnded { value in
+                    if isActive {
+                        let dragDistance = value.location.x - startLocation.x
+                        let swipeThreshold: CGFloat = 30
+
+                        if abs(dragDistance) < swipeThreshold {
+                            // This is a tap
+                            onTap()
+                        } else if dragDistance < 0 {
+                            // Swipe left
+                            onSwipeLeft()
+                        } else {
+// Swipe right
+                            onSwipeRight()
+                        }
+                        dragOffset = 0
+                        startLocation = .zero
+                    }
+                }
+        )
+        .animation(.easeOut(duration: 0.2), value: dragOffset)
     }
 }
 

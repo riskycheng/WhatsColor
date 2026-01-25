@@ -1,48 +1,22 @@
 import SwiftUI
 
-struct ControlPanelView: View {
+struct StatusControlPanelView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 15) {
             // Range indicator
             RangeIndicatorView()
 
             // Status display
             StatusDisplayView(viewModel: viewModel)
 
-            // Controls
-            HStack(spacing: 20) {
-                // Color input slots
-                VStack(spacing: 8) {
-                    Text("Input")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.white.opacity(0.6))
-
-                    HStack(spacing: 10) {
-                        ForEach(0..<4, id: \.self) { index in
-                            InputSlotView(
-                                color: viewModel.state.currentGuess[index],
-                                isActive: index == viewModel.state.activeIndex,
-                                onTap: {
-                                    viewModel.state.activeIndex = index
-                                    viewModel.showColorPicker = true
-                                }
-                            )
-                        }
-                    }
-                }
-
-                // Submit knob
-                SubmitKnobView(onTap: {
-                    viewModel.submitGuess()
-                })
-            }
-            .padding(.horizontal, 20)
+            // Submit knob only
+            SubmitKnobView(onTap: {
+                viewModel.submitGuess()
+            })
         }
-        .sheet(isPresented: $viewModel.showColorPicker) {
-            ColorPickerView(viewModel: viewModel)
-        }
+        .padding(.horizontal, 20)
     }
 }
 
@@ -101,38 +75,6 @@ struct StatusDisplayView: View {
     }
 }
 
-struct InputSlotView: View {
-    let color: GameColor?
-    let isActive: Bool
-    let onTap: () -> Void
-
-    var body: some View {
-        ZStack {
-            // Slot background
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.black.opacity(0.8))
-                .frame(width: 50, height: 50)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(
-                            isActive ? Color.white : Color.clear,
-                            lineWidth: isActive ? 3 : 0
-                        )
-                )
-                .shadow(color: isActive ? Color.white.opacity(0.5) : .clear, radius: 5, x: 0, y: 0)
-
-            // Color
-            if let color = color {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(color.color)
-                    .frame(width: 42, height: 42)
-            }
-        }
-        .onTapGesture(perform: onTap)
-        .animation(.easeInOut(duration: 0.2), value: isActive)
-    }
-}
-
 struct SubmitKnobView: View {
     let onTap: () -> Void
 
@@ -162,6 +104,6 @@ struct SubmitKnobView: View {
 }
 
 #Preview {
-    ControlPanelView(viewModel: GameViewModel())
+    StatusControlPanelView(viewModel: GameViewModel())
         .background(Color.deviceGreen)
 }

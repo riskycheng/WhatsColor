@@ -10,11 +10,19 @@ struct ContentView: View {
                 Color.launchBackground
                     .ignoresSafeArea()
 
-                // Main game device
+                // Main game device - full screen
                 VStack(spacing: 0) {
                     DeviceView(viewModel: viewModel)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
+                        .frame(maxHeight: .infinity)
+                }
+
+                // Color picker dialog (centered overlay)
+                if viewModel.showColorPicker {
+                    HorizontalColorPickerView(viewModel: viewModel)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.showColorPicker)
                 }
             }
         }
@@ -31,7 +39,7 @@ struct DeviceView: View {
             ModeSelectorView(viewModel: viewModel)
                 .padding(.bottom, 10)
 
-            // Main device body
+            // Main device body - takes available space
             VStack(spacing: 0) {
                 // Antenna (visual decoration)
                 Rectangle()
@@ -40,33 +48,20 @@ struct DeviceView: View {
                     .cornerRadius(15, corners: [.bottomLeft, .bottomRight])
                     .offset(y: 15)
 
-                // Game board area
+                // Game board area - larger portion
                 GameBoardView(viewModel: viewModel)
                     .padding(.horizontal, 20)
                     .padding(.top, 10)
 
-                // Bottom panel
-                ControlPanelView(viewModel: viewModel)
+                // Bottom panel - status and knob only
+                StatusControlPanelView(viewModel: viewModel)
                     .padding(.top, 15)
+                    .padding(.bottom, 20)
             }
             .background(Color.deviceGreen)
             .cornerRadius(40)
             .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
             .padding(.top, -30)
-
-            // New Game button
-            Button(action: {
-                viewModel.startNextLevel()
-            }) {
-                Text("New Game")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 30)
-                    .padding(.vertical, 12)
-                    .background(Color.gray.opacity(0.8))
-                    .cornerRadius(10)
-            }
-            .padding(.top, 20)
         }
     }
 }
