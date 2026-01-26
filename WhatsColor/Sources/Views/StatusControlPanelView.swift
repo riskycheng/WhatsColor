@@ -72,12 +72,29 @@ struct StatusDisplayView: View {
 
     var body: some View {
         HStack {
-            // Level number - larger
-            Text(viewModel.currentLevelString)
-                .font(.system(size: 42, weight: .bold, design: .monospaced))
-                .foregroundColor(.gameRed)
-                .shadow(color: .gameRed.opacity(0.5), radius: 4, x: 0, y: 0)
-                .frame(width: 100, alignment: .leading)
+            // Timer display - normal font style
+            HStack(spacing: 4) {
+                Text("\(viewModel.timeRemaining)")
+                    .font(.system(size: 36, weight: .bold, design: .monospaced))
+                    .foregroundColor(.gameRed)
+                    .shadow(color: .gameRed.opacity(0.5), radius: 4, x: 0, y: 0)
+                    .frame(minWidth: 60, alignment: .leading)
+                    .monospacedDigit()
+
+                Text("SEC")
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundColor(.gameRed.opacity(0.8))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.black)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+            )
 
             Spacer()
 

@@ -18,11 +18,13 @@ class GameViewModel: ObservableObject {
     // Timer state
     @Published var timeRemaining: Int = 60 // Default 60 seconds
     @Published var isTimerActive: Bool = false
+    @Published var gameStarted: Bool = false  // Timer only runs after full setup flow
     private var timer: Timer?
 
     init() {
         self.state = GameStateModel.initial
-        startNewGame()
+        gameStarted = false  // Don't auto-start timer on first launch
+        startNewGame()  // Initialize game board properly
     }
 
     // MARK: - Timer Management
@@ -79,6 +81,7 @@ class GameViewModel: ObservableObject {
         guard selectedSecretCode.count == 4 else { return }
         showSecretCodeDialog = false
         state.secretCode = selectedSecretCode
+        gameStarted = true  // Mark game as started, timer will now run
         startNewGame()
     }
 
@@ -87,6 +90,22 @@ class GameViewModel: ObservableObject {
         showSettingsDialog = true
         selectedSecretCode = []
         currentSecretSlot = 0
+    }
+
+    func dismissSecretCodeSelection() {
+        // Dismiss without going back to settings - just cancel and reset timer
+        showSecretCodeDialog = false
+        selectedSecretCode = []
+        currentSecretSlot = 0
+        // Restart game with current time settings
+        gameStarted = true  // Mark game as started
+        startNewGame()
+    }
+
+    func dismissSettingsDialog() {
+        // Dismiss settings and go back to paused state
+        showSettingsDialog = false
+        showPauseDialog = true
     }
 
     var isSecretCodeComplete: Bool {
@@ -108,8 +127,8 @@ class GameViewModel: ObservableObject {
         state.activeIndex = 0
         state.isGameOver = false
         state.message = "READY"
-        // Start timer if enabled
-        if timeRemaining > 0 {
+        // Start timer only if game has been started through the full setup flow
+        if gameStarted && timeRemaining > 0 {
             startTimer()
         }
     }
@@ -134,6 +153,7 @@ class GameViewModel: ObservableObject {
     func applySettingsAndRestart(timeLimit: Int) {
         showSettingsDialog = false
         timeRemaining = timeLimit
+        gameStarted = true  // Mark game as started, timer will run after code selection
         startSecretCodeSelection()
     }
 

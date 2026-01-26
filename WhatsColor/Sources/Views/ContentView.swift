@@ -1,5 +1,8 @@
 import SwiftUI
 
+import SwiftUI
+import AudioToolbox
+
 struct ContentView: View {
     @StateObject private var viewModel = GameViewModel()
 
@@ -175,9 +178,12 @@ struct PauseDialogView: View {
 
     var body: some View {
         ZStack {
-            // Semi-transparent overlay
+            // Semi-transparent overlay - dismiss on tap outside dialog
             Color.black.opacity(0.7)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    viewModel.resumeGame()
+                }
 
             // Dialog content
             VStack(spacing: 20) {
@@ -267,9 +273,12 @@ struct SettingsDialogView: View {
 
     var body: some View {
         ZStack {
-            // Semi-transparent overlay
+            // Semi-transparent overlay - dismiss on tap
             Color.black.opacity(0.7)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    viewModel.dismissSettingsDialog()
+                }
 
             // Dialog content
             VStack(spacing: 16) {
@@ -278,53 +287,11 @@ struct SettingsDialogView: View {
                     .foregroundColor(.white)
                     .padding(.top, 20)
 
-                // Time picker - vertical wheel style with 10-second steps
-                HStack(spacing: 0) {
-                    Picker("Time", selection: $selectedTime) {
-                        Text("0").tag(0)
-                        Text("10").tag(10)
-                        Text("20").tag(20)
-                        Text("30").tag(30)
-                        Text("40").tag(40)
-                        Text("50").tag(50)
-                        Text("60").tag(60)
-                        Text("70").tag(70)
-                        Text("80").tag(80)
-                        Text("90").tag(90)
-                        Text("100").tag(100)
-                        Text("110").tag(110)
-                        Text("120").tag(120)
-                        Text("130").tag(130)
-                        Text("140").tag(140)
-                        Text("150").tag(150)
-                        Text("160").tag(160)
-                        Text("170").tag(170)
-                        Text("180").tag(180)
-                        Text("190").tag(190)
-                        Text("200").tag(200)
-                        Text("210").tag(210)
-                        Text("220").tag(220)
-                        Text("230").tag(230)
-                        Text("240").tag(240)
-                        Text("250").tag(250)
-                        Text("260").tag(260)
-                        Text("270").tag(270)
-                        Text("280").tag(280)
-                        Text("290").tag(290)
-                        Text("300").tag(300)
-                    }
-                    .pickerStyle(WheelPickerStyle())
-                    .frame(width: 100)
-                    .clipped()
-                    .colorScheme(.dark)
-                    .compositingGroup()
-                }
-                .frame(height: 150)
-                .background(Color.gray.opacity(0.15))
-                .cornerRadius(12)
+                // iOS-style vertical time picker wheel
+                TimeWheelPicker(selectedTime: $selectedTime)
 
                 Text("\(selectedTime) SECONDS")
-                    .font(.system(size: 18, weight: .bold, design: .monospaced))
+                    .font(.system(size: 20, weight: .bold, design: .monospaced))
                     .foregroundColor(.gameGreen)
                     .padding(.vertical, 8)
 
@@ -358,9 +325,12 @@ struct SecretCodeSelectionView: View {
 
     var body: some View {
         ZStack {
-            // Semi-transparent overlay
+            // Semi-transparent overlay - dismiss on tap outside dialog
             Color.black.opacity(0.7)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    viewModel.dismissSecretCodeSelection()
+                }
 
             // Dialog content
             VStack(spacing: 20) {
@@ -408,7 +378,7 @@ struct SecretCodeSelectionView: View {
                 HStack(spacing: 20) {
                     // Cancel button
                     Button(action: {
-                        viewModel.cancelSecretCodeSelection()
+                        viewModel.dismissSecretCodeSelection()
                     }) {
                         Text("CANCEL")
                             .font(.system(size: 14, weight: .bold))
@@ -470,8 +440,7 @@ struct ColorButton: View {
 
     var body: some View {
         Button(action: {
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
+            playColorSelectFeedback()
             action()
         }) {
             RoundedRectangle(cornerRadius: 6)
@@ -491,6 +460,12 @@ struct ColorButton: View {
                 .onChanged { _ in isPressed = true }
                 .onEnded { _ in isPressed = false }
         )
+    }
+
+    private func playColorSelectFeedback() {
+        // Haptic feedback
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
     }
 }
 
