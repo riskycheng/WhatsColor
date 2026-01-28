@@ -28,9 +28,10 @@ struct TimeWheelPicker: View {
                     
                     ZStack(alignment: .trailing) {
                         ForEach(Array(stride(from: minTime, through: maxTime, by: 1)), id: \.self) { time in
-                            // Calculation: Smaller values are at the TOP (10 -> top, 600 -> bottom)
+                            // Calculation: 10 at Top, 600 at Bottom 
+                            // This ensures dragging DOWN always increases the value
                             let timeDifference = CGFloat(time - 60)
-                            let currentY = midY + rulerOffset + (timeDifference * tickSpacing)
+                            let currentY = midY + (timeDifference * tickSpacing) - rulerOffset
                             
                             // Only render visible ticks
                             if currentY > -50 && currentY < viewHeight + 50 {
@@ -106,39 +107,46 @@ struct TimeWheelPicker: View {
                     let deltaY = value.translation.height - lastOffset
                     lastOffset = value.translation.height
                     
-                    // Natural Coordinates: 10 at top, 600 at bottom.
-                    // To scroll to 10: rulerOffset becomes positive (50*tickSpacing)
-                    // To scroll to 600: rulerOffset becomes negative (-540*tickSpacing)
-                    let minTotalPixels = CGFloat(60 - maxTime) * tickSpacing // -540 * 12
-                    let maxTotalPixels = CGFloat(60 - minTime) * tickSpacing // 50 * 12
-                    let currentTotal = rulerOffset - offset
+                    // Mechanical Control Logic:
+                    // Dragging DOWN (deltaY > 0) now consistently INCREASES the value.
+                    // 10 is at the top, 600 is at the bottom.
                     
-                    // Detect if touch started on the left ruler side for "Fast Scroll"
                     if value.startLocation.x < 110 {
                         isFastScrolling = true
-                        // Fast scroll: Dragging DOWN (deltaY > 0) moves ruler DOWN (increases rulerOffset)
+                        // Fast scroll zone (Curve): Follow "Natural Scrolling" (Content follows finger)
+                        // Dragging DOWN (deltaY > 0) moves the scale DOWN (rulerOffset decreases)
+                        // which reveals smaller values from the top.
                         let proposedDelta = (deltaY * 4.5)
-                        let newTotal = max(minTotalPixels, min(maxTotalPixels, currentTotal + proposedDelta))
-                        rulerOffset = newTotal + offset
+                        rulerOffset -= proposedDelta
                     } else {
                         isFastScrolling = false
-                        // Knob Logic: Dragging DOWN (deltaY > 0) moves knob DOWN (increases offset)
-                        // Resulting in value changing towards bottom (larger numbers)
-                        let speed: CGFloat = abs(offset) <= knobTravelLimit ? 1.0 : 2.5
-                        let proposedDelta = (deltaY * speed)
-                        // Invert sign of delta for totalPixels (ruler - offset) so that offset follows finger
-                        let newTotal = max(minTotalPixels, min(maxTotalPixels, currentTotal - proposedDelta))
+                        // Knob dragging zone (Slider bar): 
+                        // Dragging DOWN (pos) moves the knob DOWN (pos)
+                        let proposedOffset = offset + deltaY
                         
-                        // Distribute the new pixel total between offset and ruler
-                        let targetOffset = rulerOffset - newTotal
-                        if abs(targetOffset) <= knobTravelLimit {
-                            offset = targetOffset
+                        if abs(proposedOffset) <= knobTravelLimit {
+                            offset = proposedOffset
                         } else {
-                            offset = targetOffset > 0 ? knobTravelLimit : -knobTravelLimit
-                            rulerOffset = newTotal + offset
+                            // Knob hit boundary: Pin knob and scroll the curve "mechanically"
+                            // Dragging DOWN continues to INCREASE the value (rulerOffset increases)
+                            let excess = proposedOffset - (proposedOffset > 0 ? knobTravelLimit : -knobTravelLimit)
+                            offset = proposedOffset > 0 ? knobTravelLimit : -knobTravelLimit
+                            rulerOffset += excess 
                         }
                     }
                     
+                    // Boundary clamping: Ensure we don't scroll into empty space
+                    // totalPixels = (T-60)*spacing = rulerOffset + offset
+                    let maxTotalPixels = CGFloat(maxTime - 60) * tickSpacing // 6480
+                    let minTotalPixels = CGFloat(minTime - 60) * tickSpacing // -600
+                    
+                    let currentTotal = rulerOffset + offset
+                    if currentTotal > maxTotalPixels {
+                        rulerOffset = maxTotalPixels - offset
+                    } else if currentTotal < minTotalPixels {
+                        rulerOffset = minTotalPixels - offset
+                    }
+
                     updateSelectionFromPositions()
                 }
                 .onEnded { _ in
@@ -158,22 +166,22 @@ struct TimeWheelPicker: View {
     }
     
     private func syncPositionsFromSelection() {
-        // Natural: To center 70 (which is below center), ruler must move UP (-10k)
-        rulerOffset = CGFloat(60 - selectedTime) * tickSpacing
-        offset = 0 // Knob starts at center
+        // Center the selected time. Value = 60 + (ruler + offset)/spacing 
+        // With offset=0, ruler = (T - 60) * spacing
+        rulerOffset = CGFloat(selectedTime - 60) * tickSpacing
+        offset = 0 
     }
     
     private func updateSelectionFromPositions() {
-        // totalPixels = rulerOffset - offset
-        // In natural layout (10 at top):
-        // Higher Time -> Ruler moves UP (neg) or Knob moves DOWN (pos) -> totalPixels becomes more NEGATIVE
-        // Time = 60 - (totalPixels / tickSpacing)
-        let totalPixels = rulerOffset - offset
+        // totalPixels = rulerOffset + offset
+        // 10 at Top, 600 at Bottom. 
+        // Drag DOWN (pos) -> Larger values.
+        let totalPixels = rulerOffset + offset
         let rawSecondsOffset = Double(totalPixels) / Double(tickSpacing)
-        let seconds = 60.0 - rawSecondsOffset
+        let seconds = 60.0 + rawSecondsOffset
         
-        // Snap to 10s increments as requested
-        let snappedTime = Int(round(seconds / 10.0)) * 10
+        // Snap to 5s increments for consistency with ruler labels
+        let snappedTime = Int(round(seconds / 5.0)) * 5
         let clampedTime = max(minTime, min(maxTime, snappedTime))
         
         if clampedTime != selectedTime {
