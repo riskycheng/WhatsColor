@@ -81,17 +81,18 @@ struct TimeWheelPicker: View {
             // MARK: - Large Display
             HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text("\(selectedTime)")
-                    .font(.system(size: 80, weight: .light, design: .rounded))
+                    .font(.system(size: 72, weight: .light, design: .rounded))
                     .foregroundColor(.white)
                     .monospacedDigit()
+                    .lineLimit(1)
                     .minimumScaleFactor(0.5)
                 
                 Text("s")
-                    .font(.system(size: 20, weight: .light, design: .rounded))
+                    .font(.system(size: 18, weight: .light, design: .rounded))
                     .foregroundColor(.white.opacity(0.5))
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 6)
             }
-            .frame(width: 150, alignment: .leading)
+            .frame(width: 155, alignment: .leading)
         }
         .contentShape(Rectangle())
         .gesture(
@@ -113,8 +114,9 @@ struct TimeWheelPicker: View {
                     if abs(potentialOffset) <= knobTravelLimit {
                         offset = potentialOffset
                     } else {
-                        // At boundary, move ruler in opposite direction of drag to pull new scales in
-                        rulerOffset -= deltaY
+                        // At boundary, move ruler quicker to switch numbers faster
+                        // Using a 2.5x multiplier for the scroll speed at boundaries
+                        rulerOffset -= deltaY * 2.5
                         // Clamp knob exactly at limit
                         offset = potentialOffset > 0 ? knobTravelLimit : -knobTravelLimit
                     }
