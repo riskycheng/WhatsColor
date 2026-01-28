@@ -281,19 +281,16 @@ struct SettingsDialogView: View {
                 }
 
             // Dialog content
-            VStack(spacing: 16) {
+            VStack(spacing: 0) {
                 Text("SET TIME LIMIT")
-                    .font(.system(size: 22, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white)
-                    .padding(.top, 20)
-
-                // iOS-style vertical time picker wheel
-                TimeWheelPicker(selectedTime: $selectedTime)
-
-                Text("\(selectedTime) SECONDS")
                     .font(.system(size: 20, weight: .bold, design: .monospaced))
-                    .foregroundColor(.gameGreen)
-                    .padding(.vertical, 8)
+                    .foregroundColor(.white.opacity(0.9))
+                    .padding(.top, 25)
+                    .padding(.bottom, 10)
+
+                // Professional iOS-style vertical time picker ruler
+                TimeWheelPicker(selectedTime: $selectedTime)
+                    .padding(.horizontal, 10)
 
                 // Start button
                 DialogButton(title: "NEXT: SET CODE", action: {
@@ -301,19 +298,24 @@ struct SettingsDialogView: View {
                     viewModel.applySettingsAndRestart(timeLimit: selectedTime)
                 })
                 .padding(.horizontal, 40)
-                .padding(.bottom, 20)
+                .padding(.vertical, 25)
             }
-            .padding(.horizontal, 30)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(red: 0.15, green: 0.15, blue: 0.15))
+                RoundedRectangle(cornerRadius: 30)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(white: 0.15), Color(white: 0.1)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.gray.opacity(0.4), lineWidth: 2)
+                        RoundedRectangle(cornerRadius: 30)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 1.5)
                     )
             )
-            .frame(width: 320)
-            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+            .frame(width: 350)
+            .shadow(color: .black.opacity(0.6), radius: 30, x: 0, y: 15)
         }
     }
 }
@@ -337,7 +339,7 @@ struct SecretCodeSelectionView: View {
                 Text("SET SECRET CODE")
                     .font(.system(size: 20, weight: .bold, design: .monospaced))
                     .foregroundColor(.white)
-                    .padding(.top, 20)
+                    .padding(.top, 25)
 
                 Text("Select 4 colors in order")
                     .font(.system(size: 14, weight: .medium))
@@ -347,47 +349,47 @@ struct SecretCodeSelectionView: View {
                 HStack(spacing: 12) {
                     ForEach(0..<4, id: \.self) { index in
                         if index < viewModel.selectedSecretCode.count {
-                            RoundedRectangle(cornerRadius: 8)
+                            RoundedRectangle(cornerRadius: 12)
                                 .fill(viewModel.selectedSecretCode[index].color)
-                                .frame(width: 50, height: 50)
-                                .shadow(color: viewModel.selectedSecretCode[index].color.opacity(0.5), radius: 3, x: 0, y: 2)
+                                .frame(width: 55, height: 55)
+                                .shadow(color: viewModel.selectedSecretCode[index].color.opacity(0.5), radius: 5, x: 0, y: 3)
                         } else {
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.5), lineWidth: 2)
-                                .frame(width: 50, height: 50)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 2)
+                                .frame(width: 55, height: 55)
                         }
                     }
                 }
-                .padding(.vertical, 20)
+                .padding(.vertical, 15)
 
                 // Color selection buttons - single line, smaller
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 12) {
                         ForEach(GameColor.allCases, id: \.self) { color in
                             ColorButton(color: color, action: {
                                 viewModel.selectSecretColor(color)
                             })
                         }
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 15)
                 }
-                .frame(height: 48)
-                .padding(.vertical, 12)
+                .frame(height: 50)
+                .padding(.vertical, 10)
 
                 // Action buttons
-                HStack(spacing: 20) {
+                HStack(spacing: 16) {
                     // Cancel button
                     Button(action: {
                         viewModel.dismissSecretCodeSelection()
                     }) {
                         Text("CANCEL")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white.opacity(0.7))
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.6))
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, 14)
                             .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.gray.opacity(0.3))
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.white.opacity(0.1))
                             )
                     }
 
@@ -395,7 +397,7 @@ struct SecretCodeSelectionView: View {
                     let startGradient = LinearGradient(
                         colors: viewModel.isSecretCodeComplete ?
                             [Color(red: 0.4, green: 0.6, blue: 0.4), Color(red: 0.3, green: 0.5, blue: 0.3)] :
-                            [Color.gray.opacity(0.3), Color.gray.opacity(0.3)],
+                            [Color.white.opacity(0.1), Color.white.opacity(0.1)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -404,31 +406,40 @@ struct SecretCodeSelectionView: View {
                         viewModel.finishSecretCodeSelection()
                     }) {
                         Text("START GAME")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(viewModel.isSecretCodeComplete ? .white : .white.opacity(0.3))
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
+                            .padding(.vertical, 14)
                             .background(
-                                RoundedRectangle(cornerRadius: 10)
+                                RoundedRectangle(cornerRadius: 12)
                                     .fill(startGradient)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(viewModel.isSecretCodeComplete ? Color.white.opacity(0.2) : Color.clear, lineWidth: 1)
                             )
                     }
                     .disabled(!viewModel.isSecretCodeComplete)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
+                .padding(.horizontal, 25)
+                .padding(.bottom, 25)
             }
-            .padding(.horizontal, 20)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(red: 0.15, green: 0.15, blue: 0.15))
+                RoundedRectangle(cornerRadius: 30)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(white: 0.15), Color(white: 0.1)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.gray.opacity(0.4), lineWidth: 2)
+                        RoundedRectangle(cornerRadius: 30)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 1.5)
                     )
             )
-            .frame(width: 340)
-            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+            .frame(width: 350)
+            .shadow(color: .black.opacity(0.6), radius: 30, x: 0, y: 15)
         }
     }
 }

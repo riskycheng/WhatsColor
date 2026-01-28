@@ -17,28 +17,28 @@ struct HorizontalColorPickerView: View {
             VStack(spacing: 0) {
                 // Title
                 HStack {
-                    Text("Select Color")
-                        .font(.headline)
-                        .foregroundColor(.white)
+                    Text("SELECT COLOR")
+                        .font(.system(size: 18, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.9))
 
                     Spacer()
 
                     Button(action: {
                         viewModel.showColorPicker = false
                     }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.gray)
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white.opacity(0.5))
+                            .padding(8)
+                            .background(Circle().fill(Color.white.opacity(0.1)))
                     }
                 }
-                .padding()
-
-                Divider()
-                    .background(Color.gray.opacity(0.3))
+                .padding(.horizontal, 25)
+                .padding(.top, 25)
 
                 // Color options - horizontal scroll
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 20) {
+                    HStack(spacing: 18) {
                         ForEach(GameColor.allCases) { color in
                             HorizontalColorButton(
                                 color: color,
@@ -50,23 +50,32 @@ struct HorizontalColorPickerView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 25)
+                    .padding(.horizontal, 25)
+                    .padding(.vertical, 30)
                 }
 
-                Divider()
-                    .background(Color.gray.opacity(0.3))
-
                 // Instructions
-                Text("Tap a color to select it")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .padding(.vertical, 10)
+                Text("TAP A COLOR TO GUESS")
+                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.4))
+                    .padding(.bottom, 25)
             }
-            .background(Color.black.opacity(0.95))
-            .cornerRadius(20)
+            .background(
+                RoundedRectangle(cornerRadius: 30)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(white: 0.15), Color(white: 0.1)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 30)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 1.5)
+                    )
+            )
             .frame(width: 350)
-            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+            .shadow(color: .black.opacity(0.6), radius: 30, x: 0, y: 15)
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
