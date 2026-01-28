@@ -37,13 +37,11 @@ struct TimeWheelPicker: View {
                             if currentY > -50 && currentY < viewHeight + 50 {
                                 RulerItemView(time: time, isSelected: time == selectedTime)
                                     .position(x: 40, y: currentY)
-                                    .opacity(isInteracting ? 1 : 0) // Hidden by default
                             }
                         }
                     }
                 }
                 .frame(width: 85)
-                .animation(.easeInOut(duration: 0.3), value: isInteracting)
                 
                 // MARK: - Curved Line Overlay
                 RulerLineShape()
@@ -86,8 +84,13 @@ struct TimeWheelPicker: View {
                     .font(.system(size: 85, weight: .light, design: .rounded))
                     .foregroundColor(.white)
                     .monospacedDigit()
+                
+                Text("s")
+                    .font(.system(size: 24, weight: .light, design: .rounded))
+                    .foregroundColor(.white.opacity(0.5))
+                    .padding(.bottom, 12)
             }
-            .frame(width: 140, alignment: .leading)
+            .frame(width: 155, alignment: .leading)
         }
         .contentShape(Rectangle()) // Make the whole area draggable
         .gesture(
@@ -113,18 +116,10 @@ struct TimeWheelPicker: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         offset = snappedOffset
                         updateSelection(isFinal: true)
+                        isInteracting = false
                     }
                     
                     lastOffset = snappedOffset
-                    
-                    // Hide ticks after a delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        if !isDragging {
-                            withAnimation {
-                                isInteracting = false
-                            }
-                        }
-                    }
                 }
         )
         .frame(height: viewHeight)
@@ -150,13 +145,18 @@ struct TimeWheelPicker: View {
             lastOffset -= CGFloat(delta) * tickSpacing
             offset -= CGFloat(delta) * tickSpacing
             
-            hapticFeedback()
+            triggerFeedback()
         }
     }
     
-    private func hapticFeedback() {
+    private func triggerFeedback() {
+        // Haptic feedback
         let generator = UISelectionFeedbackGenerator()
         generator.selectionChanged()
+        
+        // Audio feedback (Standard iOS Picker Tick Sound)
+        // SystemSoundID 1104 is the classic wheel "tick" sound
+        AudioServicesPlaySystemSound(1104)
     }
 }
 
