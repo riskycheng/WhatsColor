@@ -5,18 +5,17 @@ import AudioToolbox
 
 struct TimeWheelPicker: View {
     @Binding var selectedTime: Int
-    @State private var offset: CGFloat = 0
+    @State private var offset: CGFloat = 0 // This will now represent the knob's position relative to center
+    @State private var rulerOffset: CGFloat = 0 // This will represent the ruler's scroll
     @State private var lastOffset: CGFloat = 0
     @State private var isInteracting: Bool = false
     @GestureState private var isDragging: Bool = false
     
     private let minTime: Int = 10
-    private let maxTime: Int = 300
+    private let maxTime: Int = 900
     private let tickSpacing: CGFloat = 12
     private let viewHeight: CGFloat = 320
-    
-    // Using a separate state for the visual "scrolling" value to keep it smooth
-    @State private var displayTime: Double = 60
+    private let knobTravelLimit: CGFloat = 100 // How far knob can move before ruler slides
     
     var body: some View {
         HStack(spacing: 0) {
@@ -28,12 +27,12 @@ struct TimeWheelPicker: View {
                     
                     ZStack(alignment: .trailing) {
                         ForEach(Array(stride(from: minTime, through: maxTime, by: 1)), id: \.self) { time in
-                            // Calculation: Higher values are at the TOP
-                            // When time == selectedTime, currentY should be midY
-                            let timeDifference = CGFloat(time - selectedTime)
-                            let currentY = midY + offset - (timeDifference * tickSpacing)
+                            // Ruler hangs around the center, moved by rulerOffset
+                            // We use a fixed reference (60s at midY + rulerOffset)
+                            let timeDifference = CGFloat(time - 60)
+                            let currentY = midY + rulerOffset - (timeDifference * tickSpacing)
                             
-                            // Only render visible ticks for performance
+                            // Only render visible ticks
                             if currentY > -50 && currentY < viewHeight + 50 {
                                 RulerItemView(time: time, isSelected: time == selectedTime)
                                     .position(x: 40, y: currentY)
@@ -43,7 +42,7 @@ struct TimeWheelPicker: View {
                 }
                 .frame(width: 85)
                 
-                // MARK: - Curved Line Overlay
+                // MARK: - Curved Line Overlay (Moves with knob)
                 RulerLineShape()
                     .stroke(
                         LinearGradient(
@@ -54,7 +53,7 @@ struct TimeWheelPicker: View {
                         lineWidth: 1
                     )
                     .frame(width: 30)
-                    .offset(x: 35)
+                    .offset(x: 35, y: offset)
                     .overlay(
                         // Blue Glow
                         RulerCurveGlow()
@@ -68,83 +67,90 @@ struct TimeWheelPicker: View {
                             )
                             .blur(radius: 5)
                             .frame(width: 40, height: 100)
-                            .offset(x: 35)
+                            .offset(x: 35, y: offset)
                     )
             }
             .frame(height: viewHeight)
             .clipped()
             
-            // MARK: - Knob portion
+            // MARK: - Knob portion (Moves with finger)
             KnobView(isDragging: isInteracting)
+                .offset(y: offset)
                 .padding(.horizontal, 10)
             
             // MARK: - Large Display
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text("\(selectedTime)")
-                    .font(.system(size: 85, weight: .light, design: .rounded))
+                    .font(.system(size: 80, weight: .light, design: .rounded))
                     .foregroundColor(.white)
                     .monospacedDigit()
+                    .minimumScaleFactor(0.5)
                 
                 Text("s")
-                    .font(.system(size: 24, weight: .light, design: .rounded))
+                    .font(.system(size: 20, weight: .light, design: .rounded))
                     .foregroundColor(.white.opacity(0.5))
-                    .padding(.bottom, 12)
+                    .padding(.bottom, 8)
             }
-            .frame(width: 155, alignment: .leading)
+            .frame(width: 150, alignment: .leading)
         }
-        .contentShape(Rectangle()) // Make the whole area draggable
+        .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 0)
                 .updating($isDragging) { _, state, _ in
                     state = true
                 }
                 .onChanged { value in
-                    if !isInteracting {
-                        isInteracting = true
-                    }
-                    // Traditional drag: dragging DOWN reveals things ABOVE (larger values)
-                    // So finger moving DOWN (translation.height > 0) should increase value
-                    // In our currentY formula: currentY = midY + offset - (time - selected) * 12
-                    // Dragging down makes offset positive, which moves 61, 62 towards midY. Correct.
-                    offset = lastOffset + value.translation.height
-                    updateSelection(isFinal: false)
-                }
-                .onEnded { value in
-                    let finalOffset = lastOffset + value.translation.height
-                    let snappedOffset = round(finalOffset / tickSpacing) * tickSpacing
+                    isInteracting = true
                     
+                    let deltaY = value.translation.height - lastOffset
+                    lastOffset = value.translation.height
+                    
+                    // Logic: 
+                    // 1. Move knob first
+                    // 2. If knob hits boundary, scroll ruler instead
+                    
+                    let potentialOffset = offset + deltaY
+                    if abs(potentialOffset) <= knobTravelLimit {
+                        offset = potentialOffset
+                    } else {
+                        // At boundary, move ruler in opposite direction of drag to pull new scales in
+                        rulerOffset -= deltaY
+                        // Clamp knob exactly at limit
+                        offset = potentialOffset > 0 ? knobTravelLimit : -knobTravelLimit
+                    }
+                    
+                    updateSelectionFromPositions()
+                }
+                .onEnded { _ in
+                    lastOffset = 0
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        offset = snappedOffset
-                        updateSelection(isFinal: true)
                         isInteracting = false
                     }
-                    
-                    lastOffset = snappedOffset
                 }
         )
         .frame(height: viewHeight)
         .onAppear {
-            // Ensure default is 60 if it's not yet set
-            if selectedTime == 0 {
-                selectedTime = 60
-            }
+            if selectedTime == 0 { selectedTime = 60 }
+            // Initialize ruler so selectedTime is at the knob
+            syncPositionsFromSelection()
         }
     }
     
-    private func updateSelection(isFinal: Bool) {
-        // newTime = selectedTime + (offset / tickSpacing)
-        let delta = Int(round(offset / tickSpacing))
-        let newTime = selectedTime + delta
+    private func syncPositionsFromSelection() {
+        // Center the ruler at 60, then scroll it so selectedTime is at center
+        rulerOffset = CGFloat(selectedTime - 60) * tickSpacing
+        offset = 0 // Knob starts at center
+    }
+    
+    private func updateSelectionFromPositions() {
+        // totalTimeOffset = rulerOffset - knobOffset
+        // time = 60 + totalTimeOffset / tickSpacing
+        let totalPixels = rulerOffset - offset
+        let newTime = 60 + Int(round(totalPixels / tickSpacing))
         let clampedTime = max(minTime, min(maxTime, newTime))
         
         if clampedTime != selectedTime {
-            // Only update the actual binding and trigger haptics when we jump to a new integer
             selectedTime = clampedTime
-            // If we moved "one snap worth", we reset the offset relative to the new selection
-            // This makes the ruler feel infinite and prevents offset from becoming huge
-            lastOffset -= CGFloat(delta) * tickSpacing
-            offset -= CGFloat(delta) * tickSpacing
-            
             triggerFeedback()
         }
     }
