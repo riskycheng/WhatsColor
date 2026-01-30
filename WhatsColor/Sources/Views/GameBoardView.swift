@@ -8,7 +8,7 @@ struct GameBoardView: View {
             // Board panel
             HStack(spacing: 0) {
                 // Game grid - top to bottom
-                VStack(spacing: 12) {
+                VStack(spacing: 14) {
                     ForEach(viewModel.state.attempts) { row in
                         GameRowView(
                             row: row,
@@ -95,29 +95,29 @@ struct SlotView: View {
     var body: some View {
         ZStack {
             // Empty slot
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: 8)
                 .fill(Color.black.opacity(0.8))
-                .frame(width: 40, height: 40)
+                .frame(width: 45, height: 45)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
+                    RoundedRectangle(cornerRadius: 8)
                         .stroke(isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3)), lineWidth: isSelected ? 3 : (isActive ? 2 : 1))
                 )
 
             // Filled slot
             if let color = color {
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(color.color)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 45, height: 45)
                     .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
             }
 
             // Selection indicator for active slot
             if isSelected {
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(Color.clear)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 45, height: 45)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 6)
+                        RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.white, lineWidth: 3)
                             .scaleEffect(1.1)
                     )
@@ -198,7 +198,7 @@ struct FeedbackDot: View {
     var body: some View {
         Circle()
             .fill(dotColor)
-            .frame(width: 12, height: 12)
+            .frame(width: 14, height: 14)
             .overlay(
                 Circle()
                     .stroke(dotBorderColor, lineWidth: 1)
