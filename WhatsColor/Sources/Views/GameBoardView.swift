@@ -8,7 +8,7 @@ struct GameBoardView: View {
             // Board panel
             HStack(spacing: 0) {
                 // Game grid - top to bottom
-                VStack(spacing: 14) {
+                VStack(spacing: 8) {
                     ForEach(viewModel.state.attempts) { row in
                         GameRowView(
                             row: row,
@@ -45,6 +45,7 @@ struct GameRowView: View {
                         isSelected: isActive && viewModel.state.activeIndex == index,
                         slotIndex: index,
                         rowNumber: row.rowNumber,
+                        viewModel: viewModel,
                         onTap: {
                             if isActive {
                                 viewModel.selectSlot(at: index)
@@ -84,6 +85,7 @@ struct SlotView: View {
     let isSelected: Bool
     let slotIndex: Int
     let rowNumber: Int
+    @ObservedObject var viewModel: GameViewModel
     let onTap: () -> Void
     let onDrop: (GameColor) -> Void
     let onSwipeLeft: () -> Void
@@ -93,14 +95,34 @@ struct SlotView: View {
     @State private var startLocation: CGPoint = .zero
 
     var body: some View {
+        let showTargetEffect = viewModel.dropTargetIndex == slotIndex && isActive
+        
         ZStack {
             // Empty slot
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color.black.opacity(0.8))
+                .fill(showTargetEffect ? Color.white.opacity(0.15) : Color.black.opacity(0.8))
                 .frame(width: 45, height: 45)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3)), lineWidth: isSelected ? 3 : (isActive ? 2 : 1))
+                        .stroke(showTargetEffect ? Color.white : (isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3))), 
+                                lineWidth: showTargetEffect ? 4 : (isSelected ? 3 : (isActive ? 2 : 1)))
+                )
+                .scaleEffect(showTargetEffect ? 1.15 : 1.0)
+                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: showTargetEffect)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear
+                            .onAppear {
+                                if isActive {
+                                    viewModel.registerSlotFrame(geo.frame(in: .global), for: slotIndex)
+                                }
+                            }
+                            .onChange(of: geo.frame(in: .global)) { newFrame in
+                                if isActive {
+                                    viewModel.registerSlotFrame(newFrame, for: slotIndex)
+                                }
+                            }
+                    }
                 )
 
             // Filled slot
@@ -109,10 +131,11 @@ struct SlotView: View {
                     .fill(color.color)
                     .frame(width: 45, height: 45)
                     .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
+                    .scaleEffect(showTargetEffect ? 0.9 : 1.0)
             }
 
             // Selection indicator for active slot
-            if isSelected {
+            if isSelected && !showTargetEffect {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.clear)
                     .frame(width: 45, height: 45)
@@ -123,23 +146,15 @@ struct SlotView: View {
                     )
             }
         }
-        .onDrop(of: [.text], isTargeted: nil) { providers in
-            if isActive, let first = providers.first {
-                first.loadObject(ofClass: NSString.self) { string, error in
-                    if let str = string as? String, let raw = Int(str), let color = GameColor(rawValue: raw) {
-                        DispatchQueue.main.async {
-                            onDrop(color)
-                        }
-                    }
-                }
-                return true
-            }
-            return false
-        }
         .offset(x: dragOffset)
         .contentShape(Rectangle())
+        .onTapGesture {
+            if isActive {
+                onTap()
+            }
+        }
         .gesture(
-            DragGesture(minimumDistance: 0)
+            DragGesture(minimumDistance: 20)
                 .onChanged { value in
                     if isActive {
                         if startLocation == .zero {
@@ -151,16 +166,12 @@ struct SlotView: View {
                 .onEnded { value in
                     if isActive {
                         let dragDistance = value.location.x - startLocation.x
-                        let swipeThreshold: CGFloat = 30
-
-                        if abs(dragDistance) < swipeThreshold {
-                            // This is a tap
-                            onTap()
-                        } else if dragDistance < 0 {
+                        
+                        if dragDistance < 0 {
                             // Swipe left
                             onSwipeLeft()
                         } else {
-// Swipe right
+                            // Swipe right
                             onSwipeRight()
                         }
                         dragOffset = 0

@@ -4,7 +4,7 @@ struct StatusControlPanelView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             // Status display
             StatusDisplayView(viewModel: viewModel)
                 .frame(maxWidth: .infinity)
@@ -66,12 +66,12 @@ struct StatusDisplayView: View {
 
             // Message
             Text(viewModel.state.message)
-                .font(.system(size: 16, weight: .medium, design: .monospaced))
+                .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .foregroundColor(.gray.opacity(0.9))
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
         .background(Color.black)
         .cornerRadius(10)
         .overlay(
@@ -87,9 +87,8 @@ struct SubmitKnobView: View {
 
     var body: some View {
         Button(action: {
-            // Haptic feedback
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
+            SoundManager.shared.playSelection()
+            SoundManager.shared.hapticMedium()
             onTap()
         }) {
             ZStack {
@@ -227,8 +226,8 @@ struct SkeuomorphicButton: View {
 
     var body: some View {
         Button(action: {
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
+            SoundManager.shared.playSelection()
+            SoundManager.shared.hapticLight()
             onTap()
         }) {
             ZStack {

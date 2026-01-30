@@ -15,14 +15,17 @@
 		B0CBEC9E513D12F7C7B81BD2 /* GameBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E39D2E9ACFA60624BEC25E9 /* GameBoardView.swift */; };
 		BA1E0C3371114DA26DB056F2 /* GameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691FD63541179CBB4F9220E4 /* GameViewModel.swift */; };
 		BBA0F85933523623014943D7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF4415208FC451374D560089 /* ContentView.swift */; };
+		BEB8559304D4AF2AC4663575 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8ED14C73E9EBE15F83CA33 /* SoundManager.swift */; };
 		C8B17EBCC5F48317F571B9F1 /* WhatsColorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D2A239419B2FC4E0FFBC07 /* WhatsColorApp.swift */; };
 		C9F42B772E2DF55899C7E647 /* HorizontalColorPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB1D80EC8D25C3510068185 /* HorizontalColorPickerView.swift */; };
+		D867C3D57D5FF35DFD6234B7 /* SecretCodeSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3E5E2EDD333277EF158B26 /* SecretCodeSelectionView.swift */; };
 		F82D540272438394839B66DB /* StatusControlPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B997EE635E23D54C7ED040 /* StatusControlPanelView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		03D2A239419B2FC4E0FFBC07 /* WhatsColorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsColorApp.swift; sourceTree = "<group>"; };
 		08B1D46D9B3407A146894BB0 /* GameModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModels.swift; sourceTree = "<group>"; };
+		1C8ED14C73E9EBE15F83CA33 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 		1D1D919C4106777815837668 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		292BF94C7F3D158E400D64AE /* TimeWheelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelPicker.swift; sourceTree = "<group>"; };
 		319B12D24F6290CA358B612A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -34,6 +37,7 @@
 		8C91F5B4FF2E5DCFD11B8340 /* WhatsColor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhatsColor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CF4415208FC451374D560089 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D7B997EE635E23D54C7ED040 /* StatusControlPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusControlPanelView.swift; sourceTree = "<group>"; };
+		DB3E5E2EDD333277EF158B26 /* SecretCodeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretCodeSelectionView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -65,6 +69,7 @@
 				CF4415208FC451374D560089 /* ContentView.swift */,
 				3E39D2E9ACFA60624BEC25E9 /* GameBoardView.swift */,
 				5EB1D80EC8D25C3510068185 /* HorizontalColorPickerView.swift */,
+				DB3E5E2EDD333277EF158B26 /* SecretCodeSelectionView.swift */,
 				D7B997EE635E23D54C7ED040 /* StatusControlPanelView.swift */,
 				292BF94C7F3D158E400D64AE /* TimeWheelPicker.swift */,
 			);
@@ -86,6 +91,7 @@
 			children = (
 				6E2990C665AEA08DBC0F1873 /* Animations.swift */,
 				339DFB9E4B2D29A7804CC37E /* Extensions.swift */,
+				1C8ED14C73E9EBE15F83CA33 /* SoundManager.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -198,6 +204,8 @@
 				29F1AE4C300395EBF8FCCC3E /* GameModels.swift in Sources */,
 				BA1E0C3371114DA26DB056F2 /* GameViewModel.swift in Sources */,
 				C9F42B772E2DF55899C7E647 /* HorizontalColorPickerView.swift in Sources */,
+				D867C3D57D5FF35DFD6234B7 /* SecretCodeSelectionView.swift in Sources */,
+				BEB8559304D4AF2AC4663575 /* SoundManager.swift in Sources */,
 				F82D540272438394839B66DB /* StatusControlPanelView.swift in Sources */,
 				7DFA776BB9E0E7CEF0BD5D69 /* TimeWheelPicker.swift in Sources */,
 				C8B17EBCC5F48317F571B9F1 /* WhatsColorApp.swift in Sources */,

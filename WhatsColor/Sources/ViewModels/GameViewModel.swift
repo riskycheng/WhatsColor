@@ -10,6 +10,48 @@ class GameViewModel: ObservableObject {
     @Published var showSettingsDialog: Bool = false
     @Published var showSecretCodeDialog: Bool = false
 
+    // Drag state
+    @Published var activeDragColor: GameColor? = nil
+    @Published var dragPosition: CGPoint = .zero
+    @Published var dropTargetIndex: Int? = nil
+    
+    // Slot frames for manual drag detection
+    private var slotFrames: [Int: CGRect] = [:]
+    
+    func registerSlotFrame(_ frame: CGRect, for index: Int) {
+        slotFrames[index] = frame
+    }
+    
+    func updateDragPosition(_ position: CGPoint) {
+        dragPosition = position
+        
+        // Find if we are over any slot
+        dropTargetIndex = nil
+        for (index, frame) in slotFrames {
+            if frame.contains(position) {
+                dropTargetIndex = index
+                break
+            }
+        }
+    }
+    
+    func endDragging() {
+        if let index = dropTargetIndex, let color = activeDragColor {
+            setColor(color, at: index)
+            SoundManager.shared.playDrop()
+            SoundManager.shared.hapticMedium()
+        }
+        activeDragColor = nil
+        dragPosition = .zero
+        dropTargetIndex = nil
+    }
+
+    func setColor(_ color: GameColor, at index: Int) {
+        guard !state.isGameOver else { return }
+        state.currentGuess[index] = color
+        state.activeIndex = index
+    }
+
     // Secret code selection state
     @Published var selectedSecretCode: [GameColor] = []
     @Published var currentSecretSlot: Int = 0
@@ -74,6 +116,12 @@ class GameViewModel: ObservableObject {
         guard currentSecretSlot < 4 else { return }
         selectedSecretCode.append(color)
         currentSecretSlot += 1
+    }
+
+    func resetSecretCode(from index: Int) {
+        guard index < selectedSecretCode.count else { return }
+        selectedSecretCode.removeSubrange(index..<selectedSecretCode.count)
+        currentSecretSlot = selectedSecretCode.count
     }
 
     func finishSecretCodeSelection() {
@@ -296,6 +344,8 @@ class GameViewModel: ObservableObject {
             if correctCount == 4 {
                 state.isGameOver = true
                 state.message = "UNLOCKED!"
+                SoundManager.shared.playSuccess()
+                SoundManager.shared.hapticSuccess()
                 stopTimer()
                 return
             }
@@ -311,6 +361,8 @@ class GameViewModel: ObservableObject {
             if allCorrect {
                 state.isGameOver = true
                 state.message = "UNLOCKED!"
+                SoundManager.shared.playSuccess()
+                SoundManager.shared.hapticSuccess()
                 stopTimer()
                 return
             }
@@ -321,9 +373,11 @@ class GameViewModel: ObservableObject {
         if completedAttempts >= 7 {
             state.isGameOver = true
             state.message = "LOCKED! FAILED"
+            SoundManager.shared.playError()
             stopTimer()
         } else {
             state.message = "TRY AGAIN"
+            SoundManager.shared.hapticMedium()
         }
     }
 
