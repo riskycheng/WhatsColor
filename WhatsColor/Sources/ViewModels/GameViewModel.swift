@@ -14,6 +14,11 @@ class GameViewModel: ObservableObject {
     @Published var activeDragColor: GameColor? = nil
     @Published var dragPosition: CGPoint = .zero
     @Published var dropTargetIndex: Int? = nil
+    @Published var sourceSlotIndex: Int? = nil
+    
+    // For smooth swapping animation
+    @Published var draggedSlotOffset: CGSize = .zero
+    @Published var slotOffsets: [Int: CGSize] = [:]
     
     // Slot frames for manual drag detection
     private var slotFrames: [Int: CGRect] = [:]
@@ -26,24 +31,45 @@ class GameViewModel: ObservableObject {
         dragPosition = position
         
         // Find if we are over any slot
-        dropTargetIndex = nil
+        let oldTarget = dropTargetIndex
+        var newTarget: Int? = nil
+        
         for (index, frame) in slotFrames {
             if frame.contains(position) {
-                dropTargetIndex = index
+                newTarget = index
                 break
+            }
+        }
+        
+        if oldTarget != newTarget {
+            dropTargetIndex = newTarget
+            if newTarget != nil {
+                SoundManager.shared.hapticLight()
             }
         }
     }
     
     func endDragging() {
-        if let index = dropTargetIndex, let color = activeDragColor {
-            setColor(color, at: index)
+        if let targetIndex = dropTargetIndex, let color = activeDragColor {
+            if let sourceIndex = sourceSlotIndex {
+                // Handle swapping on release
+                if sourceIndex != targetIndex {
+                    let targetColor = state.currentGuess[targetIndex]
+                    state.currentGuess[sourceIndex] = targetColor
+                    state.currentGuess[targetIndex] = color
+                    state.activeIndex = targetIndex
+                }
+            } else {
+                // Handle palette drop on release
+                setColor(color, at: targetIndex)
+            }
             SoundManager.shared.playDrop()
             SoundManager.shared.hapticMedium()
         }
         activeDragColor = nil
         dragPosition = .zero
         dropTargetIndex = nil
+        sourceSlotIndex = nil
     }
 
     func setColor(_ color: GameColor, at index: Int) {
@@ -421,25 +447,6 @@ class GameViewModel: ObservableObject {
     func selectSlot(at index: Int) {
         guard !state.isGameOver else { return }
         state.activeIndex = index
-    }
-
-    func cycleColor(at slotIndex: Int, direction: Int) {
-        guard !state.isGameOver else { return }
-
-        // Get current color index
-        let currentColor = state.currentGuess[slotIndex]
-        var currentIndex = currentColor?.rawValue ?? -1
-
-        // Calculate next color index
-        var nextIndex = currentIndex + direction
-        if nextIndex < 0 {
-            nextIndex = GameColor.allCases.count - 1
-        } else if nextIndex >= GameColor.allCases.count {
-            nextIndex = 0
-        }
-
-        // Set new color
-        state.currentGuess[slotIndex] = GameColor(rawValue: nextIndex)
     }
 
     var hasError: Bool {

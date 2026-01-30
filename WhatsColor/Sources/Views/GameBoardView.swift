@@ -36,7 +36,7 @@ struct GameRowView: View {
     var body: some View {
         HStack(spacing: 0) {
             // Color slots
-            HStack(spacing: 10) {
+            HStack(spacing: 14) {
                 ForEach(0..<4, id: \.self) { index in
                     SlotView(
                         // For active row, show currentGuess; for others, show row.colors
@@ -55,16 +55,6 @@ struct GameRowView: View {
                             if isActive {
                                 viewModel.state.currentGuess[index] = color
                                 viewModel.selectSlot(at: index)
-                            }
-                        },
-                        onSwipeLeft: {
-                            if isActive {
-                                viewModel.cycleColor(at: index, direction: -1)
-                            }
-                        },
-                        onSwipeRight: {
-                            if isActive {
-                                viewModel.cycleColor(at: index, direction: 1)
                             }
                         }
                     )
@@ -88,11 +78,6 @@ struct SlotView: View {
     @ObservedObject var viewModel: GameViewModel
     let onTap: () -> Void
     let onDrop: (GameColor) -> Void
-    let onSwipeLeft: () -> Void
-    let onSwipeRight: () -> Void
-
-    @State private var dragOffset: CGFloat = 0
-    @State private var startLocation: CGPoint = .zero
 
     var body: some View {
         let showTargetEffect = viewModel.dropTargetIndex == slotIndex && isActive
@@ -124,6 +109,7 @@ struct SlotView: View {
                             }
                     }
                 )
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.dropTargetIndex)
 
             // Filled slot
             if let color = color {
@@ -132,6 +118,8 @@ struct SlotView: View {
                     .frame(width: 45, height: 45)
                     .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
                     .scaleEffect(showTargetEffect ? 0.9 : 1.0)
+                    .opacity(viewModel.sourceSlotIndex == slotIndex ? 0.0 : 1.0) // Hide source while dragging
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.dropTargetIndex)
             }
 
             // Selection indicator for active slot
@@ -146,40 +134,41 @@ struct SlotView: View {
                     )
             }
         }
-        .offset(x: dragOffset)
         .contentShape(Rectangle())
-        .onTapGesture {
-            if isActive {
-                onTap()
-            }
-        }
         .gesture(
-            DragGesture(minimumDistance: 20)
+            DragGesture(minimumDistance: 0, coordinateSpace: .global)
                 .onChanged { value in
                     if isActive {
-                        if startLocation == .zero {
-                            startLocation = value.location
+                        if viewModel.activeDragColor == nil {
+                            // Start dragging if we have a color and moved enough
+                            if abs(value.translation.width) > 10 || abs(value.translation.height) > 10 {
+                                if let color = color {
+                                    viewModel.activeDragColor = color
+                                    viewModel.sourceSlotIndex = slotIndex
+                                    SoundManager.shared.playDragStart()
+                                    SoundManager.shared.hapticMedium()
+                                }
+                            }
                         }
-                        dragOffset = value.location.x - startLocation.x
+                        
+                        // Update position for the global overlay
+                        if viewModel.activeDragColor != nil {
+                            viewModel.updateDragPosition(value.location)
+                        }
                     }
                 }
                 .onEnded { value in
                     if isActive {
-                        let dragDistance = value.location.x - startLocation.x
-                        
-                        if dragDistance < 0 {
-                            // Swipe left
-                            onSwipeLeft()
+                        if viewModel.activeDragColor == nil {
+                            // If we never triggered the drag threshold, treat as tap
+                            onTap()
                         } else {
-                            // Swipe right
-                            onSwipeRight()
+                            // Complete the drag-and-swap only upon release
+                            viewModel.endDragging()
                         }
-                        dragOffset = 0
-                        startLocation = .zero
                     }
                 }
         )
-        .animation(.easeOut(duration: 0.2), value: dragOffset)
     }
 }
 
@@ -198,7 +187,7 @@ struct FeedbackView: View {
                 }
             }
         }
-        .padding(.leading, 20)
+        .padding(.leading, 18)
     }
 }
 

@@ -71,7 +71,10 @@ struct HorizontalColorButton: View {
                 )
             
             // Selection / Press highlight
-            if isSelected || isPressing {
+            let isDragActive = viewModel.activeDragColor != nil
+            let showingSelection = isDragActive ? (viewModel.activeDragColor == color) : isSelected
+            
+            if showingSelection || isPressing {
                 Circle()
                     .stroke(Color.white, lineWidth: 2.5)
                     .frame(width: 40, height: 40)
@@ -90,6 +93,7 @@ struct HorizontalColorButton: View {
                         // Start drag once we move a bit to distinguish from tap
                         if abs(value.translation.width) > 5 || abs(value.translation.height) > 5 {
                             viewModel.activeDragColor = color
+                            // We don't call selectColor here anymore to avoid premature board update
                             SoundManager.shared.playDragStart()
                             SoundManager.shared.hapticMedium()
                         }
@@ -99,15 +103,13 @@ struct HorizontalColorButton: View {
                 .onEnded { value in
                     isPressing = false
                     
-                    // Distinguish between tap and drag
-                    let distance = sqrt(pow(value.translation.width, 2) + pow(value.translation.height, 2))
-                    if distance < 10 {
+                    if viewModel.activeDragColor == nil {
                         SoundManager.shared.playSelection()
                         SoundManager.shared.hapticLight()
                         onTap()
+                    } else {
+                        viewModel.endDragging()
                     }
-                    
-                    viewModel.endDragging()
                 }
         )
     }
