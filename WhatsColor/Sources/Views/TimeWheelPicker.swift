@@ -14,9 +14,9 @@ struct TimeWheelPicker: View {
     
     private let minTime: Int = 10
     private let maxTime: Int = 600
-    private let tickSpacing: CGFloat = 12
-    private let viewHeight: CGFloat = 320
-    private let knobTravelLimit: CGFloat = 100 // How far knob can move before ruler slides
+    private let tickSpacing: CGFloat = 10
+    private let viewHeight: CGFloat = 220
+    private let knobTravelLimit: CGFloat = 70 // How far knob can move before ruler slides
     
     var body: some View {
         HStack(spacing: 0) {

@@ -78,8 +78,9 @@ struct StatusDisplayView: View {
                     .font(.system(size: 36, weight: .bold, design: .monospaced))
                     .foregroundColor(.gameRed)
                     .shadow(color: .gameRed.opacity(0.5), radius: 4, x: 0, y: 0)
-                    .frame(minWidth: 60, alignment: .leading)
+                    .frame(minWidth: 75, alignment: .leading)
                     .monospacedDigit()
+                    .minimumScaleFactor(0.8)
 
                 Text("SEC")
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
