@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-enum GameColor: Int, CaseIterable, Identifiable {
+enum GameColor: Int, CaseIterable, Identifiable, Codable {
     case red = 0
     case green = 1
     case orange = 2

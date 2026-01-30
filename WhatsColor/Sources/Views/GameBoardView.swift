@@ -6,18 +6,8 @@ struct GameBoardView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Board panel
-            HStack(spacing: 15) {
-                // Row numbers - top to bottom
-                VStack(spacing: 12) {
-                    ForEach(1...7, id: \.self) { rowNum in
-                        RowNumberView(
-                            number: rowNum,
-                            isActive: viewModel.isCurrentRowActive && viewModel.getCurrentRowNumber() == rowNum
-                        )
-                    }
-                }
-
-                // Game grid - top to bottom to match row numbers
+            HStack(spacing: 0) {
+                // Game grid - top to bottom
                 VStack(spacing: 12) {
                     ForEach(viewModel.state.attempts) { row in
                         GameRowView(
@@ -37,18 +27,6 @@ struct GameBoardView: View {
     }
 }
 
-struct RowNumberView: View {
-    let number: Int
-    let isActive: Bool
-
-    var body: some View {
-        Text("\(number)")
-            .font(.system(size: 12, weight: .medium))
-            .foregroundColor(isActive ? .white : .gray.opacity(0.6))
-            .frame(width: 15, height: 40)
-    }
-}
-
 struct GameRowView: View {
     let row: GameRowModel
     let mode: FeedbackMode
@@ -64,12 +42,18 @@ struct GameRowView: View {
                         // For active row, show currentGuess; for others, show row.colors
                         color: isActive ? viewModel.state.currentGuess[index] : row.colors[index],
                         isActive: isActive,
+                        isSelected: isActive && viewModel.state.activeIndex == index,
                         slotIndex: index,
                         rowNumber: row.rowNumber,
                         onTap: {
                             if isActive {
                                 viewModel.selectSlot(at: index)
-                                viewModel.showColorPicker = true
+                            }
+                        },
+                        onDrop: { color in
+                            if isActive {
+                                viewModel.state.currentGuess[index] = color
+                                viewModel.selectSlot(at: index)
                             }
                         },
                         onSwipeLeft: {
@@ -97,9 +81,11 @@ struct GameRowView: View {
 struct SlotView: View {
     let color: GameColor?
     let isActive: Bool
+    let isSelected: Bool
     let slotIndex: Int
     let rowNumber: Int
     let onTap: () -> Void
+    let onDrop: (GameColor) -> Void
     let onSwipeLeft: () -> Void
     let onSwipeRight: () -> Void
 
@@ -114,7 +100,7 @@ struct SlotView: View {
                 .frame(width: 40, height: 40)
                 .overlay(
                     RoundedRectangle(cornerRadius: 6)
-                        .stroke(isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3), lineWidth: isActive ? 2 : 1)
+                        .stroke(isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3)), lineWidth: isSelected ? 3 : (isActive ? 2 : 1))
                 )
 
             // Filled slot
@@ -122,19 +108,33 @@ struct SlotView: View {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(color.color)
                     .frame(width: 40, height: 40)
-                    .shadow(color: .white.opacity(0.3), radius: 2, x: 0, y: 0)
+                    .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
             }
 
-            // Tap indicator for active slots
-            if isActive {
+            // Selection indicator for active slot
+            if isSelected {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.clear)
                     .frame(width: 40, height: 40)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.white.opacity(0.8), lineWidth: 2)
+                            .stroke(Color.white, lineWidth: 3)
+                            .scaleEffect(1.1)
                     )
             }
+        }
+        .onDrop(of: [.text], isTargeted: nil) { providers in
+            if isActive, let first = providers.first {
+                first.loadObject(ofClass: NSString.self) { string, error in
+                    if let str = string as? String, let raw = Int(str), let color = GameColor(rawValue: raw) {
+                        DispatchQueue.main.async {
+                            onDrop(color)
+                        }
+                    }
+                }
+                return true
+            }
+            return false
         }
         .offset(x: dragOffset)
         .contentShape(Rectangle())

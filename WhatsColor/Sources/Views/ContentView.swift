@@ -19,13 +19,6 @@ struct ContentView: View {
                     .frame(maxHeight: .infinity)
                     .padding(.vertical, 10)
 
-                // Color picker dialog (centered overlay)
-                if viewModel.showColorPicker {
-                    HorizontalColorPickerView(viewModel: viewModel)
-                        .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.2), value: viewModel.showColorPicker)
-                }
-
                 // Pause/Restart confirmation dialog
                 if viewModel.showPauseDialog {
                     PauseDialogView(viewModel: viewModel)
@@ -81,6 +74,11 @@ struct DeviceView: View {
                 GameBoardView(viewModel: viewModel)
                     .padding(.horizontal, 20)
                     .padding(.top, 4)
+
+                // Inline Color Picker
+                HorizontalColorPickerView(viewModel: viewModel)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
 
                 // Bottom panel - status and knob only
                 StatusControlPanelView(viewModel: viewModel)

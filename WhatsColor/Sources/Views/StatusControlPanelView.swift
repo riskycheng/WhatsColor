@@ -5,10 +5,6 @@ struct StatusControlPanelView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            // Range indicator
-            RangeIndicatorView()
-                .frame(maxWidth: .infinity)
-
             // Status display
             StatusDisplayView(viewModel: viewModel)
                 .frame(maxWidth: .infinity)
@@ -33,37 +29,6 @@ struct StatusControlPanelView: View {
             .padding(.horizontal, 5)
         }
         .padding(.horizontal, 20)
-    }
-}
-
-struct RangeIndicatorView: View {
-    var body: some View {
-        HStack(spacing: 8) {
-            Text("Range")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white.opacity(0.7))
-                .frame(width: 50, alignment: .leading)
-
-            Spacer()
-
-            // Color blocks - larger
-            HStack(spacing: 6) {
-                ForEach(GameColor.allCases) { color in
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(color.color)
-                        .frame(width: 18, height: 18)
-                        .shadow(color: color.color.opacity(0.4), radius: 1, x: 0, y: 1)
-                }
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(Color.black)
-        .cornerRadius(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-        )
     }
 }
 

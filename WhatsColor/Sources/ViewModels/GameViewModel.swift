@@ -4,7 +4,6 @@ import Combine
 
 class GameViewModel: ObservableObject {
     @Published var state: GameStateModel
-    @Published var showColorPicker: Bool = false
 
     // Dialog states
     @Published var showPauseDialog: Bool = false
