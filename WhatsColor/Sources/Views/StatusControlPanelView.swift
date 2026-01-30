@@ -4,7 +4,7 @@ struct StatusControlPanelView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             // Status display
             StatusDisplayView(viewModel: viewModel)
                 .frame(maxWidth: .infinity)
@@ -28,7 +28,7 @@ struct StatusControlPanelView: View {
             }
             .padding(.horizontal, 5)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
     }
 }
 
@@ -52,7 +52,7 @@ struct StatusDisplayView: View {
                     .foregroundColor(.gameRed.opacity(0.8))
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.black)
@@ -71,7 +71,7 @@ struct StatusDisplayView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .background(Color.black)
         .cornerRadius(10)
         .overlay(

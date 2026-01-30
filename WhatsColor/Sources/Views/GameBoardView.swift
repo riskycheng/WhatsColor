@@ -8,7 +8,7 @@ struct GameBoardView: View {
             // Board panel
             HStack(spacing: 0) {
                 // Game grid - top to bottom
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     ForEach(viewModel.state.attempts) { row in
                         GameRowView(
                             row: row,

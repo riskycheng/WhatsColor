@@ -30,7 +30,7 @@ struct HorizontalColorPickerView: View {
             }
         }
         .padding(.horizontal, 15)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .background(Color.panelDark)
         .cornerRadius(10)
         .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)

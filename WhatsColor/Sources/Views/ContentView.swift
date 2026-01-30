@@ -1,6 +1,4 @@
 import SwiftUI
-
-import SwiftUI
 import AudioToolbox
 
 struct ContentView: View {
@@ -8,18 +6,17 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
+            ZStack(alignment: .top) {
                 // Background
                 Color.launchBackground
                     .ignoresSafeArea()
 
-                // Main game device - centered
+                // Main game device - shifted down slightly to allow for the back button
                 DeviceView(viewModel: viewModel)
                     .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
-                    .frame(maxHeight: .infinity)
-                    .padding(.vertical, 10)
-
-                // Pause/Restart confirmation dialog
+                    .padding(.top, 12) // Moved up closer to the top boundary
+                
+                // Dialog overlays...
                 if viewModel.showPauseDialog {
                     PauseDialogView(viewModel: viewModel)
                         .transition(.opacity)
@@ -66,123 +63,102 @@ struct DeviceView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Top toolbar with reset button - aligned with game board
-            HStack(alignment: .center) {
+        ZStack(alignment: .top) {
+            // External "Stitched" Reset Button - Peeking from the back
+            HStack {
                 ResetButtonView(onTap: {
                     viewModel.pauseGame()
                 })
+                .padding(.leading, 45) // Better alignment with the corner curve
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 4)
+            .offset(y: -14) // Adjusted for the larger button height
 
             // Main device body
             VStack(spacing: 0) {
-                // Antenna (visual decoration)
-                Rectangle()
-                    .fill(Color.gray.opacity(0.7))
-                    .frame(width: 80, height: 30)
-                    .cornerRadius(15, corners: [.bottomLeft, .bottomRight])
-                    .offset(y: 15)
-
+                Spacer(minLength: 16)
+                
                 // Game board area
                 GameBoardView(viewModel: viewModel)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 0)
+                    .padding(.horizontal, 16)
+
+                Spacer(minLength: 8)
 
                 // Inline Color Picker
                 HorizontalColorPickerView(viewModel: viewModel)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 6)
+                    .padding(.horizontal, 16)
+
+                Spacer(minLength: 8)
 
                 // Bottom panel - status and knob only
                 StatusControlPanelView(viewModel: viewModel)
-                    .padding(.top, 6)
-                    .padding(.bottom, 8)
+                
+                Spacer(minLength: 12)
             }
             .background(Color.deviceGreen)
             .cornerRadius(40)
             .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
-            .padding(.top, -30)
         }
     }
 }
 
 struct ResetButtonView: View {
     let onTap: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
         Button(action: {
+            // Mechanical feedback - Standard selection click + Medium impact
             SoundManager.shared.playSelection()
             SoundManager.shared.hapticMedium()
             onTap()
         }) {
-            HStack(spacing: 8) {
-                // Reset icon
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.white.opacity(0.9))
-
-                // Reset text label
-                Text("RESET")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white.opacity(0.9))
+            // Squared metallic/Hardware tab with realistic lighting
+            ZStack {
+                // Base structure with metallic gradient - NO RADIUS
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(white: 0.15), location: 0),
+                                .init(color: Color(white: 0.25), location: 0.45),
+                                .init(color: Color(white: 0.20), location: 0.55),
+                                .init(color: Color(white: 0.12), location: 1)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                
+                // Top bevel highlight (specular hit)
+                Rectangle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.35), .clear],
+                            startPoint: .top,
+                            endPoint: .center
+                        ),
+                        lineWidth: 1.5
+                    )
+                
+                // Fine industrial texture/noise layer (subtle stroke)
+                Rectangle()
+                    .stroke(Color.black.opacity(0.4), lineWidth: 0.5)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-
-            // Layered background
-            .overlay(
-                ZStack {
-                    // Shadow layer at bottom
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.gray.opacity(0.6))
-                        .offset(y: 2)
-
-                    // Button face
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.gray.opacity(0.55),
-                                    Color.gray.opacity(0.35)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-
-                    // Border
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.white.opacity(0.25), lineWidth: 1)
-
-                    // Highlight
-                    RoundedRectangle(cornerRadius: 7)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.12),
-                                    Color.white.opacity(0.0)
-                                ],
-                                startPoint: .top,
-                                endPoint: .center
-                            )
-                        )
-                        .padding(1)
-                }
-            )
+            .frame(width: 85, height: 28)
+            .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
         }
-        .buttonStyle(PlainButtonStyle())
-        .offset(y: isPressed ? 2 : 0)
-        .animation(.easeInOut(duration: 0.1), value: isPressed)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
+        .buttonStyle(PressedButtonStyle()) // Custom style for tactile press feel
+    }
+}
+
+// Custom button style for a realistic "click" depress effect
+struct PressedButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .offset(y: configuration.isPressed ? 1 : 0) // Visual depress
+            .brightness(configuration.isPressed ? -0.05 : 0) // Slight darkening on press
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
