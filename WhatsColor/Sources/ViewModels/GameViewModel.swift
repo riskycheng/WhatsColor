@@ -12,7 +12,16 @@ class GameViewModel: ObservableObject {
     @Published var showGameOverDialog: Bool = false
 
     // Message/Toast state
-    @Published var toastMessage: String? = nil
+    struct ToastInfo: Equatable {
+        let message: String
+        let type: ToastType
+    }
+    
+    enum ToastType {
+        case info, success, warning, error
+    }
+    
+    @Published var toast: ToastInfo? = nil
     private var toastTimer: Timer?
 
     // Drag state
@@ -103,11 +112,13 @@ class GameViewModel: ObservableObject {
         startNewGame()
     }
 
-    func showToast(_ message: String) {
-        toastMessage = message
+    func showToast(_ message: String, type: ToastType = .info) {
+        toast = ToastInfo(message: message, type: type)
         toastTimer?.invalidate()
-        toastTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
-            self?.toastMessage = nil
+        toastTimer = Timer.scheduledTimer(withTimeInterval: 2.2, repeats: false) { [weak self] _ in
+            withAnimation {
+                self?.toast = nil
+            }
         }
     }
 
@@ -333,14 +344,14 @@ class GameViewModel: ObservableObject {
 
         // Check if all slots are filled
         guard state.currentGuess.allSatisfy({ $0 != nil }) else {
-            showToast("FILL ALL SLOTS")
+            showToast("FILL ALL SLOTS", type: .warning)
             return
         }
 
         // Check for unique colors... (rest of function)
         let colors = state.currentGuess.compactMap { $0 }
         guard Set(colors).count == 4 else {
-            showToast("USE UNIQUE COLORS")
+            showToast("USE UNIQUE COLORS", type: .warning)
             return
         }
 
@@ -445,7 +456,7 @@ class GameViewModel: ObservableObject {
                     showGameOverDialog = true
                     stopTimer()
                 } else {
-                    showToast("LEVEL \(state.level - 1) CLEAR")
+                    showToast("LEVEL \(state.level - 1) CLEAR", type: .success)
                     SoundManager.shared.playSuccess()
                     SoundManager.shared.hapticSuccess()
                     stopTimer() // Stop current level timer
@@ -478,7 +489,7 @@ class GameViewModel: ObservableObject {
             stopTimer()
         } else {
             // Show toast for incorrect guess
-            showToast("TRY AGAIN")
+            showToast("TRY AGAIN", type: .info)
             SoundManager.shared.hapticMedium()
         }
     }
