@@ -317,6 +317,8 @@ class GameViewModel: ObservableObject {
     func moveToNextSlot() {
         if state.activeIndex < 3 {
             state.activeIndex += 1
+        } else {
+            state.activeIndex = 0
         }
     }
 

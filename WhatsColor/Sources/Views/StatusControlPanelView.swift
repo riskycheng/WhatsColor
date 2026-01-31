@@ -9,16 +9,24 @@ struct StatusControlPanelView: View {
             StatusDisplayView(viewModel: viewModel)
             
             // 2. Control Instrument (Rotary Knob)
-            VStack(spacing: 4) {
+            VStack(spacing: 8) {
                 SubmitKnobView(viewModel: viewModel)
                 
-                // Subtle shadow/glow under the knob housing
+                // Realistic contact shadow for the hardware unit
                 Ellipse()
-                    .fill(Color.black.opacity(0.4))
-                    .frame(width: 90, height: 10)
-                    .blur(radius: 6)
+                    .fill(
+                        RadialGradient(
+                            colors: [Color.black, .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 40
+                        )
+                    )
+                    .frame(width: 80, height: 12)
+                    .opacity(0.6)
+                    .blur(radius: 4)
             }
-            .padding(.bottom, 20) // Reduced to fit within its parent comfortably
+            .padding(.bottom, 12) // Tightened internal padding to match start screen feel
         }
     }
 }
@@ -174,59 +182,48 @@ struct IndustrialRotaryButton: View {
     
     var body: some View {
         ZStack {
-            // 1. OUTER HOUSING (Heavy Duty Gunmetal)
+            // 1. OUTER HOUSING / BASEPLATE (Subtle Matte Metal)
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [Color(white: 0.35), Color(white: 0.15)],
+                        colors: [Color(white: 0.22), Color(white: 0.15)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 168, height: 168)
+                .frame(width: 108, height: 108)
                 .overlay(
                     Circle()
                         .stroke(
-                            LinearGradient(colors: [.white.opacity(0.3), .clear, .black.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            lineWidth: 3
+                            LinearGradient(colors: [.white.opacity(0.15), .black.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1.5
                         )
                 )
-                .shadow(color: .black.opacity(0.8), radius: 25, y: 15)
+                .shadow(color: .black.opacity(0.5), radius: 12, y: 6)
             
-            // 2. ROTATING DIAL (Brushed Graphite)
+            // 2. ROTATING BEZEL WITH TICKS (High Contrast Metallic)
             ZStack {
-                // Dial Base Side Wall (Visual depth)
-                Circle()
-                    .fill(Color(white: 0.08))
-                    .frame(width: 156, height: 156)
-                    .offset(y: 5)
-
-                // Dial Face (Lathed texture)
+                // Background for ticks - Metallic Silver for high contrast
                 Circle()
                     .fill(
-                        AngularGradient(
-                            stops: [
-                                .init(color: Color(white: 0.28), location: 0),
-                                .init(color: Color(white: 0.18), location: 0.25),
-                                .init(color: Color(white: 0.28), location: 0.5),
-                                .init(color: Color(white: 0.18), location: 0.75),
-                                .init(color: Color(white: 0.28), location: 1)
-                            ],
-                            center: .center
+                        LinearGradient(
+                            colors: [Color(white: 0.5), Color(white: 0.35)],
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
                     )
-                    .frame(width: 152, height: 152)
+                    .frame(width: 102, height: 102)
                     .overlay(
                         Circle()
-                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                            .stroke(Color.black.opacity(0.3), lineWidth: 0.8)
                     )
-                
-                // Fine-Grained Ticks
+
+                // Fine radial ticks - Darker for visibility on light background
                 ForEach(0..<120) { i in
                     Rectangle()
-                        .fill(Color.white.opacity(i % 10 == 0 ? 0.45 : 0.15))
-                        .frame(width: i % 10 == 0 ? 3 : 1, height: i % 10 == 0 ? 20 : 8)
-                        .offset(y: -66)
+                        .fill(Color.black.opacity(0.45))
+                        .frame(width: 1.2, height: 12)
+                        .offset(y: -40)
                         .rotationEffect(.degrees(Double(i) * 3))
                 }
             }
@@ -234,7 +231,7 @@ struct IndustrialRotaryButton: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        let vector = CGVector(dx: value.location.x - 84, dy: value.location.y - 84)
+                        let vector = CGVector(dx: value.location.x - 54, dy: value.location.y - 54)
                         let angle = atan2(vector.dy, vector.dx)
                         let newRotation = angle * 180 / .pi
                         
@@ -246,78 +243,46 @@ struct IndustrialRotaryButton: View {
                     }
             )
             
-            // 3. CENTRAL RECESSION
-            Circle()
-                .fill(Color.black)
-                .frame(width: 106, height: 106)
-                .shadow(color: .white.opacity(0.12), radius: 2, y: -2)
-            
-            // 4. ACTION BUTTON (Vivid Industrial Red)
+            // 3. INNER CONTROL PLATE (Ultra-Compact Center)
             ZStack {
-                // Pressed State logic integrated into one gradient
+                // The physical knob surface
                 Circle()
                     .fill(
-                        RadialGradient(
-                            colors: [
-                                isPressed ? Color(red: 0.6, green: 0, blue: 0.05) : Color(red: 1.0, green: 0.15, blue: 0.15),
-                                Color(red: 0.45, green: 0, blue: 0)
-                            ],
-                            center: isPressed ? .center : .topLeading,
-                            startRadius: 0,
-                            endRadius: 48
+                        LinearGradient(
+                            colors: [Color(white: 0.12), Color(white: 0.05)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 94, height: 94)
+                    .frame(width: 62, height: 62)
                     .overlay(
                         Circle()
                             .stroke(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.5), .clear, .black.opacity(0.5)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 3.5
+                                LinearGradient(colors: [.white.opacity(0.1), .black.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 1
                             )
                     )
+                    .shadow(color: .black.opacity(0.4), radius: 3, y: 1.5)
                 
-                // Hardware Printed Label (More readable)
-                VStack(spacing: 3) {
-                    Text(label)
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
-                        .foregroundColor(.black.opacity(0.4))
-                        .overlay(
-                            Text(label)
-                                .font(.system(size: 9, weight: .black, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.15))
-                                .offset(y: -0.5)
-                        )
-                    
-                    Image(systemName: "hand.tap.fill")
-                        .font(.system(size: 11))
-                        .foregroundColor(.black.opacity(0.3))
-                }
-                .offset(y: 16)
-                
-                // High-End Status Gem
+                // 4. CENTRAL GLOWING LED
                 ZStack {
                     Circle()
-                        .fill(Color.black.opacity(0.7))
-                        .frame(width: 18, height: 18)
+                        .fill(Color.black)
+                        .frame(width: 12, height: 12)
                     
                     Circle()
                         .fill(Color.gameGreen)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 5, height: 5)
                         .blur(radius: 0.5)
-                        .shadow(color: .gameGreen.opacity(0.8), radius: 6)
+                        .shadow(color: .gameGreen.opacity(0.9), radius: 5)
                     
                     Circle()
-                        .fill(Color.white)
-                        .frame(width: 2, height: 2)
-                        .offset(x: -1.5, y: -1.5)
+                        .fill(Color.white.opacity(0.8))
+                        .frame(width: 1.5, height: 1.5)
+                        .offset(x: -0.8, y: -0.8)
                 }
-                .offset(y: -22)
             }
-            .scaleEffect(isPressed ? 0.94 : 1.0)
+            .scaleEffect(isPressed ? 0.96 : 1.0)
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in

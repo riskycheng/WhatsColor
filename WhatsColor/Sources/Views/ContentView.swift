@@ -21,7 +21,7 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
                 .padding(.top, 12)
-                .padding(.bottom, 15) // Reduced from 30 to move device down
+                .padding(.bottom, 50) // Ensures a clear external margin from the bottom of the screen
                 
                 // Dialog overlays...
                 if viewModel.showPauseDialog {
@@ -128,7 +128,7 @@ struct DeviceView: View {
                 StatusControlPanelView(viewModel: viewModel)
                     .padding(.horizontal, 12)
                 
-                Spacer(minLength: 40) // INCREASED bottom spacer to push knob up from boundary
+                Spacer(minLength: 15) // Reduced internal spacer to match start screen's bottom tight feel
             }
             .background(Color.deviceGreen)
             .cornerRadius(40)
