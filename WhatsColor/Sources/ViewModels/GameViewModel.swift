@@ -240,8 +240,10 @@ class GameViewModel: ObservableObject {
         showPauseDialog = false
         isShowingStartScreen = true
         gameStarted = false
-        // Reset level if needed, or keep for progression (keeping for progression is usually better)
-        // Reset secret code memory to force full pipeline
+        // Reset level to 1 for a fresh start, or keep it if it's a "Restart Level"
+        // Let's reset to 1 to match the "Back to Start Screen" behavior
+        state.level = 1
+        timeRemaining = 120
         selectedSecretCode = [] 
         currentSecretSlot = 0
     }

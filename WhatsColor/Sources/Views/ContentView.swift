@@ -21,6 +21,7 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
                 .padding(.top, 12)
+                .padding(.bottom, 15) // Reduced from 30 to move device down
                 
                 // Dialog overlays...
                 if viewModel.showPauseDialog {
@@ -109,29 +110,28 @@ struct DeviceView: View {
 
             // Main device body
             VStack(spacing: 0) {
-                Spacer(minLength: 16)
+                Spacer(minLength: 20) // Tightened top
                 
                 // Game board area
                 GameBoardView(viewModel: viewModel)
                     .padding(.horizontal, 16)
 
-                Spacer(minLength: 8)
+                Spacer(minLength: 12)
 
                 // Inline Color Picker
                 HorizontalColorPickerView(viewModel: viewModel)
                     .padding(.horizontal, 16)
 
-                Spacer(minLength: 8)
+                Spacer(minLength: 12)
 
                 // Bottom panel - status and knob only
                 StatusControlPanelView(viewModel: viewModel)
                 
-                Spacer(minLength: 20) // Increased bottom margin
+                Spacer(minLength: 15) // Standardized bottom internal spacer
             }
             .background(Color.deviceGreen)
             .cornerRadius(40)
             .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
-            .padding(.bottom, 20) // Ensure margin to bottom boundary
         }
     }
 }

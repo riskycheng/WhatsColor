@@ -5,13 +5,13 @@ struct StatusControlPanelView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 12) // Significantly reduced from 25
+            Spacer(minLength: 10)
 
             // Dynamic Informational Panel or Progress display
             StatusDisplayView(viewModel: viewModel)
                 .frame(maxWidth: .infinity)
             
-            Spacer(minLength: 25) // Keeping some space before the knob
+            Spacer(minLength: 35) // Increased margin between timer and knob
 
             // Centered Submit knob - Docked at the bottom
             HStack {
@@ -21,9 +21,9 @@ struct StatusControlPanelView: View {
                 })
                 Spacer()
             }
-            .padding(.bottom, 10) // Reduced from 20
+            .padding(.bottom, 10) // Small padding at bottom
         }
-        .padding(.horizontal, 12) // Reduced from 20
+        .padding(.horizontal, 12)
     }
 }
 
@@ -63,52 +63,47 @@ struct StatusDisplayView: View {
                 .padding(.horizontal, 12) // Reduced from 20
             
             // Right: Elegant Status Cluster
-            VStack(alignment: .leading, spacing: 12) {
-                // Secondary Information Group
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("CURRENT STATUS")
-                        .font(.system(size: 8, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.2))
-                        .tracking(1)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("MISSION DATA")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.3))
+                    .tracking(1)
 
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(viewModel.gameMode == .solo ? "LVL" : "MODE")
-                            .font(.system(size: 10, weight: .black, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.4))
-                        
-                        Text(viewModel.gameMode == .solo ? "\(viewModel.state.level)/500" : "DUAL")
-                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                HStack(spacing: 15) {
+                    // Difficulty Column
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("DIFF")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text(viewModel.state.difficulty.rawValue.uppercased())
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
                             .foregroundColor(.gameGreen)
-                            .shadow(color: .gameGreen.opacity(0.4), radius: 6)
+                            .shadow(color: .gameGreen.opacity(0.4), radius: 4)
                     }
-                }
-                
-                // Active Config Pill
-                HStack(spacing: 8) {
-                    // Difficulty Badge
-                    Text(viewModel.state.difficulty.rawValue)
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(RoundedRectangle(cornerRadius: 4).fill(Color.gameGreen))
+                    .frame(width: 65, alignment: .leading)
                     
-                    // Mode Badge
-                    Text(viewModel.gameMode == .solo ? "SOLO" : "DUAL")
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
-                        .foregroundColor(.gameGreen)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.gameGreen.opacity(0.5), lineWidth: 1)
-                        )
+                    // Divider
+                    Rectangle()
+                        .fill(Color.white.opacity(0.15))
+                        .frame(width: 1, height: 22)
+                    
+                    // Mode/Level Column
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(viewModel.gameMode == .solo ? "LVL" : "MODE")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text(viewModel.gameMode == .solo ? "\(viewModel.state.level)" : "DUAL")
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                            .foregroundColor(.gameGreen)
+                            .shadow(color: .gameGreen.opacity(0.4), radius: 4)
+                    }
+                    .frame(width: 65, alignment: .leading)
                 }
             }
-            .padding(.trailing, 20) // Reduced from 28
+            .padding(.trailing, 20)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 120) // Increased height
+        .frame(height: 100)
         .background(
             ZStack {
                 // Main Panel

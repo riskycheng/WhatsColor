@@ -262,14 +262,14 @@ struct SecretColorCard: View {
                 ZStack {
                     // Glow effect
                     if isSelected {
-                        Circle()
+                        RoundedRectangle(cornerRadius: 12)
                             .fill(color.color.opacity(0.4))
                             .blur(radius: 10)
-                            .frame(width: 60, height: 60)
+                            .frame(width: 55, height: 55)
                     }
                     
-                    // Main circle
-                    Circle()
+                    // Main Square (matching board style)
+                    RoundedRectangle(cornerRadius: 10)
                         .fill(
                             LinearGradient(
                                 colors: [color.color, color.color.opacity(0.7)],
@@ -277,15 +277,14 @@ struct SecretColorCard: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 50, height: 50)
+                        .frame(width: 48, height: 48)
                         .shadow(
                             color: color.color.opacity(0.5),
                             radius: isSelected ? 8 : 4,
-                            x: 0,
-                            y: isSelected ? 4 : 2
+                            x: 0, y: isSelected ? 4 : 2
                         )
                         .overlay(
-                            Circle()
+                            RoundedRectangle(cornerRadius: 10)
                                 .stroke(
                                     isSelected ? Color.white : Color.white.opacity(0.2),
                                     lineWidth: isSelected ? 3 : 1
@@ -293,7 +292,7 @@ struct SecretColorCard: View {
                         )
                     
                     // Highlight
-                    Circle()
+                    RoundedRectangle(cornerRadius: 8)
                         .fill(
                             RadialGradient(
                                 colors: [
@@ -305,8 +304,8 @@ struct SecretColorCard: View {
                                 endRadius: 25
                             )
                         )
-                        .frame(width: 44, height: 44)
-                        .offset(x: -6, y: -6)
+                        .frame(width: 40, height: 40)
+                        .offset(x: -4, y: -4)
                     
                     // Selection checkmark
                     if isSelected {

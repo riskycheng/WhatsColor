@@ -124,7 +124,7 @@ struct GameStartView: View {
             .padding(.horizontal, 40)
             .buttonStyle(PressedButtonStyle())
             
-            Spacer(minLength: 40)
+            Spacer(minLength: 15) // Standardized bottom internal spacer
         }
         .background(Color.deviceGreen)
         .cornerRadius(40)
