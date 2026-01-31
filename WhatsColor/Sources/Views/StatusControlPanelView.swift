@@ -4,122 +4,110 @@ struct StatusControlPanelView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 25) { // Adjusted spacing for balanced layout
-            // 1. Telemetry Dashboard (Black Panel)
-            StatusDisplayView(viewModel: viewModel)
-            
-            // 2. Control Instrument (Rotary Knob)
-            VStack(spacing: 8) {
-                SubmitKnobView(viewModel: viewModel)
-                
-                // Realistic contact shadow for the hardware unit
-                Ellipse()
-                    .fill(
-                        RadialGradient(
-                            colors: [Color.black, .clear],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 40
-                        )
+        ZStack {
+            // Main Panel Background (Unified)
+            RoundedRectangle(cornerRadius: 32)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(white: 0.08), Color.black],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
-                    .frame(width: 80, height: 12)
-                    .opacity(0.6)
-                    .blur(radius: 4)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 32)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.white.opacity(0.12), .clear, .white.opacity(0.05)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
+                .shadow(color: .black.opacity(0.6), radius: 15, x: 0, y: 8)
+
+            HStack(alignment: .center, spacing: 12) {
+                // LEFT SIDE: Telemetry (Timer + Status)
+                VStack(alignment: .leading, spacing: 2) {
+                    // Timer Display
+                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                        Text("\(viewModel.timeRemaining)")
+                            .font(.system(size: 68, weight: .black, design: .monospaced))
+                            .foregroundColor(.gameRed)
+                            .shadow(color: .gameRed.opacity(0.4), radius: 8)
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.5)
+
+                        Text("SEC")
+                            .font(.system(size: 15, weight: .black, design: .monospaced))
+                            .foregroundColor(.gameRed.opacity(0.5))
+                    }
+                    
+                    // Mission Data (Compact)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("MISSION DATA")
+                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.2))
+                            .tracking(1)
+                        
+                        HStack(spacing: 14) {
+                            StatusItemCompact(label: "DIFF", value: viewModel.state.difficulty.rawValue.uppercased(), color: .gameGreen)
+                            
+                            Rectangle()
+                                .fill(Color.white.opacity(0.1))
+                                .frame(width: 1, height: 14)
+                            
+                            StatusItemCompact(
+                                label: viewModel.gameMode == .solo ? "LVL" : "MODE",
+                                value: viewModel.gameMode == .solo ? "\(viewModel.state.level)" : "DUAL",
+                                color: .gameGreen
+                            )
+                        }
+                    }
+                }
+                .padding(.leading, 20)
+                
+                Spacer()
+                
+                // RIGHT SIDE: Control Instrument (Rotary Knob)
+                ZStack {
+                    // Shadow for the knob
+                    Circle()
+                        .fill(RadialGradient(colors: [.black, .clear], center: .center, startRadius: 0, endRadius: 65))
+                        .opacity(0.4)
+                        .frame(width: 120)
+                        .scaleEffect(CGSize(width: 1.0, height: 0.2))
+                        .offset(y: 55)
+
+                    SubmitKnobView(viewModel: viewModel)
+                }
+                .padding(.trailing, 16)
             }
-            .padding(.bottom, 12) // Tightened internal padding to match start screen feel
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 140) // Reduced from 160 to 140 for a more compact look
+        .padding(.horizontal, 4)
     }
 }
 
-struct StatusDisplayView: View {
-    @ObservedObject var viewModel: GameViewModel
-
+struct StatusItemCompact: View {
+    let label: String
+    let value: String
+    let color: Color
+    
     var body: some View {
-        HStack(alignment: .center, spacing: 0) {
-            // Left: Large Timer display
-            HStack(alignment: .lastTextBaseline, spacing: 6) {
-                Text("\(viewModel.timeRemaining)")
-                    .font(.system(size: 72, weight: .black, design: .monospaced))
-                    .foregroundColor(.gameRed)
-                    .shadow(color: .gameRed.opacity(0.5), radius: 12)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.5)
-
-                Text("SEC")
-                    .font(.system(size: 16, weight: .black, design: .monospaced))
-                    .foregroundColor(.gameRed.opacity(0.6))
-            }
-            .padding(.leading, 24)
-            
-            Spacer()
-            
-            // Right: Elegant Status Cluster
-            VStack(alignment: .leading, spacing: 6) {
-                Text("MISSION DATA")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.3))
-                    .tracking(1)
-
-                HStack(spacing: 12) {
-                    // Difficulty Column
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("DIFF")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.5))
-                        Text(viewModel.state.difficulty.rawValue.uppercased())
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                            .foregroundColor(.gameGreen)
-                            .shadow(color: .gameGreen.opacity(0.4), radius: 4)
-                    }
-                    .frame(width: 60, alignment: .leading)
-                    
-                    // Divider
-                    Rectangle()
-                        .fill(Color.white.opacity(0.15))
-                        .frame(width: 1, height: 20)
-                    
-                    // Mode/Level Column
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(viewModel.gameMode == .solo ? "LVL" : "MODE")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.5))
-                        Text(viewModel.gameMode == .solo ? "\(viewModel.state.level)" : "DUAL")
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                            .foregroundColor(.gameGreen)
-                            .shadow(color: .gameGreen.opacity(0.4), radius: 4)
-                    }
-                    .frame(width: 35, alignment: .leading)
-                }
-            }
-            .padding(.trailing, 24)
+        HStack(spacing: 4) {
+            Text(label)
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(.white.opacity(0.4))
+            Text(value)
+                .font(.system(size: 12, weight: .bold, design: .monospaced)) // Balanced weight
+                .foregroundColor(color)
+                .shadow(color: color.opacity(0.3), radius: 2)
+                .lineLimit(1)
+                .fixedSize()
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 110)
-        .background(
-            ZStack {
-                // Main Panel
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(white: 0.05), Color.black],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                
-                // Subtle Glass/Metal Reflections
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(
-                        LinearGradient(
-                            colors: [.white.opacity(0.15), .clear, .white.opacity(0.05)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.5
-                    )
-            }
-            .shadow(color: .black.opacity(0.6), radius: 10, x: 0, y: 5)
-        )
     }
 }
 
@@ -142,12 +130,18 @@ struct SubmitKnobView: View {
             isPressed: $isPressed,
             label: "HOLD SUBMIT",
             onRotate: { newRotation in
-                // Logic: Every 30 degrees increment, cycle color (increased sensitivity)
-                let diff = newRotation - lastFiredRotation
-                if abs(diff) > 30 {
+                // Logic: Handle angular wrap-around to prevent back-and-forth jumps
+                var diff = newRotation - lastFiredRotation
+                if diff > 180 { diff -= 360 }
+                if diff < -180 { diff += 360 }
+
+                if abs(diff) > 28 { // Slightly improved sensitivity
                     viewModel.cycleColor(forward: diff > 0)
                     lastFiredRotation = newRotation
+                    
+                    // Natural sensory feedback for rotation
                     SoundManager.shared.playSelection()
+                    SoundManager.shared.hapticLight()
                 }
             },
             onPressStart: {
@@ -188,50 +182,56 @@ struct IndustrialRotaryButton: View {
     var onPressStart: (() -> Void)? = nil
     var onPressEnd: (() -> Void)? = nil
     
+    // Industrial Dimensions (ULTRA-REFINED)
+    private let housingSize: CGFloat = 110
+    private let bezelSize: CGFloat = 102
+    private let plateSize: CGFloat = 72 // Enlarged from 56
+    
     var body: some View {
         ZStack {
-            // 1. OUTER HOUSING / BASEPLATE (Subtle Matte Metal)
+            // 1. OUTER HOUSING / BASEPLATE (Deep Charcoal Metal)
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [Color(white: 0.22), Color(white: 0.15)],
+                        colors: [Color(white: 0.22), Color(white: 0.1)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 108, height: 108)
+                .frame(width: housingSize, height: housingSize)
                 .overlay(
                     Circle()
                         .stroke(
-                            LinearGradient(colors: [.white.opacity(0.15), .black.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            lineWidth: 1.5
+                            LinearGradient(colors: [.white.opacity(0.1), .black.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1.2
                         )
                 )
-                .shadow(color: .black.opacity(0.5), radius: 12, y: 6)
+                .shadow(color: .black.opacity(0.6), radius: 8, y: 5)
             
-            // 2. ROTATING BEZEL WITH TICKS (High Contrast Metallic)
+            // 2. ROTATING BEZEL WITH TICKS (Refined Gunmetal)
             ZStack {
-                // Background for ticks - Metallic Silver for high contrast
+                // Background for ticks - Consistent Matte Metal
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color(white: 0.5), Color(white: 0.35)],
-                            startPoint: .top,
-                            endPoint: .bottom
+                            colors: [Color(white: 0.35), Color(white: 0.28)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 102, height: 102)
+                    .frame(width: bezelSize, height: bezelSize)
                     .overlay(
                         Circle()
-                            .stroke(Color.black.opacity(0.3), lineWidth: 0.8)
+                            .stroke(Color.black.opacity(0.3), lineWidth: 1.2)
                     )
 
-                // Fine radial ticks - Darker for visibility on light background
+                // High-Density Instrument Ticks (Precise Contrast)
                 ForEach(0..<120) { i in
+                    let isMajor = i % 10 == 0
                     Rectangle()
-                        .fill(Color.black.opacity(0.45))
-                        .frame(width: 1.2, height: 12)
-                        .offset(y: -40)
+                        .fill(Color.black.opacity(isMajor ? 0.6 : 0.3))
+                        .frame(width: isMajor ? 0.8 : 0.4, height: isMajor ? 8 : 5)
+                        .offset(y: -(bezelSize/2 - (isMajor ? 6 : 4)))
                         .rotationEffect(.degrees(Double(i) * 3))
                 }
             }
@@ -239,58 +239,55 @@ struct IndustrialRotaryButton: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        let vector = CGVector(dx: value.location.x - 54, dy: value.location.y - 54)
+                        let center = bezelSize / 2
+                        let vector = CGVector(dx: value.location.x - center, dy: value.location.y - center)
                         let angle = atan2(vector.dy, vector.dx)
                         let newRotation = angle * 180 / .pi
                         
-                        if Int(newRotation / 3) != Int(rotation / 3) {
-                            SoundManager.shared.hapticLight()
-                            onRotate?(newRotation)
-                        }
+                        // Pass rotation to callback
+                        onRotate?(newRotation)
                         rotation = newRotation
                     }
             )
             
-            // 3. INNER CONTROL PLATE (Ultra-Compact Center)
+            // 3. INNER CONTROL PLATE (Recessed Black Matte)
             ZStack {
-                // The physical knob surface
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color(white: 0.12), Color(white: 0.05)],
+                            colors: [Color(white: 0.15), Color(white: 0.08)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 62, height: 62)
+                    .frame(width: plateSize, height: plateSize)
                     .overlay(
                         Circle()
                             .stroke(
-                                LinearGradient(colors: [.white.opacity(0.1), .black.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                                lineWidth: 1
+                                LinearGradient(colors: [.white.opacity(0.08), .black.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 1.0
                             )
                     )
-                    .shadow(color: .black.opacity(0.4), radius: 3, y: 1.5)
                 
-                // 4. CENTRAL GLOWING LED
+                // 4. CENTRAL GLOWING LED (Harmonious Glow)
                 ZStack {
                     Circle()
                         .fill(Color.black)
-                        .frame(width: 12, height: 12)
+                        .frame(width: 14, height: 14) // Slightly larger for better balance
                     
                     Circle()
                         .fill(Color.gameGreen)
-                        .frame(width: 5, height: 5)
-                        .blur(radius: 0.5)
-                        .shadow(color: .gameGreen.opacity(0.9), radius: 5)
+                        .frame(width: 5.5, height: 5.5)
+                        .blur(radius: 0.3)
+                        .shadow(color: .gameGreen.opacity(0.8), radius: 6)
                     
                     Circle()
-                        .fill(Color.white.opacity(0.8))
+                        .fill(Color.white.opacity(0.9))
                         .frame(width: 1.5, height: 1.5)
                         .offset(x: -0.8, y: -0.8)
                 }
             }
-            .scaleEffect(isPressed ? 0.96 : 1.0)
+            .scaleEffect(isPressed ? 0.95 : 1.0)
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { _ in
