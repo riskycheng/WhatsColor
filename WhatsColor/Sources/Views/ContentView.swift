@@ -142,21 +142,21 @@ struct DeviceView: View {
             
             // Game board area
             GameBoardView(viewModel: viewModel)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 24)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 12)
 
             // Inline Color Picker
             HorizontalColorPickerView(viewModel: viewModel)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 24)
 
             Spacer()
 
             // Bottom panel - status and knob
             StatusControlPanelView(viewModel: viewModel)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 24)
             
-            Spacer(minLength: 15) // Standardized internal gap from the shell bottom
+            Spacer(minLength: 25) // Standardized internal gap from the shell bottom
         }
     }
 }

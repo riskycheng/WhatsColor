@@ -4,21 +4,11 @@ struct HorizontalColorPickerView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Technical Label
-            HStack(spacing: 4) {
-                Image(systemName: "paintpalette.fill")
-                    .font(.system(size: 8))
-                Text("COLOR_INJECTOR_BUS")
-                    .font(.system(size: 9, weight: .black, design: .monospaced))
-                    .tracking(1)
-            }
-            .foregroundColor(.white.opacity(0.15))
-            .padding(.leading, 10)
-
+        VStack(spacing: 0) {
             HStack(spacing: 0) {
-                // Color options - sized to match board width
-                HStack(spacing: 8) { 
+                // Color options - evenly spaced to fill width
+                HStack(spacing: 0) { 
+                    Spacer(minLength: 0)
                     ForEach(GameColor.allCases) { color in
                         HorizontalColorButton(
                             color: color,
@@ -28,23 +18,26 @@ struct HorizontalColorPickerView: View {
                                 viewModel.selectColor(color)
                             }
                         )
+                        if color != GameColor.allCases.last {
+                            Spacer(minLength: 4)
+                        }
                     }
+                    Spacer(minLength: 0)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 10)
             .padding(.vertical, 14)
             .background(
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 16)
                         .fill(Color.black.opacity(0.4))
                     
                     // Internal shadow/recessed look
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.05), lineWidth: 1)
                 }
             )
         }
-        .padding(.horizontal, 16)
     }
 }
 

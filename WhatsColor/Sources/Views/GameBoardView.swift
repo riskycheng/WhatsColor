@@ -4,24 +4,7 @@ struct GameBoardView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // Screen Header Label
-            HStack {
-                Text("NEURAL_CORE_DISPLAY")
-                    .font(.system(size: 9, weight: .black, design: .monospaced))
-                    .tracking(2)
-                    .foregroundColor(.white.opacity(0.15))
-                Spacer()
-                HStack(spacing: 3) {
-                    ForEach(0..<3) { _ in
-                        Rectangle()
-                            .fill(Color.gameGreen.opacity(0.2))
-                            .frame(width: 4, height: 4)
-                    }
-                }
-            }
-            .padding(.horizontal, 8)
-
+        VStack(alignment: .leading, spacing: 0) {
             // Board panel
             VStack(spacing: 12) {
                 ForEach(viewModel.state.attempts) { row in
