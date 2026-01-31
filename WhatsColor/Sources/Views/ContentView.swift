@@ -44,21 +44,6 @@ struct ContentView: View {
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
-                            
-                            // Industrial Screw details at corners
-                            VStack {
-                                HStack {
-                                    ScrewHeadSmall().padding(15)
-                                    Spacer()
-                                    ScrewHeadSmall().padding(15)
-                                }
-                                Spacer()
-                                HStack {
-                                    ScrewHeadSmall().padding(15)
-                                    Spacer()
-                                    ScrewHeadSmall().padding(15)
-                                }
-                            }
                         }
                     )
                     .cornerRadius(40)
@@ -66,7 +51,8 @@ struct ContentView: View {
                     .blur(radius: viewModel.showPauseDialog || viewModel.showGameOverDialog ? 15 : 0)
                     .animation(.easeInOut(duration: 0.3), value: viewModel.showPauseDialog || viewModel.showGameOverDialog)
                 }
-                .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 14) // Standard handheld outer margin
                 .frame(maxHeight: .infinity)
                 .padding(.top, 12)
                 .padding(.bottom, 60) // Slightly more space for the external bar
@@ -76,8 +62,8 @@ struct ContentView: View {
                     VStack {
                         Spacer()
                         SystemStatusBar(viewModel: viewModel)
-                            .frame(width: geometry.size.width > 400 ? 340 : geometry.size.width - 80)
-                            .frame(height: 50) // Fix height to ensure vertical centering within the 50pt padding
+                            .padding(.horizontal, 45) // Match standard recessed width
+                            .frame(height: 50)
                     }
                     .ignoresSafeArea(.keyboard)
                 }
@@ -142,19 +128,19 @@ struct DeviceView: View {
             
             // Game board area
             GameBoardView(viewModel: viewModel)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 16)
 
             Spacer(minLength: 12)
 
             // Inline Color Picker
             HorizontalColorPickerView(viewModel: viewModel)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 16)
 
             Spacer()
 
             // Bottom panel - status and knob
             StatusControlPanelView(viewModel: viewModel)
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 16)
             
             Spacer(minLength: 25) // Standardized internal gap from the shell bottom
         }

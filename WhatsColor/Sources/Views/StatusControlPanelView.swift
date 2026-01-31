@@ -44,27 +44,18 @@ struct StatusControlPanelView: View {
                             .foregroundColor(.gameRed.opacity(0.5))
                     }
                     
-                    // Mission Data (Compact)
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("MISSION DATA")
-                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .tracking(1)
-                            .foregroundColor(.white.opacity(0.2))
+                    // Mission Data - High-Contrast Technical Telemetry
+                    HStack(spacing: 0) {
+                        Text(viewModel.state.difficulty.rawValue.uppercased())
+                            .font(.system(size: 17, weight: .black, design: .monospaced))
+                            .foregroundColor(.gameGreen)
+                            .shadow(color: .gameGreen.opacity(0.5), radius: 6)
                         
-                        HStack(spacing: 14) {
-                            StatusItemCompact(label: "DIFF", value: viewModel.state.difficulty.rawValue.uppercased(), color: .gameGreen)
-                            
-                            Rectangle()
-                                .fill(Color.white.opacity(0.1))
-                                .frame(width: 1, height: 14)
-                            
-                            StatusItemCompact(
-                                label: viewModel.gameMode == .solo ? "LVL" : "MODE",
-                                value: viewModel.gameMode == .solo ? "\(viewModel.state.level)" : "DUAL",
-                                color: .gameGreen
-                            )
-                        }
+                        Text(viewModel.gameMode == .solo ? " // L\(viewModel.state.level)" : " // DUAL")
+                            .font(.system(size: 17, weight: .bold, design: .monospaced))
+                            .foregroundColor(.gameGreen.opacity(0.6))
                     }
+                    .padding(.top, 4)
                 }
                 .padding(.leading, 20)
                 
@@ -88,26 +79,6 @@ struct StatusControlPanelView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 140) // Reduced from 160 to 140 for a more compact look
         .padding(.horizontal, 4)
-    }
-}
-
-struct StatusItemCompact: View {
-    let label: String
-    let value: String
-    let color: Color
-    
-    var body: some View {
-        HStack(spacing: 4) {
-            Text(label)
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.4))
-            Text(value)
-                .font(.system(size: 12, weight: .bold, design: .monospaced)) // Balanced weight
-                .foregroundColor(color)
-                .shadow(color: color.opacity(0.3), radius: 2)
-                .lineLimit(1)
-                .fixedSize()
-        }
     }
 }
 
