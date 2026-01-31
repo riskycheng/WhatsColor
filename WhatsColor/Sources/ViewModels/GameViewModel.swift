@@ -302,7 +302,7 @@ class GameViewModel: ObservableObject {
         let currentColor = state.currentGuess[state.activeIndex]
         let allColors = GameColor.allCases
         
-        let currentIndex = allColors.firstIndex(where: { $0 == currentColor }) ?? -1
+        let currentIndex = allColors.firstIndex(where: { $0 == currentColor }) ?? 0
         let nextIndex: Int
         
         if forward {
@@ -355,6 +355,9 @@ class GameViewModel: ObservableObject {
         // Reset currentGuess for next row (but don't auto-advance)
         state.currentGuess = Array(repeating: nil, count: 4)
         state.activeIndex = 0
+        
+        // Clear slot frames for the next row to re-register
+        slotFrames.removeAll()
 
         // Check win/lose condition
         checkGameStatus()

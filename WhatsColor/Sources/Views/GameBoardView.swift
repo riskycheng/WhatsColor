@@ -103,6 +103,11 @@ struct SlotView: View {
                                     viewModel.registerSlotFrame(geo.frame(in: .global), for: slotIndex)
                                 }
                             }
+                            .onChange(of: isActive) { active in
+                                if active {
+                                    viewModel.registerSlotFrame(geo.frame(in: .global), for: slotIndex)
+                                }
+                            }
                             .onChange(of: geo.frame(in: .global)) { newFrame in
                                 if isActive {
                                     viewModel.registerSlotFrame(newFrame, for: slotIndex)
