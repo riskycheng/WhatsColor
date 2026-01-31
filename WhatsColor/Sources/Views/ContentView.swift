@@ -110,13 +110,13 @@ struct DeviceView: View {
 
             // Main device body
             VStack(spacing: 0) {
-                Spacer(minLength: 20) // Tightened top
+                Spacer(minLength: 15) // Standard top margin
                 
                 // Game board area
                 GameBoardView(viewModel: viewModel)
                     .padding(.horizontal, 16)
 
-                Spacer(minLength: 12)
+                Spacer(minLength: 10)
 
                 // Inline Color Picker
                 HorizontalColorPickerView(viewModel: viewModel)
@@ -124,10 +124,11 @@ struct DeviceView: View {
 
                 Spacer(minLength: 12)
 
-                // Bottom panel - status and knob only
+                // Bottom panel - status and knob
                 StatusControlPanelView(viewModel: viewModel)
+                    .padding(.horizontal, 12)
                 
-                Spacer(minLength: 15) // Standardized bottom internal spacer
+                Spacer(minLength: 15) // Standard bottom internal spacer
             }
             .background(Color.deviceGreen)
             .cornerRadius(40)

@@ -296,6 +296,24 @@ class GameViewModel: ObservableObject {
         // Do not auto-advance to next slot - stay on current slot
     }
 
+    func cycleColor(forward: Bool = true) {
+        guard !state.isGameOver else { return }
+        
+        let currentColor = state.currentGuess[state.activeIndex]
+        let allColors = GameColor.allCases
+        
+        let currentIndex = allColors.firstIndex(where: { $0 == currentColor }) ?? -1
+        let nextIndex: Int
+        
+        if forward {
+            nextIndex = (currentIndex + 1) % allColors.count
+        } else {
+            nextIndex = (currentIndex - 1 + allColors.count) % allColors.count
+        }
+        
+        selectColor(allColors[nextIndex])
+    }
+
     func moveToNextSlot() {
         if state.activeIndex < 3 {
             state.activeIndex += 1
@@ -317,7 +335,7 @@ class GameViewModel: ObservableObject {
             return
         }
 
-        // Check for unique colors
+        // Check for unique colors... (rest of function)
         let colors = state.currentGuess.compactMap { $0 }
         guard Set(colors).count == 4 else {
             showToast("USE UNIQUE COLORS")

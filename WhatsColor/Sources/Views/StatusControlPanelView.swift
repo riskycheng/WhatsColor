@@ -4,26 +4,13 @@ struct StatusControlPanelView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 10)
-
-            // Dynamic Informational Panel or Progress display
+        VStack(spacing: 25) {
+            // 1. Telemetry Dashboard (Black Panel)
             StatusDisplayView(viewModel: viewModel)
-                .frame(maxWidth: .infinity)
             
-            Spacer(minLength: 35) // Increased margin between timer and knob
-
-            // Centered Submit knob - Docked at the bottom
-            HStack {
-                Spacer()
-                SubmitKnobView(onTap: {
-                    viewModel.submitGuess()
-                })
-                Spacer()
-            }
-            .padding(.bottom, 10) // Small padding at bottom
+            // 2. Control Instrument (Rotary Knob)
+            SubmitKnobView(viewModel: viewModel)
         }
-        .padding(.horizontal, 12)
     }
 }
 
@@ -45,22 +32,9 @@ struct StatusDisplayView: View {
                     .font(.system(size: 16, weight: .black, design: .monospaced))
                     .foregroundColor(.gameRed.opacity(0.6))
             }
-            .padding(.leading, 20) // Reduced from 28
+            .padding(.leading, 24)
             
             Spacer()
-            
-            // Vertical Divider with glow
-            RoundedRectangle(cornerRadius: 1)
-                .fill(
-                    LinearGradient(
-                        colors: [.clear, .white.opacity(0.15), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(width: 2)
-                .padding(.vertical, 15)
-                .padding(.horizontal, 12) // Reduced from 20
             
             // Right: Elegant Status Cluster
             VStack(alignment: .leading, spacing: 6) {
@@ -69,7 +43,7 @@ struct StatusDisplayView: View {
                     .foregroundColor(.white.opacity(0.3))
                     .tracking(1)
 
-                HStack(spacing: 15) {
+                HStack(spacing: 12) {
                     // Difficulty Column
                     VStack(alignment: .leading, spacing: 2) {
                         Text("DIFF")
@@ -80,12 +54,12 @@ struct StatusDisplayView: View {
                             .foregroundColor(.gameGreen)
                             .shadow(color: .gameGreen.opacity(0.4), radius: 4)
                     }
-                    .frame(width: 65, alignment: .leading)
+                    .frame(width: 60, alignment: .leading)
                     
                     // Divider
                     Rectangle()
                         .fill(Color.white.opacity(0.15))
-                        .frame(width: 1, height: 22)
+                        .frame(width: 1, height: 20)
                     
                     // Mode/Level Column
                     VStack(alignment: .leading, spacing: 2) {
@@ -97,17 +71,17 @@ struct StatusDisplayView: View {
                             .foregroundColor(.gameGreen)
                             .shadow(color: .gameGreen.opacity(0.4), radius: 4)
                     }
-                    .frame(width: 65, alignment: .leading)
+                    .frame(width: 35, alignment: .leading)
                 }
             }
-            .padding(.trailing, 20)
+            .padding(.trailing, 24)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 100)
+        .frame(height: 110)
         .background(
             ZStack {
                 // Main Panel
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 24)
                     .fill(
                         LinearGradient(
                             colors: [Color(white: 0.05), Color.black],
@@ -117,7 +91,7 @@ struct StatusDisplayView: View {
                     )
                 
                 // Subtle Glass/Metal Reflections
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 24)
                     .stroke(
                         LinearGradient(
                             colors: [.white.opacity(0.15), .clear, .white.opacity(0.05)],
@@ -127,7 +101,7 @@ struct StatusDisplayView: View {
                         lineWidth: 1.5
                     )
             }
-            .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
+            .shadow(color: .black.opacity(0.6), radius: 10, x: 0, y: 5)
         )
     }
 }
@@ -138,83 +112,155 @@ struct StatusDisplayView: View {
 }
 
 struct SubmitKnobView: View {
-    let onTap: () -> Void
+    @ObservedObject var viewModel: GameViewModel
+    @State private var rotation: Double = 0
     @State private var isPressed = false
+    @State private var lastFiredRotation: Double = 0
 
     var body: some View {
-        Button(action: {
-            SoundManager.shared.playSelection()
-            SoundManager.shared.hapticMedium()
-            onTap()
-        }) {
-            ZStack {
-                // Outer shadow/depth layer - fixed, creates depth
-                Circle()
-                    .fill(Color(red: 0.65, green: 0.15, blue: 0.15))
-                    .frame(width: 84, height: 84)
+        IndustrialRotaryButton(
+            rotation: $rotation,
+            isPressed: $isPressed,
+            label: "CONFIRM",
+            onRotate: { newRotation in
+                // Logic: Every 40 degrees increment, cycle color
+                let diff = newRotation - lastFiredRotation
+                if abs(diff) > 40 {
+                    viewModel.cycleColor(forward: diff > 0)
+                    lastFiredRotation = newRotation
+                    SoundManager.shared.playSelection()
+                }
+            },
+            onTap: {
+                viewModel.submitGuess()
+            }
+        )
+    }
+}
 
-                // Inner circle - scales when pressed
+struct IndustrialRotaryButton: View {
+    @Binding var rotation: Double
+    @Binding var isPressed: Bool
+    let label: String
+    var onRotate: ((Double) -> Void)? = nil
+    var onTap: (() -> Void)? = nil
+    
+    var body: some View {
+        ZStack {
+            // 1. OUTERMOST FIXED RING (Depth / Housing)
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [Color(white: 0.15), Color(white: 0.05)],
+                        center: .center,
+                        startRadius: 45,
+                        endRadius: 55
+                    )
+                )
+                .frame(width: 112, height: 112)
+                .shadow(color: .black.opacity(0.8), radius: 8, x: 0, y: 4)
+            
+            // 2. ROTATING DIAL (With Ticks)
+            ZStack {
+                // Dial Base - Professional Metal Finish
+                Circle()
+                    .fill(
+                        AngularGradient(
+                            stops: [
+                                .init(color: Color(white: 0.12), location: 0),
+                                .init(color: Color(white: 0.22), location: 0.25),
+                                .init(color: Color(white: 0.15), location: 0.5),
+                                .init(color: Color(white: 0.25), location: 0.75),
+                                .init(color: Color(white: 0.12), location: 1)
+                            ],
+                            center: .center
+                        )
+                    )
+                
+                // Graduation Ticks (Extending closer to center)
+                ForEach(0..<60) { i in
+                    Rectangle()
+                        .fill(Color.white.opacity(i % 5 == 0 ? 0.25 : 0.1))
+                        .frame(width: i % 5 == 0 ? 2 : 1, height: i % 5 == 0 ? 12 : 6)
+                        .offset(y: -46)
+                        .rotationEffect(.degrees(Double(i) * 6))
+                }
+            }
+            .frame(width: 104, height: 104)
+            .rotationEffect(.degrees(rotation))
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let vector = CGVector(dx: value.location.x - 52, dy: value.location.y - 52)
+                        let angle = atan2(vector.dy, vector.dx)
+                        let newRotation = angle * 180 / .pi
+                        
+                        // Haptic feedback on ticks
+                        if Int(newRotation / 6) != Int(rotation / 6) {
+                            SoundManager.shared.hapticLight()
+                            onRotate?(newRotation)
+                        }
+                        rotation = newRotation
+                    }
+            )
+            
+            // 3. INNER RECESSED GROOVE (Dark pit)
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color.black, Color(white: 0.1)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 80, height: 80)
+                .overlay(
+                    Circle().stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
+            
+            // 4. CENTRAL ACTION BUTTON
+            Button(action: {
+                SoundManager.shared.playSelection()
+                SoundManager.shared.hapticMedium()
+                onTap?()
+            }) {
                 ZStack {
-                    // Main button face
                     Circle()
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color(red: 1.0, green: 0.5, blue: 0.5),
-                                    Color(red: 0.9, green: 0.35, blue: 0.35)
+                                    isPressed ? Color(red: 0.7, green: 0.1, blue: 0.1) : Color.gameRed,
+                                    isPressed ? Color(red: 0.5, green: 0, blue: 0) : Color(red: 0.7, green: 0.1, blue: 0.1)
                                 ],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
                         )
-                        .frame(width: 80, height: 80)
-                        .shadow(
-                            color: Color(red: 0.5, green: 0.1, blue: 0.1).opacity(0.5),
-                            radius: 4,
-                            x: 0,
-                            y: 2
-                        )
-
-                    // Highlight
+                        .frame(width: 72, height: 72)
+                        .shadow(color: .black.opacity(0.5), radius: 5, y: 3)
+                    
+                    // Light Indicator (LED)
                     Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    Color.white.opacity(0.25),
-                                    Color.white.opacity(0.0)
-                                ],
-                                center: .top,
-                                startRadius: 0,
-                                endRadius: 35
-                            )
-                        )
-                        .frame(width: 76, height: 76)
-                        .offset(y: -22)
-
-                    // Marker
-                    VStack {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.9))
-                            .frame(width: 6, height: 18)
-                            .cornerRadius(3)
-                        Spacer()
-                    }
-                    .frame(width: 70, height: 70)
-                    .offset(y: -10)
+                        .fill(Color.white.opacity(0.9))
+                        .frame(width: 5, height: 5)
+                        .shadow(color: .white, radius: 4)
+                        .offset(y: -18)
+                    
+                    Text(label)
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.8))
+                        .offset(y: 8)
                 }
-                .scaleEffect(isPressed ? 0.92 : 1.0)
+                .scaleEffect(isPressed ? 0.94 : 1.0)
+                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
             }
+            .buttonStyle(PlainButtonStyle())
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in isPressed = true }
+                    .onEnded { _ in isPressed = false }
+            )
         }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    isPressed = true
-                }
-                .onEnded { _ in
-                    isPressed = false
-                }
-        )
     }
 }
 
