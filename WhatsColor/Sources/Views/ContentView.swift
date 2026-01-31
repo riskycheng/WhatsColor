@@ -125,6 +125,7 @@ struct ContentView: View {
                     .position(x: viewModel.dragPosition.x, y: viewModel.dragPosition.y)
                     .transition(.scale.combined(with: .opacity))
                     .ignoresSafeArea()
+                    .allowsHitTesting(false) // CRITICAL: Stop overlay from stealing drag events
                 }
             }
         }

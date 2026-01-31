@@ -111,7 +111,7 @@ struct SlotView: View {
         let showTargetEffect = viewModel.dropTargetIndex == slotIndex && viewModel.dropTargetRow == rowNumber && isActive
         
         ZStack {
-            // Empty slot
+            // Empty slot base
             RoundedRectangle(cornerRadius: 8)
                 .fill(showTargetEffect ? Color.white.opacity(0.15) : Color.black.opacity(0.8))
                 .frame(width: 45, height: 45)
@@ -122,20 +122,8 @@ struct SlotView: View {
                 )
                 .scaleEffect(showTargetEffect ? 1.15 : 1.0)
                 .animation(.spring(response: 0.2, dampingFraction: 0.6), value: showTargetEffect)
-                .background(
-                    GeometryReader { geo in
-                        Color.clear
-                            .onAppear {
-                                viewModel.registerSlotFrame(geo.frame(in: .global), row: rowNumber, slot: slotIndex)
-                            }
-                            .onChange(of: geo.frame(in: .global)) { newFrame in
-                                viewModel.registerSlotFrame(newFrame, row: rowNumber, slot: slotIndex)
-                            }
-                    }
-                )
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.dropTargetIndex)
 
-            // Filled slot
+            // Filled slot color
             if let color = color {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(color.color)
@@ -158,6 +146,17 @@ struct SlotView: View {
                     )
             }
         }
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear {
+                        viewModel.registerSlotFrame(geo.frame(in: .global), row: rowNumber, slot: slotIndex)
+                    }
+                    .onChange(of: geo.frame(in: .global)) { newFrame in
+                        viewModel.registerSlotFrame(newFrame, row: rowNumber, slot: slotIndex)
+                    }
+            }
+        )
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .global)

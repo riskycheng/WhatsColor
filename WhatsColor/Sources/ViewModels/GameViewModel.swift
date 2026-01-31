@@ -57,19 +57,21 @@ class GameViewModel: ObservableObject {
         var newTargetRow: Int? = nil
         var newTargetIndex: Int? = nil
         
-        // Only consider frames for the current active row
         let activeRowNumber = getCurrentRowNumber()
         
+        // Improve search: look for any slot, then validate if it's in the active row
         for (key, frame) in slotFrames {
             if frame.contains(position) {
                 let parts = key.split(separator: "-")
                 if parts.count == 2, 
                    let r = Int(parts[0]), 
-                   let s = Int(parts[1]),
-                   r == activeRowNumber { // Strict: only allow dropping on active row
-                    newTargetRow = r
-                    newTargetIndex = s
-                    break
+                   let s = Int(parts[1]) {
+                    // Only allow dropping on the active row
+                    if r == activeRowNumber {
+                        newTargetRow = r
+                        newTargetIndex = s
+                        break
+                    }
                 }
             }
         }
@@ -400,8 +402,10 @@ class GameViewModel: ObservableObject {
         let guess = colors
         let feedback = calculateFeedback(guess: guess, secret: state.secretCode)
 
-        // Add attempt to current row
-        if let currentAttemptIndex = state.attempts.firstIndex(where: { !$0.isComplete && $0.colors.allSatisfy({ $0 == nil }) }) {
+        // Find the specific row we are currently editing
+        let activeRowNumber = getCurrentRowNumber()
+        if let currentAttemptIndex = state.attempts.firstIndex(where: { $0.rowNumber == activeRowNumber }) {
+            // LOCK IN the colors and feedback for this row
             state.attempts[currentAttemptIndex].colors = state.currentGuess
             state.attempts[currentAttemptIndex].feedback = feedback
         }
@@ -410,9 +414,6 @@ class GameViewModel: ObservableObject {
         state.currentGuess = Array(repeating: nil, count: 4)
         state.activeIndex = 0
         
-        // Clear slot frames for the next row to re-register
-        slotFrames.removeAll()
-
         // Check win/lose condition
         checkGameStatus()
     }
@@ -591,11 +592,10 @@ class GameViewModel: ObservableObject {
     }
 
     func getCurrentRowNumber() -> Int {
-        // Find the first incomplete row
-        if let currentRow = state.attempts.first(where: { !$0.isComplete }) {
+        // Find the first row that hasn't been "locked in" with feedback
+        if let currentRow = state.attempts.first(where: { $0.feedback.allSatisfy { $0 == .empty } }) {
             return currentRow.rowNumber
         }
-        // If all rows are complete, return the last row number
         return 7
     }
 
