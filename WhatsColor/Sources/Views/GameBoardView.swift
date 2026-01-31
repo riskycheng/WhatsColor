@@ -8,7 +8,7 @@ struct GameBoardView: View {
             // Board panel
             HStack(spacing: 0) {
                 // Game grid - top to bottom
-                VStack(spacing: 10) {
+                VStack(spacing: 16) { // Increased row spacing
                     ForEach(viewModel.state.attempts) { row in
                         GameRowView(
                             row: row,
@@ -19,7 +19,8 @@ struct GameBoardView: View {
                     }
                 }
             }
-            .padding(15)
+            .padding(.horizontal, 15)
+            .padding(.vertical, 25) // Increased vertical margin inside board panel
             .background(Color.panelDark)
             .cornerRadius(10)
             .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)

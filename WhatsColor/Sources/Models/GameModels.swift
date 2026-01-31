@@ -83,6 +83,14 @@ enum GameDifficulty: String, CaseIterable, Identifiable {
         case .hard: return "5 attempts"
         }
     }
+
+    var baseTime: Int {
+        switch self {
+        case .easy: return 120
+        case .normal: return 90
+        case .hard: return 60
+        }
+    }
 }
 
 struct GameRowModel: Identifiable {

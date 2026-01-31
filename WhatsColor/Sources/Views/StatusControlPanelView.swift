@@ -4,31 +4,26 @@ struct StatusControlPanelView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 6) {
-            // Status display
+        VStack(spacing: 0) {
+            Spacer(minLength: 12) // Significantly reduced from 25
+
+            // Dynamic Informational Panel or Progress display
             StatusDisplayView(viewModel: viewModel)
                 .frame(maxWidth: .infinity)
+            
+            Spacer(minLength: 25) // Keeping some space before the knob
 
-            // Controls row
-            HStack(spacing: 15) {
-                // Left: Difficulty selector
-                DifficultySelectorView(viewModel: viewModel)
-
+            // Centered Submit knob - Docked at the bottom
+            HStack {
                 Spacer()
-
-                // Center: Submit knob
                 SubmitKnobView(onTap: {
                     viewModel.submitGuess()
                 })
-
                 Spacer()
-
-                // Right: Mode selector
-                ModeSelectorView(viewModel: viewModel)
             }
-            .padding(.horizontal, 5)
+            .padding(.bottom, 10) // Reduced from 20
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12) // Reduced from 20
     }
 }
 
@@ -36,49 +31,115 @@ struct StatusDisplayView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        HStack {
-            // Timer display - normal font style
-            HStack(spacing: 4) {
+        HStack(alignment: .center, spacing: 0) {
+            // Left: Large Timer display
+            HStack(alignment: .lastTextBaseline, spacing: 6) {
                 Text("\(viewModel.timeRemaining)")
-                    .font(.system(size: 36, weight: .bold, design: .monospaced))
+                    .font(.system(size: 72, weight: .black, design: .monospaced))
                     .foregroundColor(.gameRed)
-                    .shadow(color: .gameRed.opacity(0.5), radius: 4, x: 0, y: 0)
-                    .frame(minWidth: 75, alignment: .leading)
+                    .shadow(color: .gameRed.opacity(0.5), radius: 12)
                     .monospacedDigit()
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.5)
 
                 Text("SEC")
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundColor(.gameRed.opacity(0.8))
+                    .font(.system(size: 16, weight: .black, design: .monospaced))
+                    .foregroundColor(.gameRed.opacity(0.6))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.black)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
-            )
-
+            .padding(.leading, 20) // Reduced from 28
+            
             Spacer()
+            
+            // Vertical Divider with glow
+            RoundedRectangle(cornerRadius: 1)
+                .fill(
+                    LinearGradient(
+                        colors: [.clear, .white.opacity(0.15), .clear],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 2)
+                .padding(.vertical, 15)
+                .padding(.horizontal, 12) // Reduced from 20
+            
+            // Right: Elegant Status Cluster
+            VStack(alignment: .leading, spacing: 12) {
+                // Secondary Information Group
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("CURRENT STATUS")
+                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.2))
+                        .tracking(1)
 
-            // Message
-            Text(viewModel.state.message)
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
-                .foregroundColor(.gray.opacity(0.9))
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(viewModel.gameMode == .solo ? "LVL" : "MODE")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.4))
+                        
+                        Text(viewModel.gameMode == .solo ? "\(viewModel.state.level)/500" : "DUAL")
+                            .font(.system(size: 18, weight: .black, design: .monospaced))
+                            .foregroundColor(.gameGreen)
+                            .shadow(color: .gameGreen.opacity(0.4), radius: 6)
+                    }
+                }
+                
+                // Active Config Pill
+                HStack(spacing: 8) {
+                    // Difficulty Badge
+                    Text(viewModel.state.difficulty.rawValue)
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(RoundedRectangle(cornerRadius: 4).fill(Color.gameGreen))
+                    
+                    // Mode Badge
+                    Text(viewModel.gameMode == .solo ? "SOLO" : "DUAL")
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .foregroundColor(.gameGreen)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.gameGreen.opacity(0.5), lineWidth: 1)
+                        )
+                }
+            }
+            .padding(.trailing, 20) // Reduced from 28
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 6)
-        .background(Color.black)
-        .cornerRadius(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+        .frame(maxWidth: .infinity)
+        .frame(height: 120) // Increased height
+        .background(
+            ZStack {
+                // Main Panel
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(white: 0.05), Color.black],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                
+                // Subtle Glass/Metal Reflections
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.15), .clear, .white.opacity(0.05)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+            }
+            .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
         )
     }
+}
+
+#Preview {
+    StatusControlPanelView(viewModel: GameViewModel())
+        .background(Color.deviceGreen)
 }
 
 struct SubmitKnobView: View {
@@ -158,130 +219,6 @@ struct SubmitKnobView: View {
                 .onEnded { _ in
                     isPressed = false
                 }
-        )
-    }
-}
-
-struct DifficultySelectorView: View {
-    @ObservedObject var viewModel: GameViewModel
-
-    var body: some View {
-        VStack(spacing: 6) {
-            SkeuomorphicButton(
-                title: "EASY",
-                isSelected: viewModel.state.difficulty == .easy,
-                onTap: { viewModel.changeDifficulty(to: .easy) }
-            )
-
-            SkeuomorphicButton(
-                title: "NORMAL",
-                isSelected: viewModel.state.difficulty == .normal,
-                onTap: { viewModel.changeDifficulty(to: .normal) }
-            )
-
-            SkeuomorphicButton(
-                title: "HARD",
-                isSelected: viewModel.state.difficulty == .hard,
-                onTap: { viewModel.changeDifficulty(to: .hard) }
-            )
-        }
-        .frame(minWidth: 80)
-        .padding(.vertical, 6)
-        .padding(.horizontal, 6)
-        .background(Color.black.opacity(0.5))
-        .cornerRadius(10)
-    }
-}
-
-struct ModeSelectorView: View {
-    @ObservedObject var viewModel: GameViewModel
-
-    var body: some View {
-        VStack(spacing: 6) {
-            SkeuomorphicButton(
-                title: "SOLO",
-                isSelected: viewModel.state.mode == .advanced,
-                onTap: { viewModel.changeMode(to: .advanced) }
-            )
-
-            SkeuomorphicButton(
-                title: "DUAL",
-                isSelected: viewModel.state.mode == .beginner,
-                onTap: { viewModel.changeMode(to: .beginner) }
-            )
-        }
-        .frame(minWidth: 80)
-        .padding(.vertical, 6)
-        .padding(.horizontal, 6)
-        .background(Color.black.opacity(0.5))
-        .cornerRadius(10)
-    }
-}
-
-struct SkeuomorphicButton: View {
-    let title: String
-    let isSelected: Bool
-    let onTap: () -> Void
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: {
-            SoundManager.shared.playSelection()
-            SoundManager.shared.hapticLight()
-            onTap()
-        }) {
-            ZStack {
-                // Bottom shadow layer (always visible, creates depth)
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.6))
-                    .offset(y: 2)
-
-                // Main button face
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(
-                        LinearGradient(
-                            colors: isSelected ?
-                                [Color(red: 0.4, green: 0.6, blue: 0.4), Color(red: 0.3, green: 0.5, blue: 0.3)] :
-                                [Color.gray.opacity(0.4), Color.gray.opacity(0.3)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(isSelected ? Color.white.opacity(0.3) : Color.clear, lineWidth: 1)
-                    )
-
-                // Highlight on top half
-                RoundedRectangle(cornerRadius: 7)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(isSelected ? 0.15 : 0.1),
-                                Color.white.opacity(0.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .center
-                        )
-                    )
-                    .padding(1)
-
-                // Text
-                Text(title)
-                    .font(.system(size: isSelected ? 14 : 13, weight: .bold))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.7))
-                    .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
-                    .frame(minWidth: 70)
-            }
-            .frame(height: 40)
-            .offset(y: isPressed ? 2 : 0)
-            .animation(.easeInOut(duration: 0.1), value: isPressed)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
         )
     }
 }

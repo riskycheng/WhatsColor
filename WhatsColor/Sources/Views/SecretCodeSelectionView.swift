@@ -69,12 +69,12 @@ struct SecretCodeSelectionView: View {
     
     private var headerSection: some View {
         HStack {
-            VStack(spacing: 4) {
-                Text("SET SECRET CODE")
+            VStack(alignment: .leading, spacing: 4) {
+                Text(viewModel.gameMode == .dual ? "PLAYER 1: MISSION LOG" : "MISSION BRIEFING")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
                 
-                Text("Select 4 colors in order")
+                Text(viewModel.gameMode == .dual ? "SET THE SECRET CODE" : "Select 4 colors in order")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
                     .foregroundColor(.white.opacity(0.6))
             }
@@ -142,48 +142,58 @@ struct SecretCodeSelectionView: View {
     // MARK: - Action Buttons Section
     
     private var actionButtonsSection: some View {
-        HStack(spacing: 16) {
-            // Cancel button
-            Button(action: {
-                viewModel.dismissSecretCodeSelection()
-            }) {
-                Text("CANCEL")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.white.opacity(0.7))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.white.opacity(0.1))
-                    )
+        VStack(spacing: 12) {
+            if viewModel.gameMode == .dual && viewModel.isSecretCodeComplete {
+                Text("READY? HAND TO THE CHALLENGER")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.6))
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
             
-            // Start button
-            Button(action: {
-                viewModel.finishSecretCodeSelection()
-            }) {
-                Text("START GAME")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(viewModel.isSecretCodeComplete ?
-                                  Color.gameGreen :
-                                  Color.gray.opacity(0.3))
-                    )
-                    .shadow(
-                        color: viewModel.isSecretCodeComplete ?
-                            Color.gameGreen.opacity(0.4) :
-                            .clear,
-                        radius: 8, x: 0, y: 4
-                    )
+            HStack(spacing: 16) {
+                // Cancel button
+                Button(action: {
+                    viewModel.dismissSecretCodeSelection()
+                }) {
+                    Text("CANCEL")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white.opacity(0.7))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.white.opacity(0.1))
+                        )
+                }
+                
+                // Start button
+                Button(action: {
+                    viewModel.finishSecretCodeSelection()
+                }) {
+                    Text("START GAME")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(viewModel.isSecretCodeComplete ?
+                                      Color.gameGreen :
+                                      Color.gray.opacity(0.3))
+                        )
+                        .shadow(
+                            color: viewModel.isSecretCodeComplete ?
+                                Color.gameGreen.opacity(0.4) :
+                                .clear,
+                            radius: 8, x: 0, y: 4
+                        )
+                }
+                .disabled(!viewModel.isSecretCodeComplete)
             }
-            .disabled(!viewModel.isSecretCodeComplete)
         }
         .padding(.horizontal, dialogPadding)
         .padding(.vertical, 12)
+        .animation(.spring(), value: viewModel.isSecretCodeComplete)
     }
 }
 
@@ -198,56 +208,33 @@ struct ColorSlotView: View {
     var body: some View {
         Button(action: onTap) {
             ZStack {
-                // Slot background
-                RoundedRectangle(cornerRadius: 10)
+                // Slot background - Changed to RoundedRectangle with smaller radius for "Square" look
+                RoundedRectangle(cornerRadius: 4)
                     .fill(Color.white.opacity(0.05))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: 4)
                             .stroke(
-                                isActive ? Color.gameGreen.opacity(0.6) : Color.clear,
-                                lineWidth: isActive ? 2 : 0
+                                isActive ? Color.gameGreen.opacity(0.6) : Color.white.opacity(0.1),
+                                lineWidth: isActive ? 2 : 1
                             )
                     )
                 
                 if let color = color {
                     // Selected color
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 2)
                         .fill(color.color)
+                        .padding(4)
                         .shadow(color: color.color.opacity(0.5), radius: 4, x: 0, y: 2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                        )
-                    
-                    // Position indicator
-                    VStack {
-                        HStack {
-                            Text("\(slotIndex + 1)")
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
-                                .padding(4)
-                                .background(Circle().fill(Color.black.opacity(0.5)))
-                                .offset(x: -4, y: -4)
-                            Spacer()
-                        }
-                        Spacer()
-                    }
-                    .padding(4)
                 } else {
                     // Empty slot indicator
                     VStack(spacing: 4) {
                         Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .light))
-                            .foregroundColor(.gray.opacity(0.5))
-                        
-                        if isActive {
-                            Text("TAP")
-                                .font(.system(size: 9, weight: .bold, design: .rounded))
-                                .foregroundColor(.gameGreen)
-                        }
+                            .font(.system(size: 14, weight: .light))
+                            .foregroundColor(.white.opacity(0.2))
                     }
                 }
             }
+            .frame(width: 60, height: 60) // Ensure square dimensions
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isActive ? 1.05 : 1.0)

@@ -11,10 +11,16 @@ struct ContentView: View {
                 Color.launchBackground
                     .ignoresSafeArea()
 
-                // Main game device - shifted down slightly to allow for the back button
-                DeviceView(viewModel: viewModel)
-                    .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
-                    .padding(.top, 12) // Moved up closer to the top boundary
+                // Main game content
+                Group {
+                    if viewModel.isShowingStartScreen {
+                        GameStartView(viewModel: viewModel)
+                    } else {
+                        DeviceView(viewModel: viewModel)
+                    }
+                }
+                .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
+                .padding(.top, 12)
                 
                 // Dialog overlays...
                 if viewModel.showPauseDialog {
@@ -35,6 +41,33 @@ struct ContentView: View {
                     SecretCodeSelectionView(viewModel: viewModel)
                         .transition(.opacity)
                         .animation(.easeInOut(duration: 0.2), value: viewModel.showSecretCodeDialog)
+                }
+
+                // Game Over Dialog
+                if viewModel.showGameOverDialog {
+                    GameOverDialogView(viewModel: viewModel)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.showGameOverDialog)
+                }
+
+                // Toast Message
+                if let toast = viewModel.toastMessage {
+                    VStack {
+                        Spacer()
+                        Text(toast)
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule()
+                                    .fill(Color.black.opacity(0.8))
+                                    .overlay(Capsule().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                            )
+                            .padding(.bottom, 100)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.spring(), value: viewModel.toastMessage)
                 }
 
                 // Manual Drag Overlay - instant response, no plus badge, finger-offset
@@ -93,11 +126,12 @@ struct DeviceView: View {
                 // Bottom panel - status and knob only
                 StatusControlPanelView(viewModel: viewModel)
                 
-                Spacer(minLength: 12)
+                Spacer(minLength: 20) // Increased bottom margin
             }
             .background(Color.deviceGreen)
             .cornerRadius(40)
             .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+            .padding(.bottom, 20) // Ensure margin to bottom boundary
         }
     }
 }
@@ -195,6 +229,11 @@ struct PauseDialogView: View {
 
                     DialogButton(title: "RESTART", action: {
                         viewModel.confirmRestart()
+                        viewModel.startGame() // Immediately start a new game with current settings
+                    })
+
+                    DialogButton(title: "MAIN MENU", action: {
+                        viewModel.confirmRestart() // This sets isShowingStartScreen = true
                     })
                 }
                 .padding(.top, 10)
@@ -211,6 +250,7 @@ struct PauseDialogView: View {
             )
             .frame(width: 300)
             .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+            .offset(y: -40) // Move dialog a little bit upper
         }
     }
 }
@@ -256,11 +296,87 @@ struct DialogButton: View {
     }
 }
 
+// MARK: - Game Over Dialog
+
+struct GameOverDialogView: View {
+    @ObservedObject var viewModel: GameViewModel
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.8)
+                .ignoresSafeArea()
+
+            VStack(spacing: 25) {
+                Text(viewModel.state.message)
+                    .font(.system(size: 32, weight: .black, design: .monospaced))
+                    .foregroundColor(viewModel.state.message.contains("UNLOCKED") ? .gameGreen : .gameRed)
+                    .shadow(color: (viewModel.state.message.contains("UNLOCKED") ? Color.gameGreen : Color.gameRed).opacity(0.5), radius: 10)
+
+                VStack(spacing: 8) {
+                    Text("MISSION RESULTS")
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.4))
+                    
+                    HStack(spacing: 20) {
+                        ResultStatView(label: "LEVEL", value: viewModel.currentLevelString)
+                        ResultStatView(label: "TIME", value: "\(viewModel.timeRemaining)s")
+                    }
+                }
+                .padding(.vertical, 10)
+
+                VStack(spacing: 12) {
+                    DialogButton(title: "PLAY AGAIN", action: {
+                        viewModel.showGameOverDialog = false
+                        viewModel.confirmRestart()
+                    })
+
+                    DialogButton(title: "MAIN MENU", action: {
+                        viewModel.showGameOverDialog = false
+                        viewModel.isShowingStartScreen = true
+                        viewModel.gameStarted = false
+                    })
+                }
+            }
+            .padding(30)
+            .background(
+                RoundedRectangle(cornerRadius: 30)
+                    .fill(Color(white: 0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 30)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 2)
+                    )
+            )
+            .padding(.horizontal, 40)
+        }
+    }
+}
+
+struct ResultStatView: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(.white.opacity(0.3))
+            Text(value)
+                .font(.system(size: 18, weight: .black, design: .monospaced))
+                .foregroundColor(.white)
+        }
+    }
+}
+
 // MARK: - Settings Dialog
 
 struct SettingsDialogView: View {
     @ObservedObject var viewModel: GameViewModel
-    @State private var selectedTime: Int = 60
+    @State private var selectedTime: Int
+
+    init(viewModel: GameViewModel) {
+        self.viewModel = viewModel
+        self._selectedTime = State(initialValue: viewModel.timeRemaining)
+    }
 
     var body: some View {
         ZStack {
@@ -284,7 +400,7 @@ struct SettingsDialogView: View {
                     .padding(.horizontal, 10)
 
                 // Start button
-                DialogButton(title: "NEXT: SET CODE", action: {
+                DialogButton(title: viewModel.gameMode == .dual ? "NEXT: SET CODE" : "START MISSION", action: {
                     viewModel.timeRemaining = selectedTime
                     viewModel.applySettingsAndRestart(timeLimit: selectedTime)
                 })

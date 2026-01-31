@@ -9,6 +9,11 @@ class GameViewModel: ObservableObject {
     @Published var showPauseDialog: Bool = false
     @Published var showSettingsDialog: Bool = false
     @Published var showSecretCodeDialog: Bool = false
+    @Published var showGameOverDialog: Bool = false
+
+    // Message/Toast state
+    @Published var toastMessage: String? = nil
+    private var toastTimer: Timer?
 
     // Drag state
     @Published var activeDragColor: GameColor? = nil
@@ -19,6 +24,9 @@ class GameViewModel: ObservableObject {
     // For smooth swapping animation
     @Published var draggedSlotOffset: CGSize = .zero
     @Published var slotOffsets: [Int: CGSize] = [:]
+    
+    // Game Flow State
+    @Published var isShowingStartScreen: Bool = true
     
     // Slot frames for manual drag detection
     private var slotFrames: [Int: CGRect] = [:]
@@ -90,8 +98,17 @@ class GameViewModel: ObservableObject {
 
     init() {
         self.state = GameStateModel.initial
-        gameStarted = false  // Don't auto-start timer on first launch
-        startNewGame()  // Initialize game board properly
+        gameStarted = false
+        isShowingStartScreen = true
+        startNewGame()
+    }
+
+    func showToast(_ message: String) {
+        toastMessage = message
+        toastTimer?.invalidate()
+        toastTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+            self?.toastMessage = nil
+        }
     }
 
     // MARK: - Timer Management
@@ -118,6 +135,7 @@ class GameViewModel: ObservableObject {
             stopTimer()
             state.isGameOver = true
             state.message = "TIME'S UP!"
+            showGameOverDialog = true
         }
     }
 
@@ -220,13 +238,34 @@ class GameViewModel: ObservableObject {
 
     func confirmRestart() {
         showPauseDialog = false
-        showSettingsDialog = true
+        isShowingStartScreen = true
+        gameStarted = false
+        // Reset level if needed, or keep for progression (keeping for progression is usually better)
+        // Reset secret code memory to force full pipeline
+        selectedSecretCode = [] 
+        currentSecretSlot = 0
+    }
+
+    func startGame() {
+        if gameMode == .dual {
+            // DUAL mode: full pipeline (Time -> Color -> Play)
+            showSettingsDialog = true
+            isShowingStartScreen = false
+            gameStarted = true
+        } else {
+            // SOLO mode: Skip dialogs, use predefined mission parameters
+            isShowingStartScreen = false
+            gameStarted = true
+            timeRemaining = state.difficulty.baseTime
+            selectedSecretCode = [] // Ensure a random code is generated
+            startNewGame()
+        }
     }
 
     func applySettingsAndRestart(timeLimit: Int) {
         showSettingsDialog = false
         timeRemaining = timeLimit
-        gameStarted = true  // Mark game as started, timer will run after code selection
+        // This is only called in DUAL mode now, so proceed to secret code setup
         startSecretCodeSelection()
     }
 
@@ -272,14 +311,14 @@ class GameViewModel: ObservableObject {
 
         // Check if all slots are filled
         guard state.currentGuess.allSatisfy({ $0 != nil }) else {
-            state.message = "FILL ALL SLOTS"
+            showToast("FILL ALL SLOTS")
             return
         }
 
         // Check for unique colors
         let colors = state.currentGuess.compactMap { $0 }
         guard Set(colors).count == 4 else {
-            state.message = "USE UNIQUE COLORS"
+            showToast("USE UNIQUE COLORS")
             return
         }
 
@@ -357,41 +396,51 @@ class GameViewModel: ObservableObject {
 
     func checkGameStatus() {
         guard let lastAttempt = state.attempts.last(where: { $0.isComplete }) else {
-            state.message = "TRY AGAIN"
             return
         }
 
         let guess = lastAttempt.colors.compactMap { $0 }
         let feedback = lastAttempt.feedback
 
-        // Check if all colors are correct
+        let isWin: Bool
         if state.mode == .advanced {
             let correctCount = feedback.filter { $0 == .correct }.count
-            if correctCount == 4 {
-                state.isGameOver = true
-                state.message = "UNLOCKED!"
-                SoundManager.shared.playSuccess()
-                SoundManager.shared.hapticSuccess()
-                stopTimer()
-                return
-            }
+            isWin = (correctCount == 4)
         } else {
-            // Beginner mode: check each position
-            var allCorrect = true
-            for i in 0..<4 {
-                if feedback[i] != .correct {
-                    allCorrect = false
-                    break
+            isWin = feedback.allSatisfy { $0 == .correct }
+        }
+
+        if isWin {
+            if gameMode == .solo {
+                state.level += 1
+                if state.level > 500 {
+                    state.level = 1 // Loop or end game? User said 500 total.
+                    state.isGameOver = true
+                    state.message = "ALL MISSIONS COMPLETE"
+                    showGameOverDialog = true
+                    stopTimer()
+                } else {
+                    showToast("LEVEL \(state.level - 1) CLEAR")
+                    SoundManager.shared.playSuccess()
+                    SoundManager.shared.hapticSuccess()
+                    stopTimer() // Stop current level timer
+                    
+                    // Small delay before next level
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        // Reset time for the next mission
+                        self.timeRemaining = self.state.difficulty.baseTime
+                        self.startNewGame()
+                    }
                 }
-            }
-            if allCorrect {
+            } else {
                 state.isGameOver = true
                 state.message = "UNLOCKED!"
+                showGameOverDialog = true
                 SoundManager.shared.playSuccess()
                 SoundManager.shared.hapticSuccess()
                 stopTimer()
-                return
             }
+            return
         }
 
         // Check if out of attempts
@@ -399,10 +448,12 @@ class GameViewModel: ObservableObject {
         if completedAttempts >= 7 {
             state.isGameOver = true
             state.message = "LOCKED! FAILED"
+            showGameOverDialog = true
             SoundManager.shared.playError()
             stopTimer()
         } else {
-            state.message = "TRY AGAIN"
+            // Show toast for incorrect guess
+            showToast("TRY AGAIN")
             SoundManager.shared.hapticMedium()
         }
     }
@@ -414,10 +465,21 @@ class GameViewModel: ObservableObject {
 
     func changeDifficulty(to difficulty: GameDifficulty) {
         state.difficulty = difficulty
+        // Update predefined time for the selected difficulty
+        timeRemaining = difficulty.baseTime
         startNewGame()
     }
 
     // MARK: - Computed Properties
+
+    enum GameMode {
+        case solo
+        case dual
+    }
+
+    var gameMode: GameMode {
+        state.mode == .advanced ? .solo : .dual
+    }
 
     var currentLevelString: String {
         String(format: "%03d", state.level)

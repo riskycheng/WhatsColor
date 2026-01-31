@@ -5,18 +5,8 @@ struct HorizontalColorPickerView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Label section
-            VStack(alignment: .leading, spacing: 0) {
-                Text("COLOR")
-                Text("RANGE")
-            }
-            .font(.system(size: 9, weight: .bold, design: .monospaced))
-            .foregroundColor(.white.opacity(0.3))
-            
-            Spacer(minLength: 4)
-
             // Color options - sized to match board width
-            HStack(spacing: 3) {
+            HStack(spacing: 6) { // Slightly increased spacing between colors
                 ForEach(GameColor.allCases) { color in
                     HorizontalColorButton(
                         color: color,
@@ -29,8 +19,8 @@ struct HorizontalColorPickerView: View {
                 }
             }
         }
-        .padding(.horizontal, 15)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12) // Increased top/bottom margins
         .background(Color.panelDark)
         .cornerRadius(10)
         .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
