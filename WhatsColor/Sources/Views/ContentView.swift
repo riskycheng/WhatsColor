@@ -12,16 +12,36 @@ struct ContentView: View {
                     .ignoresSafeArea()
 
                 // Main game content
-                Group {
-                    if viewModel.isShowingStartScreen {
-                        GameStartView(viewModel: viewModel)
-                    } else {
-                        DeviceView(viewModel: viewModel)
+                ZStack(alignment: .top) {
+                    // Peek-out Button (External Reset) - Only in mission mode
+                    if !viewModel.isShowingStartScreen {
+                        HStack {
+                            ResetButtonView(onTap: {
+                                viewModel.pauseGame()
+                            })
+                            .padding(.leading, 45)
+                            Spacer()
+                        }
+                        .offset(y: -14)
                     }
+
+                    // Main Device Body Shell
+                    Group {
+                        if viewModel.isShowingStartScreen {
+                            GameStartView(viewModel: viewModel)
+                        } else {
+                            DeviceView(viewModel: viewModel)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.deviceGreen)
+                    .cornerRadius(40)
+                    .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
                 }
                 .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
+                .frame(maxHeight: .infinity)
                 .padding(.top, 12)
-                .padding(.bottom, 50) // Ensures a clear external margin from the bottom of the screen
+                .padding(.bottom, 50) // Consistent external margin from screen boundary
                 
                 // Dialog overlays...
                 if viewModel.showPauseDialog {
@@ -97,42 +117,26 @@ struct DeviceView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // External "Stitched" Reset Button - Peeking from the back
-            HStack {
-                ResetButtonView(onTap: {
-                    viewModel.pauseGame()
-                })
-                .padding(.leading, 45) // Better alignment with the corner curve
-                Spacer()
-            }
-            .offset(y: -14) // Adjusted for the larger button height
+        VStack(spacing: 0) {
+            Spacer(minLength: 12) // Slightly tighter top
+            
+            // Game board area
+            GameBoardView(viewModel: viewModel)
+                .padding(.horizontal, 16)
 
-            // Main device body
-            VStack(spacing: 0) {
-                Spacer(minLength: 12) // Slightly tighter top
-                
-                // Game board area
-                GameBoardView(viewModel: viewModel)
-                    .padding(.horizontal, 16)
+            Spacer(minLength: 8)
 
-                Spacer(minLength: 8)
+            // Inline Color Picker
+            HorizontalColorPickerView(viewModel: viewModel)
+                .padding(.horizontal, 16)
 
-                // Inline Color Picker
-                HorizontalColorPickerView(viewModel: viewModel)
-                    .padding(.horizontal, 16)
+            Spacer()
 
-                Spacer(minLength: 10)
-
-                // Bottom panel - status and knob
-                StatusControlPanelView(viewModel: viewModel)
-                    .padding(.horizontal, 12)
-                
-                Spacer(minLength: 15) // Reduced internal spacer to match start screen's bottom tight feel
-            }
-            .background(Color.deviceGreen)
-            .cornerRadius(40)
-            .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+            // Bottom panel - status and knob
+            StatusControlPanelView(viewModel: viewModel)
+                .padding(.horizontal, 12)
+            
+            Spacer(minLength: 15) // Standardized internal gap from the shell bottom
         }
     }
 }

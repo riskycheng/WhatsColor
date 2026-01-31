@@ -133,7 +133,8 @@ struct SubmitKnobView: View {
     @State private var rotation: Double = 0
     @State private var isPressed = false
     @State private var lastFiredRotation: Double = 0
-    @State private var pressStartTime: Date?
+    @State private var hasTriggeredLongPress = false
+    @State private var longPressWorkItem: DispatchWorkItem?
 
     var body: some View {
         IndustrialRotaryButton(
@@ -150,23 +151,30 @@ struct SubmitKnobView: View {
                 }
             },
             onPressStart: {
-                pressStartTime = Date()
+                hasTriggeredLongPress = false
+                
+                // Create a new work item for long press
+                let workItem = DispatchWorkItem {
+                    hasTriggeredLongPress = true
+                    viewModel.submitGuess()
+                    SoundManager.shared.hapticSuccess()
+                }
+                longPressWorkItem = workItem
+                
+                // Schedule it after 0.5 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
             },
             onPressEnd: {
-                if let startTime = pressStartTime {
-                    let duration = Date().timeIntervalSince(startTime)
-                    if duration < 0.4 {
-                        // Short press: cycle active slot
-                        viewModel.moveToNextSlot()
-                        SoundManager.shared.playSelection()
-                        SoundManager.shared.hapticLight()
-                    } else {
-                        // Long press: submit
-                        viewModel.submitGuess()
-                        SoundManager.shared.hapticSuccess()
-                    }
+                // Cancel pending long press if it hasn't fired yet
+                longPressWorkItem?.cancel()
+                longPressWorkItem = nil
+                
+                if !hasTriggeredLongPress {
+                    // Short press logic: cycle active slot
+                    viewModel.moveToNextSlot()
+                    SoundManager.shared.playSelection()
+                    SoundManager.shared.hapticLight()
                 }
-                pressStartTime = nil
             }
         )
     }

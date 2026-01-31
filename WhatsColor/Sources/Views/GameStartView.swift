@@ -126,9 +126,6 @@ struct GameStartView: View {
             
             Spacer(minLength: 15) // Standardized bottom internal spacer
         }
-        .background(Color.deviceGreen)
-        .cornerRadius(40)
-        .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 
