@@ -34,23 +34,53 @@ struct ContentView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.deviceGreen)
+                    .background(
+                        ZStack {
+                            Color.deviceGreen
+                            
+                            // Hardware Finish - Brushed look
+                            LinearGradient(
+                                colors: [.white.opacity(0.1), .clear, .black.opacity(0.15)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            
+                            // Industrial Screw details at corners
+                            VStack {
+                                HStack {
+                                    ScrewHeadSmall().padding(15)
+                                    Spacer()
+                                    ScrewHeadSmall().padding(15)
+                                }
+                                Spacer()
+                                HStack {
+                                    ScrewHeadSmall().padding(15)
+                                    Spacer()
+                                    ScrewHeadSmall().padding(15)
+                                }
+                            }
+                        }
+                    )
                     .cornerRadius(40)
                     .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+                    .blur(radius: viewModel.showPauseDialog || viewModel.showGameOverDialog ? 15 : 0)
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.showPauseDialog || viewModel.showGameOverDialog)
                 }
                 .frame(maxWidth: geometry.size.width > 400 ? 380 : geometry.size.width - 40)
                 .frame(maxHeight: .infinity)
                 .padding(.top, 12)
                 .padding(.bottom, 60) // Slightly more space for the external bar
                 
-                // EXTERNAL SYSTEM STATUS BAR (Outside the green shell)
-                VStack {
-                    Spacer()
-                    SystemStatusBar(viewModel: viewModel)
-                        .frame(width: geometry.size.width > 400 ? 340 : geometry.size.width - 80)
-                        .frame(height: 50) // Fix height to ensure vertical centering within the 50pt padding
+                // EXTERNAL SYSTEM STATUS BAR - Only shown during mission, hidden on start screen
+                if !viewModel.isShowingStartScreen {
+                    VStack {
+                        Spacer()
+                        SystemStatusBar(viewModel: viewModel)
+                            .frame(width: geometry.size.width > 400 ? 340 : geometry.size.width - 80)
+                            .frame(height: 50) // Fix height to ensure vertical centering within the 50pt padding
+                    }
+                    .ignoresSafeArea(.keyboard)
                 }
-                .ignoresSafeArea(.keyboard)
                 
                 // Dialog overlays...
                 if viewModel.showPauseDialog {
@@ -165,8 +195,8 @@ struct SystemStatusBar: View {
                                 
                                 Text(toast.message)
                                     .font(.system(size: 11, weight: .black, design: .monospaced))
-                                    .foregroundColor(statusColor)
                                     .tracking(1.5)
+                                    .foregroundColor(statusColor)
                                 
                                 Spacer()
                                 
@@ -188,8 +218,8 @@ struct SystemStatusBar: View {
                             HStack {
                                 Text("SYSTEM: NOMINAL")
                                     .font(.system(size: 9, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.12))
                                     .tracking(2.5)
+                                    .foregroundColor(.white.opacity(0.12))
                                 
                                 Spacer()
                                 
@@ -420,6 +450,25 @@ struct GameOverDialogView: View {
                 }
                 .padding(.vertical, 10)
 
+                // Only show solution in DUAL mode, not in persistent SOLO mode
+                if viewModel.gameMode == .dual {
+                    VStack(spacing: 8) {
+                        Text("CORRECT CODE")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.4))
+                        
+                        HStack(spacing: 12) {
+                            ForEach(0..<4, id: \.self) { index in
+                                Circle()
+                                    .fill(viewModel.state.secretCode[index].color)
+                                    .frame(width: 24, height: 24)
+                                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                            }
+                        }
+                    }
+                    .padding(.bottom, 10)
+                }
+
                 VStack(spacing: 12) {
                     DialogButton(title: "PLAY AGAIN", action: {
                         viewModel.showGameOverDialog = false
@@ -541,6 +590,28 @@ struct RoundedCorner: Shape {
             cornerRadii: CGSize(width: radius, height: radius)
         )
         return Path(path.cgPath)
+    }
+}
+
+struct ScrewHeadSmall: View {
+    var body: some View {
+        Circle()
+            .fill(
+                RadialGradient(
+                    colors: [Color(white: 0.4), Color(white: 0.15)],
+                    center: .center,
+                    startRadius: 0,
+                    endRadius: 4
+                )
+            )
+            .frame(width: 8, height: 8)
+            .overlay(
+                Rectangle()
+                    .fill(Color.black.opacity(0.3))
+                    .frame(width: 6, height: 1.5)
+                    .rotationEffect(.degrees(45))
+            )
+            .shadow(color: .black.opacity(0.3), radius: 1, x: 0, y: 1)
     }
 }
 

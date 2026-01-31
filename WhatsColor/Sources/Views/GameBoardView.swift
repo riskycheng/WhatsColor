@@ -4,26 +4,53 @@ struct GameBoardView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Board panel
-            HStack(spacing: 0) {
-                // Game grid - top to bottom
-                VStack(spacing: 8) { // Reduced row spacing
-                    ForEach(viewModel.state.attempts) { row in
-                        GameRowView(
-                            row: row,
-                            mode: viewModel.state.mode,
-                            isActive: viewModel.isCurrentRowActive && viewModel.getCurrentRowNumber() == row.rowNumber,
-                            viewModel: viewModel
-                        )
+        VStack(alignment: .leading, spacing: 10) {
+            // Screen Header Label
+            HStack {
+                Text("NEURAL_CORE_DISPLAY")
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .tracking(2)
+                    .foregroundColor(.white.opacity(0.15))
+                Spacer()
+                HStack(spacing: 3) {
+                    ForEach(0..<3) { _ in
+                        Rectangle()
+                            .fill(Color.gameGreen.opacity(0.2))
+                            .frame(width: 4, height: 4)
                     }
                 }
             }
-            .padding(.horizontal, 15)
-            .padding(.vertical, 15) // Reduced vertical margin inside board panel
-            .background(Color.panelDark)
-            .cornerRadius(10)
-            .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
+            .padding(.horizontal, 8)
+
+            // Board panel
+            VStack(spacing: 12) {
+                ForEach(viewModel.state.attempts) { row in
+                    GameRowView(
+                        row: row,
+                        mode: viewModel.state.mode,
+                        isActive: viewModel.isCurrentRowActive && viewModel.getCurrentRowNumber() == row.rowNumber,
+                        viewModel: viewModel
+                    )
+                }
+            }
+            .padding(18)
+            .background(
+                ZStack {
+                    // Deep recessed screen background
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(white: 0.03))
+                    
+                    // Screen "Glow" shadow
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.03), lineWidth: 1)
+                }
+            )
+            .overlay(
+                // Carbon fiber / grid texture overlay (subtle)
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.05), lineWidth: 0.5)
+            )
+            .shadow(color: .black.opacity(0.8), radius: 15, x: 0, y: 10)
         }
     }
 }
@@ -81,7 +108,7 @@ struct SlotView: View {
     let onDrop: (GameColor) -> Void
 
     var body: some View {
-        let showTargetEffect = viewModel.dropTargetIndex == slotIndex && isActive
+        let showTargetEffect = viewModel.dropTargetIndex == slotIndex && viewModel.dropTargetRow == rowNumber && isActive
         
         ZStack {
             // Empty slot
@@ -99,19 +126,10 @@ struct SlotView: View {
                     GeometryReader { geo in
                         Color.clear
                             .onAppear {
-                                if isActive {
-                                    viewModel.registerSlotFrame(geo.frame(in: .global), for: slotIndex)
-                                }
-                            }
-                            .onChange(of: isActive) { active in
-                                if active {
-                                    viewModel.registerSlotFrame(geo.frame(in: .global), for: slotIndex)
-                                }
+                                viewModel.registerSlotFrame(geo.frame(in: .global), row: rowNumber, slot: slotIndex)
                             }
                             .onChange(of: geo.frame(in: .global)) { newFrame in
-                                if isActive {
-                                    viewModel.registerSlotFrame(newFrame, for: slotIndex)
-                                }
+                                viewModel.registerSlotFrame(newFrame, row: rowNumber, slot: slotIndex)
                             }
                     }
                 )
@@ -124,7 +142,7 @@ struct SlotView: View {
                     .frame(width: 45, height: 45)
                     .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
                     .scaleEffect(showTargetEffect ? 0.9 : 1.0)
-                    .opacity(viewModel.sourceSlotIndex == slotIndex ? 0.0 : 1.0) // Hide source while dragging
+                    .opacity(viewModel.sourceSlotIndex == slotIndex && viewModel.sourceSlotRow == rowNumber ? 0.0 : 1.0) // Hide source while dragging
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.dropTargetIndex)
             }
 
@@ -150,6 +168,7 @@ struct SlotView: View {
                             if abs(value.translation.width) > 10 || abs(value.translation.height) > 10 {
                                 if let color = color {
                                     viewModel.activeDragColor = color
+                                    viewModel.sourceSlotRow = rowNumber
                                     viewModel.sourceSlotIndex = slotIndex
                                     SoundManager.shared.playDragStart()
                                     SoundManager.shared.hapticMedium()
@@ -169,9 +188,12 @@ struct SlotView: View {
                             // If we never triggered the drag threshold, treat as tap
                             onTap()
                         } else {
-                            // Complete the drag-and-swap only upon release
+                            // Check if we are releasing over a valid target
                             viewModel.endDragging()
                         }
+                    } else if viewModel.activeDragColor != nil {
+                        // If dragging started from active row but ended over inactive row, still trigger logic
+                        viewModel.endDragging()
                     }
                 }
         )

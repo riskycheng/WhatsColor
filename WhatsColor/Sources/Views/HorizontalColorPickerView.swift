@@ -4,26 +4,47 @@ struct HorizontalColorPickerView: View {
     @ObservedObject var viewModel: GameViewModel
 
     var body: some View {
-        HStack(spacing: 0) {
-            // Color options - sized to match board width
-            HStack(spacing: 6) { // Slightly increased spacing between colors
-                ForEach(GameColor.allCases) { color in
-                    HorizontalColorButton(
-                        color: color,
-                        isSelected: viewModel.state.currentGuess[viewModel.state.activeIndex] == color,
-                        viewModel: viewModel,
-                        onTap: {
-                            viewModel.selectColor(color)
-                        }
-                    )
+        VStack(alignment: .leading, spacing: 6) {
+            // Technical Label
+            HStack(spacing: 4) {
+                Image(systemName: "paintpalette.fill")
+                    .font(.system(size: 8))
+                Text("COLOR_INJECTOR_BUS")
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .tracking(1)
+            }
+            .foregroundColor(.white.opacity(0.15))
+            .padding(.leading, 10)
+
+            HStack(spacing: 0) {
+                // Color options - sized to match board width
+                HStack(spacing: 8) { 
+                    ForEach(GameColor.allCases) { color in
+                        HorizontalColorButton(
+                            color: color,
+                            isSelected: viewModel.state.currentGuess[viewModel.state.activeIndex] == color,
+                            viewModel: viewModel,
+                            onTap: {
+                                viewModel.selectColor(color)
+                            }
+                        )
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.4))
+                    
+                    // Internal shadow/recessed look
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                }
+            )
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12) // Increased top/bottom margins
-        .background(Color.panelDark)
-        .cornerRadius(10)
-        .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
+        .padding(.horizontal, 16)
     }
 }
 

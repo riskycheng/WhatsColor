@@ -48,8 +48,8 @@ struct StatusControlPanelView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("MISSION DATA")
                             .font(.system(size: 8, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.2))
                             .tracking(1)
+                            .foregroundColor(.white.opacity(0.2))
                         
                         HStack(spacing: 14) {
                             StatusItemCompact(label: "DIFF", value: viewModel.state.difficulty.rawValue.uppercased(), color: .gameGreen)

@@ -4,6 +4,8 @@ import Combine
 
 class GameViewModel: ObservableObject {
     @Published var state: GameStateModel
+    
+    // Level keys are now difficulty-dependent
 
     // Dialog states
     @Published var showPauseDialog: Bool = false
@@ -27,7 +29,9 @@ class GameViewModel: ObservableObject {
     // Drag state
     @Published var activeDragColor: GameColor? = nil
     @Published var dragPosition: CGPoint = .zero
-    @Published var dropTargetIndex: Int? = nil
+    @Published var dropTargetRow: Int? = nil      // Specify row
+    @Published var dropTargetIndex: Int? = nil    // Specify slot within row
+    @Published var sourceSlotRow: Int? = nil      // Specify source row
     @Published var sourceSlotIndex: Int? = nil
     
     // For smooth swapping animation
@@ -37,30 +41,43 @@ class GameViewModel: ObservableObject {
     // Game Flow State
     @Published var isShowingStartScreen: Bool = true
     
-    // Slot frames for manual drag detection
-    private var slotFrames: [Int: CGRect] = [:]
+    // Frames for each slot: unique key "row-slot"
+    @Published var slotFrames: [String: CGRect] = [:]
     
-    func registerSlotFrame(_ frame: CGRect, for index: Int) {
-        slotFrames[index] = frame
+    func registerSlotFrame(_ frame: CGRect, row: Int, slot: Int) {
+        let key = "\(row)-\(slot)"
+        slotFrames[key] = frame
     }
     
     func updateDragPosition(_ position: CGPoint) {
         dragPosition = position
         
-        // Find if we are over any slot
-        let oldTarget = dropTargetIndex
-        var newTarget: Int? = nil
+        let oldTargetRow = dropTargetRow
+        let oldTargetIndex = dropTargetIndex
+        var newTargetRow: Int? = nil
+        var newTargetIndex: Int? = nil
         
-        for (index, frame) in slotFrames {
+        // Only consider frames for the current active row
+        let activeRowNumber = getCurrentRowNumber()
+        
+        for (key, frame) in slotFrames {
             if frame.contains(position) {
-                newTarget = index
-                break
+                let parts = key.split(separator: "-")
+                if parts.count == 2, 
+                   let r = Int(parts[0]), 
+                   let s = Int(parts[1]),
+                   r == activeRowNumber { // Strict: only allow dropping on active row
+                    newTargetRow = r
+                    newTargetIndex = s
+                    break
+                }
             }
         }
         
-        if oldTarget != newTarget {
-            dropTargetIndex = newTarget
-            if newTarget != nil {
+        if oldTargetRow != newTargetRow || oldTargetIndex != newTargetIndex {
+            dropTargetRow = newTargetRow
+            dropTargetIndex = newTargetIndex
+            if newTargetIndex != nil {
                 SoundManager.shared.hapticLight()
             }
         }
@@ -68,16 +85,19 @@ class GameViewModel: ObservableObject {
     
     func endDragging() {
         if let targetIndex = dropTargetIndex, let color = activeDragColor {
-            if let sourceIndex = sourceSlotIndex {
-                // Handle swapping on release
-                if sourceIndex != targetIndex {
-                    let targetColor = state.currentGuess[targetIndex]
-                    state.currentGuess[sourceIndex] = targetColor
-                    state.currentGuess[targetIndex] = color
-                    state.activeIndex = targetIndex
+            if let sourceIndex = sourceSlotIndex, let sourceRow = sourceSlotRow {
+                // Swapping logic: must check if target row is the active row
+                let activeRowNumber = getCurrentRowNumber()
+                if sourceRow == activeRowNumber && dropTargetRow == activeRowNumber {
+                    if sourceIndex != targetIndex {
+                        let targetColor = state.currentGuess[targetIndex]
+                        state.currentGuess[sourceIndex] = targetColor
+                        state.currentGuess[targetIndex] = color
+                        state.activeIndex = targetIndex
+                    }
                 }
             } else {
-                // Handle palette drop on release
+                // Palette drop
                 setColor(color, at: targetIndex)
             }
             SoundManager.shared.playDrop()
@@ -85,7 +105,9 @@ class GameViewModel: ObservableObject {
         }
         activeDragColor = nil
         dragPosition = .zero
+        dropTargetRow = nil
         dropTargetIndex = nil
+        sourceSlotRow = nil
         sourceSlotIndex = nil
     }
 
@@ -105,11 +127,26 @@ class GameViewModel: ObservableObject {
     @Published var gameStarted: Bool = false  // Timer only runs after full setup flow
     private var timer: Timer?
 
+    private func getLevelKey(for difficulty: GameDifficulty) -> String {
+        return "WhatsColor_Level_\(difficulty.rawValue)"
+    }
+
     init() {
         self.state = GameStateModel.initial
+        
+        // Load difficulty-specific level
+        let key = "WhatsColor_Level_\(self.state.difficulty.rawValue)"
+        let savedLevel = UserDefaults.standard.integer(forKey: key)
+        self.state.level = max(1, savedLevel)
+        
         gameStarted = false
         isShowingStartScreen = true
         startNewGame()
+    }
+    
+    private func saveProgress() {
+        let key = getLevelKey(for: state.difficulty)
+        UserDefaults.standard.set(state.level, forKey: key)
     }
 
     func showToast(_ message: String, type: ToastType = .info) {
@@ -251,9 +288,12 @@ class GameViewModel: ObservableObject {
         showPauseDialog = false
         isShowingStartScreen = true
         gameStarted = false
-        // Reset level to 1 for a fresh start, or keep it if it's a "Restart Level"
-        // Let's reset to 1 to match the "Back to Start Screen" behavior
-        state.level = 1
+        
+        // Reset level to 1 only if we are in beginner/dual mode, otherwise keep level progress
+        if gameMode == .dual {
+            state.level = 1
+        }
+        
         timeRemaining = 120
         selectedSecretCode = [] 
         currentSecretSlot = 0
@@ -284,6 +324,7 @@ class GameViewModel: ObservableObject {
 
     func startNextLevel() {
         state.level += 1
+        saveProgress()
         startNewGame()
     }
 
@@ -503,6 +544,12 @@ class GameViewModel: ObservableObject {
         state.difficulty = difficulty
         // Update predefined time for the selected difficulty
         timeRemaining = difficulty.baseTime
+        
+        // Load difficulty-specific level
+        let key = getLevelKey(for: difficulty)
+        let savedLevel = UserDefaults.standard.integer(forKey: key)
+        state.level = max(1, savedLevel)
+        
         startNewGame()
     }
 
@@ -519,6 +566,16 @@ class GameViewModel: ObservableObject {
 
     var currentLevelString: String {
         String(format: "%03d", state.level)
+    }
+
+    var currentRank: String {
+        let lv = state.level
+        if lv <= 5 { return "RECRUIT" }
+        if lv <= 20 { return "SPECIALIST" }
+        if lv <= 50 { return "OPERATIVE" }
+        if lv <= 100 { return "COMMANDER" }
+        if lv <= 300 { return "ELITE" }
+        return "LEGENDARY"
     }
 
     var activeColors: [GameColor] {
