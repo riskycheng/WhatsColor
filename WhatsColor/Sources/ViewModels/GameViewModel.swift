@@ -331,6 +331,17 @@ class GameViewModel: ObservableObject {
     }
 
     func generateSecretCode() -> [GameColor] {
+        // Simplified codes for the first two levels of each difficulty in SOLO mode
+        if gameMode == .solo {
+            if state.level == 1 {
+                // Simplest order: first 4 colors
+                return [.red, .green, .orange, .blue]
+            } else if state.level == 2 {
+                // Second simplest: reversed order of first 4 colors
+                return [.blue, .orange, .green, .red]
+            }
+        }
+        
         var indices = Array(0..<7)
         var code: [GameColor] = []
 
@@ -491,8 +502,11 @@ class GameViewModel: ObservableObject {
         if isWin {
             if gameMode == .solo {
                 state.level += 1
+                saveProgress() // Persist level progress immediately
+                
                 if state.level > 500 {
-                    state.level = 1 // Loop or end game? User said 500 total.
+                    state.level = 1 
+                    saveProgress()
                     state.isGameOver = true
                     state.message = "ALL MISSIONS COMPLETE"
                     showGameOverDialog = true
