@@ -123,7 +123,7 @@ struct SecretCodeSelectionView: View {
     
     private var colorPickerSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 14) {
+            HStack(spacing: 8) { // Tighter spacing for square blocks
                 ForEach(GameColor.allCases, id: \.self) { color in
                     SecretColorCard(
                         color: color,
@@ -134,21 +134,23 @@ struct SecretCodeSelectionView: View {
                     )
                 }
             }
-            .padding(.horizontal, dialogPadding - 4)
-            .padding(.vertical, 16)
+            .padding(.horizontal, dialogPadding)
         }
     }
     
     // MARK: - Action Buttons Section
     
     private var actionButtonsSection: some View {
-        VStack(spacing: 12) {
-            if viewModel.gameMode == .dual && viewModel.isSecretCodeComplete {
-                Text("READY? HAND TO THE CHALLENGER")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundColor(.white.opacity(0.6))
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+        VStack(spacing: 8) {
+            // Unified Hint Area - Pre-reserved space to prevent layout jumps
+            HStack {
+                Text(viewModel.gameMode == .dual && viewModel.isSecretCodeComplete ? "READY? HAND TO THE CHALLENGER" : " ")
+                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                    .foregroundColor(.gameGreen.opacity(0.6))
+                    .tracking(1)
             }
+            .frame(height: 14)
+            .padding(.top, 4)
             
             HStack(spacing: 16) {
                 // Cancel button
@@ -249,109 +251,48 @@ struct SecretColorCard: View {
     let isSelected: Bool
     let action: () -> Void
     
-    @State private var isPressed = false
-    
     var body: some View {
         Button(action: {
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
+            SoundManager.shared.hapticLight()
             action()
         }) {
-            VStack(spacing: 8) {
-                // Color swatch
-                ZStack {
-                    // Glow effect
-                    if isSelected {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(color.color.opacity(0.4))
-                            .blur(radius: 10)
-                            .frame(width: 55, height: 55)
-                    }
-                    
-                    // Main Square (matching board style)
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(
-                            LinearGradient(
-                                colors: [color.color, color.color.opacity(0.7)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 48, height: 48)
-                        .shadow(
-                            color: color.color.opacity(0.5),
-                            radius: isSelected ? 8 : 4,
-                            x: 0, y: isSelected ? 4 : 2
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(
-                                    isSelected ? Color.white : Color.white.opacity(0.2),
-                                    lineWidth: isSelected ? 3 : 1
-                                )
-                        )
-                    
-                    // Highlight
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    Color.white.opacity(0.3),
-                                    Color.white.opacity(0.0)
-                                ],
-                                center: .topLeading,
-                                startRadius: 0,
-                                endRadius: 25
-                            )
-                        )
-                        .frame(width: 40, height: 40)
-                        .offset(x: -4, y: -4)
-                    
-                    // Selection checkmark
-                    if isSelected {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
-                    }
+            ZStack {
+                // Glow effect for selection
+                if isSelected {
+                    Rectangle()
+                        .fill(color.color.opacity(0.4))
+                        .blur(radius: 12)
+                        .frame(width: 58, height: 58)
                 }
                 
-                // Color name
-                Text(color.name)
-                    .font(.system(size: 11, weight: isSelected ? .bold : .medium, design: .rounded))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.5))
-            }
-            .padding(.vertical, 10)
-            .padding(.horizontal, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ?
-                          LinearGradient(
-                              colors: [Color.gameGreen.opacity(0.15), Color.gameGreen.opacity(0.08)],
-                              startPoint: .top,
-                              endPoint: .bottom
-                          ) :
-                          LinearGradient(
-                              colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)],
-                              startPoint: .top,
-                              endPoint: .bottom
-                          )
+                // The Primary Square Block
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [color.color, color.color.opacity(0.8)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
+                    .frame(width: 50, height: 50)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(isSelected ? Color.gameGreen.opacity(0.5) : Color.clear, lineWidth: 2)
-)
-            )
+                        Rectangle()
+                            .stroke(isSelected ? Color.white : Color.white.opacity(0.15), lineWidth: isSelected ? 3 : 1)
+                    )
+                    .shadow(color: color.color.opacity(0.35), radius: isSelected ? 8 : 2, x: 0, y: isSelected ? 4 : 1)
+                
+                // Selection checkmark overlay
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 22, weight: .black))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.4), radius: 2)
+                }
+            }
+            .frame(width: 65, height: 75) // Standardized hitbox for scrolling
         }
         .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.92 : (isSelected ? 1.08 : 1.0))
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isPressed)
         .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isSelected)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
-        )
     }
 }
 
