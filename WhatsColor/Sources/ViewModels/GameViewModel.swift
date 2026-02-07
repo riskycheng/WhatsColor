@@ -133,13 +133,23 @@ class GameViewModel: ObservableObject {
         return "WhatsColor_Level_\(difficulty.rawValue)"
     }
 
+    private let themeKey = "WhatsColor_Theme"
+
     init() {
         self.state = GameStateModel.initial
         
         // Load difficulty-specific level
-        let key = "WhatsColor_Level_\(self.state.difficulty.rawValue)"
+        let key = getLevelKey(for: self.state.difficulty)
         let savedLevel = UserDefaults.standard.integer(forKey: key)
         self.state.level = max(1, savedLevel)
+        
+        // Load theme or use a rich default (Pixel Fruit for industrial look)
+        if let savedTheme = UserDefaults.standard.string(forKey: themeKey),
+           let theme = GameTheme(rawValue: savedTheme) {
+            self.state.theme = theme
+        } else {
+            self.state.theme = .pixelFruit
+        }
         
         gameStarted = false
         isShowingStartScreen = true
@@ -149,6 +159,10 @@ class GameViewModel: ObservableObject {
     private func saveProgress() {
         let key = getLevelKey(for: state.difficulty)
         UserDefaults.standard.set(state.level, forKey: key)
+    }
+
+    func saveTheme() {
+        UserDefaults.standard.set(state.theme.rawValue, forKey: themeKey)
     }
 
     func showToast(_ message: String, type: ToastType = .info) {
@@ -566,6 +580,13 @@ class GameViewModel: ObservableObject {
         state.level = max(1, savedLevel)
         
         startNewGame()
+    }
+
+    func changeTheme(to theme: GameTheme) {
+        state.theme = theme
+        saveTheme()
+        SoundManager.shared.playSelection()
+        SoundManager.shared.hapticLight()
     }
 
     // MARK: - Computed Properties

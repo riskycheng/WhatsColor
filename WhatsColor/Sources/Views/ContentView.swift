@@ -99,14 +99,22 @@ struct ContentView: View {
                 // Manual Drag Overlay - instant response, no plus badge, finger-offset
                 if let dragColor = viewModel.activeDragColor {
                     ZStack {
-                        Circle()
-                            .fill(dragColor.color)
-                            .frame(width: 60, height: 60)
-                            .shadow(color: .black.opacity(0.4), radius: 10, x: 0, y: 5)
-                        
-                        Circle()
-                            .stroke(Color.white, lineWidth: 2.5)
-                            .frame(width: 68, height: 68)
+                        if let icon = viewModel.state.theme.image(for: dragColor) {
+                            icon
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 55, height: 55)
+                                .shadow(color: .black.opacity(0.4), radius: 10, x: 0, y: 5)
+                        } else {
+                            Circle()
+                                .fill(dragColor.color)
+                                .frame(width: 60, height: 60)
+                                .shadow(color: .black.opacity(0.4), radius: 10, x: 0, y: 5)
+                            
+                            Circle()
+                                .stroke(Color.white, lineWidth: 2.5)
+                                .frame(width: 68, height: 68)
+                        }
                     }
                     .position(x: viewModel.dragPosition.x, y: viewModel.dragPosition.y)
                     .transition(.scale.combined(with: .opacity))

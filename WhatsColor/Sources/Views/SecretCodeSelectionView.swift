@@ -106,6 +106,7 @@ struct SecretCodeSelectionView: View {
                            viewModel.selectedSecretCode[index] : nil,
                     slotIndex: index,
                     isActive: index == viewModel.selectedSecretCode.count,
+                    viewModel: viewModel,
                     onTap: {
                         // Reset from this slot onwards
                         if index < viewModel.selectedSecretCode.count {
@@ -128,6 +129,7 @@ struct SecretCodeSelectionView: View {
                     SecretColorCard(
                         color: color,
                         isSelected: viewModel.selectedSecretCode.last == color,
+                        viewModel: viewModel,
                         action: {
                             viewModel.selectSecretColor(color)
                         }
@@ -205,6 +207,7 @@ struct ColorSlotView: View {
     let color: GameColor?
     let slotIndex: Int
     let isActive: Bool
+    @ObservedObject var viewModel: GameViewModel
     let onTap: () -> Void
     
     var body: some View {
@@ -222,11 +225,19 @@ struct ColorSlotView: View {
                     )
                 
                 if let color = color {
-                    // Selected color
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(color.color)
-                        .padding(4)
-                        .shadow(color: color.color.opacity(0.5), radius: 4, x: 0, y: 2)
+                    // Selected color/icon
+                    if let icon = viewModel.state.theme.image(for: color) {
+                        icon
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 44, height: 44)
+                            .shadow(color: .black.opacity(0.35), radius: 2, x: 0, y: 1)
+                    } else {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(color.color)
+                            .padding(4)
+                            .shadow(color: color.color.opacity(0.5), radius: 4, x: 0, y: 2)
+                    }
                 } else {
                     // Empty slot indicator
                     VStack(spacing: 4) {
@@ -249,6 +260,7 @@ struct ColorSlotView: View {
 struct SecretColorCard: View {
     let color: GameColor
     let isSelected: Bool
+    @ObservedObject var viewModel: GameViewModel
     let action: () -> Void
     
     var body: some View {
@@ -275,6 +287,16 @@ struct SecretColorCard: View {
                         )
                     )
                     .frame(width: 50, height: 50)
+                    .overlay(
+                        Group {
+                            if let icon = viewModel.state.theme.image(for: color) {
+                                icon
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 36, height: 36)
+                            }
+                        }
+                    )
                     .overlay(
                         Rectangle()
                             .stroke(isSelected ? Color.white : Color.white.opacity(0.15), lineWidth: isSelected ? 3 : 1)

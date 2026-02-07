@@ -108,13 +108,23 @@ struct SlotView: View {
 
             // Filled slot color
             if let color = color {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(color.color)
-                    .frame(width: 45, height: 45)
-                    .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
-                    .scaleEffect(showTargetEffect ? 0.9 : 1.0)
-                    .opacity(viewModel.sourceSlotIndex == slotIndex && viewModel.sourceSlotRow == rowNumber ? 0.0 : 1.0) // Hide source while dragging
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.dropTargetIndex)
+                Group {
+                    if let icon = viewModel.state.theme.image(for: color) {
+                        icon
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 38, height: 38)
+                            .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
+                    } else {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(color.color)
+                            .frame(width: 45, height: 45)
+                            .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
+                    }
+                }
+                .scaleEffect(showTargetEffect ? 0.9 : 1.0)
+                .opacity(viewModel.sourceSlotIndex == slotIndex && viewModel.sourceSlotRow == rowNumber ? 0.0 : 1.0) // Hide source while dragging
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.dropTargetIndex)
             }
 
             // Selection indicator for active slot

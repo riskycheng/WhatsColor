@@ -48,7 +48,7 @@ enum FeedbackType: Equatable {
     case empty
 }
 
-enum FeedbackMode: String, CaseIterable, Identifiable {
+enum FeedbackMode: String, CaseIterable, Identifiable, Codable {
     case beginner = "Line Hint"
     case advanced = "Dot Hint"
 
@@ -64,7 +64,74 @@ enum FeedbackMode: String, CaseIterable, Identifiable {
     }
 }
 
-enum GameDifficulty: String, CaseIterable, Identifiable {
+enum GameTheme: String, CaseIterable, Identifiable, Codable {
+    case classic = "CLASSIC"
+    case pixelFruit = "PIXEL FRUIT"
+    case cuteCat = "CUTE CAT"
+    case cuteDog = "CUTE DOG"
+    case fastFood = "FAST FOOD"
+    case fruit = "FRUIT"
+    case vegetables = "VEGETABLES"
+
+    var id: String { rawValue }
+
+    var folderName: String? {
+        switch self {
+        case .pixelFruit: return "pixel_fruit"
+        case .cuteCat: return "cute_cat"
+        case .cuteDog: return "cute_dog"
+        case .fastFood: return "nice_fastfood"
+        case .fruit: return "nice_fruit"
+        case .vegetables: return "nice_vegitables"
+        default: return nil
+        }
+    }
+
+    func iconNames() -> [String] {
+        switch self {
+        case .pixelFruit:
+            return ["icon_baximei", "icon_bocai", "icon_fupenzi", "icon_lanmei", "icon_niuyouguo", "icon_qiyiguo", "icon_xilanhua"]
+        case .cuteCat:
+            return ["baimao", "buoumao", "heimao", "jumao", "nainiumao", "sanhuamao", "wumaomao"]
+        case .cuteDog:
+            return ["cangao", "chaiquan", "fadou", "hashiqi", "jinmao", "lachangquan", "tianyuanquan"]
+        case .fastFood:
+            return ["hanbaobao", "makalong", "pisa", "sanwenzhi", "shutiao", "tiantianquan", "zhenzhunaicha"]
+        case .fruit:
+            return ["boluo", "caomei", "cheng", "fanqie", "li", "liulian", "niuyouguo"]
+        case .vegetables:
+            return ["kugua", "lajiao", "luobu", "nangua", "xilanhua", "yangcong", "yumi"]
+        case .classic:
+            return []
+        }
+    }
+
+    func image(for color: GameColor) -> Image? {
+        let names = iconNames()
+        guard color.rawValue < names.count else { return nil }
+        let name = names[color.rawValue]
+        
+        // Try simple Image(name) first as resources are often flattened
+        let image = Image(name)
+        // Note: SwiftUI's Image(name) doesn't return nil if not found easily, 
+        // it just shows nothing or logs. But we can check via UIImage.
+        if UIImage(named: name) != nil {
+            return self == .pixelFruit ? image.interpolation(.none) : image
+        }
+        
+        // Fallback to path-based if they are in folder references
+        if let folder = folderName,
+           let path = Bundle.main.path(forResource: name, ofType: "png", inDirectory: "icon_materials/\(folder)"),
+           let uiImage = UIImage(contentsOfFile: path) {
+            let img = Image(uiImage: uiImage)
+            return self == .pixelFruit ? img.interpolation(.none) : img
+        }
+        
+        return nil
+    }
+}
+
+enum GameDifficulty: String, CaseIterable, Identifiable, Codable {
     case easy = "EASY"
     case normal = "NORMAL"
     case hard = "HARD"
@@ -117,6 +184,7 @@ struct GameStateModel {
     var activeIndex: Int
     var mode: FeedbackMode
     var difficulty: GameDifficulty
+    var theme: GameTheme
     var isGameOver: Bool
     var level: Int
     var message: String
@@ -128,6 +196,7 @@ struct GameStateModel {
         activeIndex: 0,
         mode: .advanced,
         difficulty: .normal,
+        theme: .pixelFruit,
         isGameOver: false,
         level: 1,
         message: "READY"

@@ -31,31 +31,61 @@ struct StatusControlPanelView: View {
                 // LEFT SIDE: Telemetry (Timer + Status)
                 VStack(alignment: .leading, spacing: 2) {
                     // Timer Display
-                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    HStack(alignment: .lastTextBaseline, spacing: 6) {
                         Text("\(viewModel.timeRemaining)")
-                            .font(.system(size: 68, weight: .black, design: .monospaced))
+                            .font(.system(size: 62, weight: .black, design: .monospaced))
                             .foregroundColor(.gameRed)
                             .shadow(color: .gameRed.opacity(0.4), radius: 8)
                             .monospacedDigit()
                             .minimumScaleFactor(0.5)
 
                         Text("SEC")
-                            .font(.system(size: 15, weight: .black, design: .monospaced))
+                            .font(.system(size: 14, weight: .black, design: .monospaced))
                             .foregroundColor(.gameRed.opacity(0.5))
+                            .padding(.bottom, 10)
                     }
                     
-                    // Mission Data - High-Contrast Technical Telemetry
-                    HStack(spacing: 0) {
-                        Text(viewModel.state.difficulty.rawValue.uppercased())
-                            .font(.system(size: 17, weight: .black, design: .monospaced))
-                            .foregroundColor(.gameGreen)
-                            .shadow(color: .gameGreen.opacity(0.5), radius: 6)
+                    // REDESIGNED: Advanced Mission Status Telemetry
+                    HStack(spacing: 12) {
+                        // Difficulty Block
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("RANK")
+                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.4))
+                                .tracking(1)
+                            
+                            Text(viewModel.state.difficulty.rawValue)
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .foregroundColor(.gameGreen)
+                                .shadow(color: .gameGreen.opacity(0.5), radius: 4)
+                                .lineLimit(1)
+                        }
                         
-                        Text(viewModel.gameMode == .solo ? " // L\(viewModel.state.level)" : " // DUAL")
-                            .font(.system(size: 17, weight: .bold, design: .monospaced))
-                            .foregroundColor(.gameGreen.opacity(0.6))
+                        // Hardware-style Vertical Divider
+                        Rectangle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [.clear, .white.opacity(0.2), .clear],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: 1, height: 22)
+                        
+                        // Operation Mode Block
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(viewModel.gameMode == .solo ? "SECTOR" : "MODE")
+                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.4))
+                                .tracking(1)
+                            
+                            Text(viewModel.gameMode == .solo ? String(format: "L-%02d", viewModel.state.level) : "VERSUS")
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.9))
+                                .lineLimit(1)
+                        }
                     }
-                    .padding(.top, 4)
+                    .padding(.top, 6)
                 }
                 .padding(.leading, 20)
                 

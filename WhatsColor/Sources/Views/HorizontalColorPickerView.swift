@@ -59,20 +59,28 @@ struct HorizontalColorButton: View {
                 .offset(y: isPressing ? 4 : 2)
             
             // Main color circle
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [color.color.opacity(0.85), color.color],
-                        center: .topLeading,
-                        startRadius: 2,
-                        endRadius: 32
+            if let icon = viewModel.state.theme.image(for: color) {
+                icon
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 32, height: 32)
+                    .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
+            } else {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [color.color.opacity(0.85), color.color],
+                            center: .topLeading,
+                            startRadius: 2,
+                            endRadius: 32
+                        )
                     )
-                )
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                )
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
+            }
             
             // Selection / Press highlight
             let isDragActive = viewModel.activeDragColor != nil
