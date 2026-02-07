@@ -34,6 +34,17 @@ struct GameBoardView: View {
                     .stroke(Color.white.opacity(0.05), lineWidth: 0.5)
             )
             .shadow(color: .black.opacity(0.8), radius: 15, x: 0, y: 10)
+            .background(
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear {
+                            viewModel.registerBoardFrame(geo.frame(in: .global))
+                        }
+                        .onChange(of: geo.frame(in: .global)) { newFrame in
+                            viewModel.registerBoardFrame(newFrame)
+                        }
+                }
+            )
         }
     }
 }
@@ -91,7 +102,9 @@ struct SlotView: View {
     let onDrop: (GameColor) -> Void
 
     var body: some View {
-        let showTargetEffect = viewModel.dropTargetIndex == slotIndex && viewModel.dropTargetRow == rowNumber && isActive
+        let isPreciseTarget = viewModel.dropTargetIndex == slotIndex && viewModel.dropTargetRow == rowNumber && isActive
+        let isGenericBoardTarget = viewModel.isOverBoard && viewModel.dropTargetIndex == nil && isSelected && isActive && viewModel.sourceSlotIndex == nil
+        let showTargetEffect = isPreciseTarget || isGenericBoardTarget
         
         ZStack {
             // Empty slot base

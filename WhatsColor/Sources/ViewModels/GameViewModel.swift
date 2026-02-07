@@ -43,14 +43,23 @@ class GameViewModel: ObservableObject {
     
     // Frames for each slot: unique key "row-slot"
     @Published var slotFrames: [String: CGRect] = [:]
+    @Published var boardFrame: CGRect = .zero
+    @Published var isOverBoard: Bool = false
     
     func registerSlotFrame(_ frame: CGRect, row: Int, slot: Int) {
         let key = "\(row)-\(slot)"
         slotFrames[key] = frame
     }
     
+    func registerBoardFrame(_ frame: CGRect) {
+        boardFrame = frame
+    }
+    
     func updateDragPosition(_ position: CGPoint) {
         dragPosition = position
+        
+        // Check if we are over the game board region
+        isOverBoard = boardFrame.contains(position)
         
         let oldTargetRow = dropTargetRow
         let oldTargetIndex = dropTargetIndex
@@ -86,37 +95,66 @@ class GameViewModel: ObservableObject {
     }
     
     func endDragging() {
-        if let targetIndex = dropTargetIndex, let color = activeDragColor {
-            if let sourceIndex = sourceSlotIndex, let sourceRow = sourceSlotRow {
-                // Swapping logic: must check if target row is the active row
-                let activeRowNumber = getCurrentRowNumber()
-                if sourceRow == activeRowNumber && dropTargetRow == activeRowNumber {
-                    if sourceIndex != targetIndex {
-                        let targetColor = state.currentGuess[targetIndex]
-                        state.currentGuess[sourceIndex] = targetColor
-                        state.currentGuess[targetIndex] = color
-                        state.activeIndex = targetIndex
+        if let color = activeDragColor {
+            if let targetIndex = dropTargetIndex {
+                if let sourceIndex = sourceSlotIndex, let sourceRow = sourceSlotRow {
+                    // Swapping logic: must check if target row is the active row
+                    let activeRowNumber = getCurrentRowNumber()
+                    if sourceRow == activeRowNumber && dropTargetRow == activeRowNumber {
+                        if sourceIndex != targetIndex {
+                            let targetColor = state.currentGuess[targetIndex]
+                            state.currentGuess[sourceIndex] = targetColor
+                            state.currentGuess[targetIndex] = color
+                            
+                            // Apply same intelligent auto-advance after swap
+                            if let nextEmptyRight = (targetIndex+1..<4).first(where: { state.currentGuess[$0] == nil }) {
+                                state.activeIndex = nextEmptyRight
+                            } else if let firstEmptyLeft = (0..<4).first(where: { state.currentGuess[$0] == nil }) {
+                                state.activeIndex = firstEmptyLeft
+                            }
+                        }
                     }
+                } else {
+                    // Palette drop precisely on a slot
+                    setColor(color, at: targetIndex)
                 }
-            } else {
-                // Palette drop
-                setColor(color, at: targetIndex)
+                SoundManager.shared.playDrop()
+                SoundManager.shared.hapticMedium()
+            } else if isOverBoard {
+                // Drop anywhere on board -> Use currently active slot
+                if sourceSlotIndex == nil { // Only palette drops can use generic board area
+                    setColor(color, at: state.activeIndex)
+                    SoundManager.shared.playDrop()
+                    SoundManager.shared.hapticMedium()
+                }
             }
-            SoundManager.shared.playDrop()
-            SoundManager.shared.hapticMedium()
         }
+        
         activeDragColor = nil
         dragPosition = .zero
         dropTargetRow = nil
         dropTargetIndex = nil
         sourceSlotRow = nil
         sourceSlotIndex = nil
+        isOverBoard = false
     }
 
     func setColor(_ color: GameColor, at index: Int) {
         guard !state.isGameOver else { return }
-        state.currentGuess[index] = color
-        state.activeIndex = index
+        withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+            state.currentGuess[index] = color
+            
+            // Intelligence Auto-Advance Logic:
+            // 1. Check for empty cells to the right
+            if let nextEmptyRight = (index+1..<4).first(where: { state.currentGuess[$0] == nil }) {
+                state.activeIndex = nextEmptyRight
+            } 
+            // 2. If no empty right, check for empty cells to the left
+            else if let firstEmptyLeft = (0..<4).first(where: { state.currentGuess[$0] == nil }) {
+                state.activeIndex = firstEmptyLeft
+            }
+            // 3. If no empty cells left at all, stay at current index or cycle (user preferred to stay/move to next if space)
+        }
     }
 
     // Secret code selection state
@@ -400,9 +438,7 @@ class GameViewModel: ObservableObject {
 
     func selectColor(_ color: GameColor) {
         guard !state.isGameOver else { return }
-
-        state.currentGuess[state.activeIndex] = color
-        // Do not auto-advance to next slot - stay on current slot
+        setColor(color, at: state.activeIndex)
     }
 
     func cycleColor(forward: Bool = true) {
