@@ -369,6 +369,8 @@ struct LogoThemeGear: View {
     @State private var lastReportedIndex: Int = 0
     @State private var isTouching: Bool = false
     @State private var pulseOpacity: Double = 0.2
+    @State private var scanOffset: CGFloat = -40
+    @State private var chevronOffset: CGFloat = 0
     
     // Calculate the sequence of themes for the wheel
     private let themes = GameTheme.allCases
@@ -446,6 +448,19 @@ struct LogoThemeGear: View {
                         .offset(y: itemOffset)
                     }
                 }
+
+                // 2.5 INFRARED SCANNING BEAM
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.clear, .gameGreen.opacity(0.15), .clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: 280, height: 15)
+                    .offset(y: scanOffset)
+                    .blendMode(.screen)
                 
                 // 3. SECTOR ALIGNMENT CROSSHAIRS (Fixed indicators)
                 HStack {
@@ -473,10 +488,12 @@ struct LogoThemeGear: View {
                     Image(systemName: "chevron.up.fill")
                         .font(.system(size: 10))
                         .foregroundColor(.black.opacity(pulseOpacity))
+                        .offset(y: -chevronOffset)
                     
                     Image(systemName: "chevron.down.fill")
                         .font(.system(size: 10))
                         .foregroundColor(.black.opacity(pulseOpacity))
+                        .offset(y: chevronOffset)
                 }
             }
             .frame(height: 100)
@@ -500,8 +517,20 @@ struct LogoThemeGear: View {
         .contentShape(Rectangle())
         .onAppear {
             lastReportedIndex = currentThemeIndex
+            
+            // Indicator Pulse
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                 pulseOpacity = 0.6
+            }
+            
+            // Scanning Beam Loop
+            withAnimation(.linear(duration: 4.0).repeatForever(autoreverses: false)) {
+                scanOffset = 40
+            }
+            
+            // Chevron Guidance Animation
+            withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                chevronOffset = 5
             }
         }
         .gesture(

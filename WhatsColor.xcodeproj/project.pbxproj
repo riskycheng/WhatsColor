@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -103,7 +103,7 @@
 		7EC5E010A890391508069324 /* icon_lanmei.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_lanmei.png; sourceTree = "<group>"; };
 		7FABF95381F5FB9C3A34C6DB /* yumi.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = yumi.png; sourceTree = "<group>"; };
 		89A9651E58EB586AF36B7BFF /* luobu.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = luobu.png; sourceTree = "<group>"; };
-		8C91F5B4FF2E5DCFD11B8340 /* WhatsColor.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WhatsColor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8C91F5B4FF2E5DCFD11B8340 /* WhatsColor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhatsColor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E0EBF16DA6ADFF63C5E6491 /* jinmao.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = jinmao.png; sourceTree = "<group>"; };
 		98ADA1747BD3CC68292B6FD3 /* icon_materials */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icon_materials; path = WhatsColor/Resources/icon_materials; sourceTree = SOURCE_ROOT; };
 		A2658458AF959186C0D428B6 /* icon_fupenzi.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_fupenzi.png; sourceTree = "<group>"; };
@@ -350,7 +350,6 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					D7C316769D9059A6E1230C1B = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -365,7 +364,6 @@
 			);
 			mainGroup = 0A6D5FF13F2DAB95239E2C49;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 54;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -586,7 +584,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8883CLR38K;
 				INFOPLIST_FILE = WhatsColor/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -606,7 +604,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8883CLR38K;
 				INFOPLIST_FILE = WhatsColor/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
