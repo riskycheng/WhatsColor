@@ -12,7 +12,6 @@ class GameViewModel: ObservableObject {
     @Published var showSettingsDialog: Bool = false
     @Published var showSecretCodeDialog: Bool = false
     @Published var showGameOverDialog: Bool = false
-    @Published var showThemeSelection: Bool = false
 
     // Message/Toast state
     struct ToastInfo: Equatable {

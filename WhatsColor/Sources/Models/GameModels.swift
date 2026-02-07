@@ -75,6 +75,18 @@ enum GameTheme: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
+    var logoName: String {
+        switch self {
+        case .classic: return "COLOR"
+        case .pixelFruit: return "PIXEL"
+        case .cuteCat: return "CATS"
+        case .cuteDog: return "DOGS"
+        case .fastFood: return "FOOD"
+        case .fruit: return "FRUIT"
+        case .vegetables: return "VEGGIE"
+        }
+    }
+
     var folderName: String? {
         switch self {
         case .pixelFruit: return "pixel_fruit"

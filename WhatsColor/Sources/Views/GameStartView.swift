@@ -41,35 +41,35 @@ struct GameStartView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 280, height: 120)
+                            .frame(width: 300, height: 160)
                             .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(Color.white.opacity(0.5), lineWidth: 1)
                             )
                         
-                        VStack(spacing: -8) {
+                        VStack(spacing: 0) {
                             Text("WHATS")
-                                .font(.system(size: 20, weight: .black, design: .monospaced))
-                                .tracking(4)
-                                .foregroundColor(Color(white: 0.2))
+                                .font(.system(size: 16, weight: .black, design: .monospaced))
+                                .tracking(6)
+                                .foregroundColor(Color(white: 0.3))
+                                .padding(.top, 12)
                             
-                            Text("COLOR")
-                                .font(.system(size: 58, weight: .black, design: .monospaced))
-                                .foregroundColor(Color(white: 0.1))
-                                .shadow(color: .white.opacity(0.8), radius: 0.5, x: 1, y: 1)
+                            // BRAND THEME GEAR SELECTOR
+                            LogoThemeGear(viewModel: viewModel)
+                                .frame(height: 100)
                             
                             // Glowing red status line
                             RoundedRectangle(cornerRadius: 1)
                                 .fill(Color.gameRed)
-                                .frame(width: 140, height: 3)
-                                .shadow(color: .gameRed.opacity(0.8), radius: 5)
-                                .padding(.top, 12)
+                                .frame(width: 160, height: 2)
+                                .shadow(color: .gameRed.opacity(0.6), radius: 4)
+                                .padding(.bottom, 12)
                         }
                     }
                 }
                 
-                Spacer(minLength: 60)
+                Spacer(minLength: 50)
                 
                 // Main Console Panel
                 VStack(spacing: 40) {
@@ -212,29 +212,6 @@ VStack(spacing: 18) {
                 .frame(height: 64) 
                 .padding(.horizontal, 24)
                 .padding(.top, 15)
-                
-                // DATA VISUALIZATION TOGGLE
-                Button(action: {
-                    SoundManager.shared.playSelection()
-                    SoundManager.shared.hapticLight()
-                    withAnimation(.spring()) {
-                        viewModel.showThemeSelection = true
-                    }
-                }) {
-                    HStack {
-                        Image(systemName: "cpu")
-                            .font(.system(size: 14, weight: .bold))
-                        Text("VISUALIZATION ENGINE SETUP")
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
-                            .tracking(1.5)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .black))
-                    }
-                    .foregroundColor(.white.opacity(0.6))
-                    .padding(.horizontal, 40)
-                    .padding(.vertical, 15)
-                }
                 
                 Spacer()
                 
@@ -383,32 +360,193 @@ struct ScrewHead: View {
     }
 }
 
-struct ThemePillButton: View {
-    let title: String
-    let isSelected: Bool
-    let onTap: () -> Void
+// MARK: - Brand Logo Theme Selector (Interactive Gear)
+
+struct LogoThemeGear: View {
+    @ObservedObject var viewModel: GameViewModel
+    @State private var dragOffset: CGFloat = 0
+    @GestureState private var gestureOffset: CGFloat = 0
+    @State private var lastReportedIndex: Int = 0
+    @State private var isTouching: Bool = false
+    @State private var pulseOpacity: Double = 0.2
+    
+    // Calculate the sequence of themes for the wheel
+    private let themes = GameTheme.allCases
+    private let itemHeight: CGFloat = 70
+
+    private func themeDescriptor(for theme: GameTheme) -> String {
+        switch theme {
+        case .classic: return "ORIGINAL_CHROMA"
+        case .pixelFruit: return "VIBRANT_PIXEL"
+        case .cuteCat: return "FELINE_UNIT"
+        case .cuteDog: return "CANINE_UNIT"
+        case .fastFood: return "FUEL_RESOURCE"
+        case .fruit: return "ORGANIC_PACK"
+        case .vegetables: return "VITAL_GREENS"
+        }
+    }
     
     var body: some View {
-        Button(action: {
-            SoundManager.shared.playSelection()
-            SoundManager.shared.hapticLight()
-            onTap()
-        }) {
-            Text(title)
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundColor(isSelected ? .black : .white.opacity(0.5))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(
-                    Capsule()
-                        .fill(isSelected ? Color.gameGreen : Color.white.opacity(0.08))
+        let currentThemeIndex = themes.firstIndex(of: viewModel.state.theme) ?? 0
+        let totalLiveOffset = dragOffset + gestureOffset
+        
+        ZStack {
+            // 1. TACTICAL HIGHLIGHT GLOW (Activates on Touch)
+            if isTouching {
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.gameGreen.opacity(0.08))
+                    .frame(width: 280, height: 100)
+                    .blur(radius: 20)
+                    .transition(.opacity)
+            }
+            
+            // 2. THEME LOGO SLIDER
+            ZStack {
+                // Background Mechanical Grids
+                VStack(spacing: 6) {
+                    ForEach(0..<20) { i in
+                        Rectangle()
+                            .fill(Color.black.opacity(isTouching ? 0.12 : 0.06))
+                            .frame(width: 250, height: 1)
+                            .offset(y: (CGFloat(i * 12) + totalLiveOffset).remainder(dividingBy: 12))
+                    }
+                }
+                .frame(height: 140)
+                .opacity(0.6)
+                
+                // The Moving Wheel Items
+                ForEach(0..<themes.count, id: \.self) { index in
+                    let theme = themes[index]
+                    let distance = CGFloat(index - currentThemeIndex)
+                    let itemOffset = (distance * itemHeight) + totalLiveOffset
+                    
+                    if abs(itemOffset) < 180 {
+                        VStack(spacing: 1) {
+                            Text(theme.logoName)
+                                .font(.system(size: 52, weight: .black, design: .monospaced))
+                                .foregroundColor(Color(white: 0.1))
+                                .shadow(color: .white.opacity(max(0, 1.2 - abs(itemOffset)/80.0)), radius: 0.5, x: 1, y: 1)
+                                .scaleEffect(1.0 - abs(itemOffset) / 350.0)
+                                .opacity(1.0 - abs(itemOffset) / 130.0)
+                                .brightness(abs(itemOffset) < 10 ? (isTouching ? 0.08 : 0) : -0.1)
+
+                            // SUB-INFOGRAPHIC LABEL
+                            if abs(itemOffset) < 40 {
+                                Text(themeDescriptor(for: theme))
+                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                    .foregroundColor(.black.opacity(0.4))
+                                    .tracking(3)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(Color.gameGreen.opacity(0.1))
+                                    .cornerRadius(2)
+                                    .opacity(1.0 - abs(itemOffset) / 30.0)
+                            }
+                        }
+                        .offset(y: itemOffset)
+                    }
+                }
+                
+                // 3. SECTOR ALIGNMENT CROSSHAIRS (Fixed indicators)
+                HStack {
+                    Rectangle().fill(Color.gameRed).frame(width: 20, height: 2)
+                    Spacer()
+                    Rectangle().fill(Color.gameRed).frame(width: 20, height: 2)
+                }
+                .frame(width: 260)
+                .opacity(isTouching ? 0.8 : 0.3)
+                .shadow(color: .gameRed.opacity(0.5), radius: 4)
+            }
+            .frame(height: 75)
+            .clipped()
+            
+            // 4. INTERACTION TELEMETRY
+            VStack {
+                Text("ENGINEER CONFIG_MODULE")
+                    .font(.system(size: 7, weight: .black, design: .monospaced))
+                    .foregroundColor(isTouching ? .gameGreen.opacity(0.6) : .black.opacity(0.2))
+                    .tracking(2.5)
+                    .offset(y: -42)
+
+                // Pulsing Tactical Chevrons
+                VStack(spacing: 65) {
+                    Image(systemName: "chevron.up.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.black.opacity(pulseOpacity))
+                    
+                    Image(systemName: "chevron.down.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.black.opacity(pulseOpacity))
+                }
+            }
+            .frame(height: 100)
+            
+            // 5. HARDWARE LENS (Frosted look over the gear)
+            RoundedRectangle(cornerRadius: 15)
+                .fill(
+                    LinearGradient(
+                        colors: [.white.opacity(0.1), .clear, .black.opacity(0.05)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
                 )
+                .frame(width: 260, height: 85)
                 .overlay(
-                    Capsule()
-                        .stroke(isSelected ? Color.white.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
                 )
+                .allowsHitTesting(false)
         }
-        .buttonStyle(PlainButtonStyle())
+        .contentShape(Rectangle())
+        .onAppear {
+            lastReportedIndex = currentThemeIndex
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                pulseOpacity = 0.6
+            }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .updating($gestureOffset) { value, state, _ in
+                    state = value.translation.height
+                    
+                    // Live Haptic Tick Logic (Mechanical Feedback)
+                    let currentIndex = themes.firstIndex(of: viewModel.state.theme) ?? 0
+                    let shift = -Int((value.translation.height / itemHeight).rounded())
+                    let virtualIndex = currentIndex + shift
+                    
+                    if virtualIndex != lastReportedIndex && virtualIndex >= 0 && virtualIndex < themes.count {
+                        DispatchQueue.main.async {
+                            if virtualIndex != lastReportedIndex {
+                                lastReportedIndex = virtualIndex
+                                SoundManager.shared.hapticLight()
+                                // Small mechanical click sound could be added here if available
+                            }
+                        }
+                    }
+                }
+                .onChanged { _ in
+                    if !isTouching {
+                        withAnimation(.easeIn(duration: 0.15)) { isTouching = true }
+                        SoundManager.shared.playSelection() // Activation click
+                    }
+                }
+                .onEnded { value in
+                    withAnimation(.easeOut(duration: 0.25)) { isTouching = false }
+                    
+                    let movement = value.translation.height
+                    let indexChange = -Int((movement / itemHeight).rounded())
+                    
+                    withAnimation(.interpolatingSpring(stiffness: 300, damping: 20)) {
+                        let newIndex = max(0, min(themes.count - 1, currentThemeIndex + indexChange))
+                        if newIndex != currentThemeIndex {
+                            viewModel.state.theme = themes[newIndex]
+                            SoundManager.shared.playDrop() // Engagement "Thud"
+                            SoundManager.shared.hapticMedium()
+                            viewModel.saveTheme()
+                        }
+                    }
+                }
+        )
     }
 }
 
