@@ -64,6 +64,7 @@ struct GameRowView: View {
                         // For active row, show currentGuess; for others, show row.colors
                         color: isActive ? viewModel.state.currentGuess[index] : row.colors[index],
                         isActive: isActive,
+                        isFixed: isActive && viewModel.state.fixedSlots[index],
                         isSelected: isActive && viewModel.state.activeIndex == index,
                         slotIndex: index,
                         rowNumber: row.rowNumber,
@@ -94,6 +95,7 @@ struct GameRowView: View {
 struct SlotView: View {
     let color: GameColor?
     let isActive: Bool
+    let isFixed: Bool
     let isSelected: Bool
     let slotIndex: Int
     let rowNumber: Int
@@ -113,8 +115,8 @@ struct SlotView: View {
                 .frame(width: 45, height: 45)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(showTargetEffect ? Color.white : (isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3))), 
-                                lineWidth: showTargetEffect ? 4 : (isSelected ? 3 : (isActive ? 2 : 1)))
+                        .stroke(isFixed ? Color.gameGreen : (showTargetEffect ? Color.white : (isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3)))), 
+                                lineWidth: showTargetEffect ? 4 : (isFixed ? 3 : (isSelected ? 3 : (isActive ? 2 : 1))))
                 )
                 .scaleEffect(showTargetEffect ? 1.15 : 1.0)
                 .animation(.spring(response: 0.2, dampingFraction: 0.6), value: showTargetEffect)
@@ -142,8 +144,25 @@ struct SlotView: View {
                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: color)
             }
 
+            // High-tech fixed indicator (top right corner)
+            if isFixed {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Circle()
+                            .fill(Color.gameGreen)
+                            .frame(width: 8, height: 8)
+                            .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1))
+                            .shadow(color: .gameGreen.opacity(0.8), radius: 4)
+                            .padding(4)
+                    }
+                    Spacer()
+                }
+                .frame(width: 45, height: 45)
+            }
+
             // Selection indicator for active slot
-            if isSelected && !showTargetEffect {
+            if isSelected && !showTargetEffect && !isFixed {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.clear)
                     .frame(width: 45, height: 45)
@@ -152,6 +171,11 @@ struct SlotView: View {
                             .stroke(Color.white, lineWidth: 3)
                             .scaleEffect(1.1)
                     )
+            }
+        }
+        .onLongPressGesture(minimumDuration: 0.5) {
+            if isActive {
+                viewModel.toggleFixed(at: slotIndex)
             }
         }
         .background(

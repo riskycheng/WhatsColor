@@ -347,6 +347,7 @@ class GameViewModel: ObservableObject {
         // Always create 7 rows regardless of difficulty
         state.attempts = (1...7).map { GameRowModel(rowNumber: $0) }
         state.currentGuess = Array(repeating: nil, count: 4)
+        state.fixedSlots = Array(repeating: false, count: 4)
         state.activeIndex = 0
         state.isGameOver = false
         state.message = "READY"
@@ -501,9 +502,18 @@ class GameViewModel: ObservableObject {
             state.attempts[currentAttemptIndex].feedback = feedback
         }
 
-        // Reset currentGuess for next row (but don't auto-advance)
-        state.currentGuess = Array(repeating: nil, count: 4)
-        state.activeIndex = 0
+        // Reset currentGuess for next row (preserve fixed slots)
+        let nextGuess: [GameColor?] = (0..<4).map { i in
+            state.fixedSlots[i] ? state.currentGuess[i] : nil
+        }
+        state.currentGuess = nextGuess
+        
+        // Find next appropriate activeIndex
+        if let firstEmpty = nextGuess.firstIndex(where: { $0 == nil }) {
+            state.activeIndex = firstEmpty
+        } else {
+            state.activeIndex = 0
+        }
         
         // Check win/lose condition
         checkGameStatus()
@@ -702,6 +712,15 @@ class GameViewModel: ObservableObject {
     func selectSlot(at index: Int) {
         guard !state.isGameOver else { return }
         state.activeIndex = index
+    }
+
+    func toggleFixed(at index: Int) {
+        guard !state.isGameOver else { return }
+        SoundManager.shared.playSelection()
+        SoundManager.shared.hapticMedium()
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+            state.fixedSlots[index].toggle()
+        }
     }
 
     var hasError: Bool {

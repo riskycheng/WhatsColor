@@ -215,6 +215,7 @@ struct GameStateModel {
     var secretCode: [GameColor]
     var attempts: [GameRowModel]
     var currentGuess: [GameColor?]
+    var fixedSlots: [Bool]
     var activeIndex: Int
     var mode: FeedbackMode
     var difficulty: GameDifficulty
@@ -227,6 +228,7 @@ struct GameStateModel {
         secretCode: [],
         attempts: [],
         currentGuess: Array(repeating: nil, count: 4),
+        fixedSlots: Array(repeating: false, count: 4),
         activeIndex: 0,
         mode: .advanced,
         difficulty: .normal,
