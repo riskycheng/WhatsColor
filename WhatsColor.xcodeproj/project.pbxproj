@@ -57,6 +57,7 @@
 		C72FC872BE67CC0FDC4D518B /* icon_bocai.png in Resources */ = {isa = PBXBuildFile; fileRef = B45C0D1393F359842B56EEC6 /* icon_bocai.png */; };
 		C8B17EBCC5F48317F571B9F1 /* WhatsColorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D2A239419B2FC4E0FFBC07 /* WhatsColorApp.swift */; };
 		C9F42B772E2DF55899C7E647 /* HorizontalColorPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EB1D80EC8D25C3510068185 /* HorizontalColorPickerView.swift */; };
+		D7766BCA9C541BD447F5F01B /* ThemeSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B948DD3577657567804A8812 /* ThemeSelectionView.swift */; };
 		D867C3D57D5FF35DFD6234B7 /* SecretCodeSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3E5E2EDD333277EF158B26 /* SecretCodeSelectionView.swift */; };
 		DDE9E02349B5E06CA72CF661 /* caomei.png in Resources */ = {isa = PBXBuildFile; fileRef = 7DE5CEAB57EE21450206E7CD /* caomei.png */; };
 		E159CC530F99B5A78EE944D3 /* GameStartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3B5593AC0BA53B75D2A6690 /* GameStartView.swift */; };
@@ -116,6 +117,7 @@
 		B75D6A2722301397B33E5453 /* pisa.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = pisa.png; sourceTree = "<group>"; };
 		B7A68C389E33395F34FE944B /* hashiqi.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hashiqi.png; sourceTree = "<group>"; };
 		B91B6CCCC75C841AA19F8CC0 /* makalong.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = makalong.png; sourceTree = "<group>"; };
+		B948DD3577657567804A8812 /* ThemeSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSelectionView.swift; sourceTree = "<group>"; };
 		C322E78F3B9077A87B831205 /* icon_baximei.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon_baximei.png; sourceTree = "<group>"; };
 		C3B5593AC0BA53B75D2A6690 /* GameStartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStartView.swift; sourceTree = "<group>"; };
 		CACB6CBC2954A32F78D6D940 /* sanwenzhi.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sanwenzhi.png; sourceTree = "<group>"; };
@@ -177,6 +179,7 @@
 				5EB1D80EC8D25C3510068185 /* HorizontalColorPickerView.swift */,
 				DB3E5E2EDD333277EF158B26 /* SecretCodeSelectionView.swift */,
 				D7B997EE635E23D54C7ED040 /* StatusControlPanelView.swift */,
+				B948DD3577657567804A8812 /* ThemeSelectionView.swift */,
 				292BF94C7F3D158E400D64AE /* TimeWheelPicker.swift */,
 			);
 			path = Views;
@@ -445,6 +448,7 @@
 				D867C3D57D5FF35DFD6234B7 /* SecretCodeSelectionView.swift in Sources */,
 				BEB8559304D4AF2AC4663575 /* SoundManager.swift in Sources */,
 				F82D540272438394839B66DB /* StatusControlPanelView.swift in Sources */,
+				D7766BCA9C541BD447F5F01B /* ThemeSelectionView.swift in Sources */,
 				7DFA776BB9E0E7CEF0BD5D69 /* TimeWheelPicker.swift in Sources */,
 				C8B17EBCC5F48317F571B9F1 /* WhatsColorApp.swift in Sources */,
 			);

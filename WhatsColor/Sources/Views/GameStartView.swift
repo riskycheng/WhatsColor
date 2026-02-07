@@ -126,38 +126,6 @@ VStack(spacing: 18) {
                             )
                         }
                     }
-                    
-                    // NEW: Data Visualization Theme Selector
-                    VStack(spacing: 14) {
-                        HStack(spacing: 8) {
-                            Rectangle()
-                                .fill(Color.gameGreen)
-                                .frame(width: 4, height: 14)
-                                .shadow(color: .gameGreen.opacity(0.5), radius: 3)
-                            Text("VISUALIZATION ENGINE")
-                                .font(.system(size: 13, weight: .black, design: .monospaced))
-                                .tracking(1.5)
-                                .foregroundColor(.white)
-                            Spacer()
-                        }
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 10) {
-                                ForEach(GameTheme.allCases) { theme in
-                                    ThemePillButton(
-                                        title: theme.rawValue,
-                                        isSelected: viewModel.state.theme == theme,
-                                        onTap: {
-                                            viewModel.state.theme = theme
-                                            viewModel.saveTheme()
-                                        }
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, 2)
-                            .padding(.vertical, 4)
-                        }
-                    }
                 }
                 .padding(28)
                 .background(
@@ -244,6 +212,29 @@ VStack(spacing: 18) {
                 .frame(height: 64) 
                 .padding(.horizontal, 24)
                 .padding(.top, 15)
+                
+                // DATA VISUALIZATION TOGGLE
+                Button(action: {
+                    SoundManager.shared.playSelection()
+                    SoundManager.shared.hapticLight()
+                    withAnimation(.spring()) {
+                        viewModel.showThemeSelection = true
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "cpu")
+                            .font(.system(size: 14, weight: .bold))
+                        Text("VISUALIZATION ENGINE SETUP")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .tracking(1.5)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .black))
+                    }
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 15)
+                }
                 
                 Spacer()
                 

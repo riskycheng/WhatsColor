@@ -89,6 +89,13 @@ struct ContentView: View {
                         .animation(.easeInOut(duration: 0.2), value: viewModel.showSecretCodeDialog)
                 }
 
+                // Theme selection dialog
+                if viewModel.showThemeSelection {
+                    ThemeSelectionView(viewModel: viewModel)
+                        .transition(AnyTransition.opacity)
+                        .animation(Animation.easeInOut(duration: 0.2), value: viewModel.showThemeSelection)
+                }
+
                 // Game Over Dialog
                 if viewModel.showGameOverDialog {
                     GameOverDialogView(viewModel: viewModel)
