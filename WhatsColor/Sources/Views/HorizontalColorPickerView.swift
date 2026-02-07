@@ -51,35 +51,44 @@ struct HorizontalColorButton: View {
 
     var body: some View {
         ZStack {
-            // Shadow background
-            Circle()
-                .fill(color.color.opacity(0.3))
-                .frame(width: 36, height: 36)
-                .blur(radius: isPressing ? 8 : 4)
-                .offset(y: isPressing ? 4 : 2)
-            
-            // Main color circle
+            // Main visual element (Icon or Color Dot)
             if let icon = viewModel.state.theme.image(for: color) {
+                // Background shadow for the icon
+                Circle()
+                    .fill(Color.black.opacity(0.3))
+                    .frame(width: 32, height: 32)
+                    .blur(radius: isPressing ? 4 : 2)
+                    .offset(y: isPressing ? 2 : 1)
+
                 icon
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 32, height: 32)
-                    .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
             } else {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [color.color.opacity(0.85), color.color],
-                            center: .topLeading,
-                            startRadius: 2,
-                            endRadius: 32
+                // Secondary visual fallback (Original Color Dot)
+                ZStack {
+                    // Shadow background (Fallback only)
+                    Circle()
+                        .fill(color.color.opacity(0.3))
+                        .frame(width: 36, height: 36)
+                        .blur(radius: isPressing ? 8 : 4)
+                        .offset(y: isPressing ? 4 : 2)
+                    
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [color.color.opacity(0.85), color.color],
+                                center: .topLeading,
+                                startRadius: 2,
+                                endRadius: 32
+                            )
                         )
-                    )
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        Circle()
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    )
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                }
             }
             
             // Selection / Press highlight

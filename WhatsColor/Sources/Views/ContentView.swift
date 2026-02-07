@@ -454,10 +454,20 @@ struct GameOverDialogView: View {
                         
                         HStack(spacing: 12) {
                             ForEach(0..<4, id: \.self) { index in
-                                Circle()
-                                    .fill(viewModel.state.secretCode[index].color)
-                                    .frame(width: 24, height: 24)
-                                    .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
+                                let color = viewModel.state.secretCode[index]
+                                Group {
+                                    if let icon = viewModel.state.theme.image(for: color) {
+                                        icon
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 24, height: 24)
+                                    } else {
+                                        Circle()
+                                            .fill(color.color)
+                                            .frame(width: 24, height: 24)
+                                    }
+                                }
+                                .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
                             }
                         }
                     }

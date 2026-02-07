@@ -24,6 +24,8 @@ targets:
         type: group
       - path: WhatsColor/Resources
         type: group
+      - path: WhatsColor/Resources/icon_materials
+        type: folder
     settings:
       base:
         INFOPLIST_FILE: WhatsColor/Resources/Info.plist

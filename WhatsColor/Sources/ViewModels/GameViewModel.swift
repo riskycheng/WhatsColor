@@ -136,8 +136,33 @@ class GameViewModel: ObservableObject {
     private let themeKey = "WhatsColor_Theme"
 
     init() {
+        print("🛠️ System: Initializing Handheld Console...")
         self.state = GameStateModel.initial
         
+        // --- BUNDLE DIAGNOSTICS ---
+        let fm = FileManager.default
+        let bundlePath = Bundle.main.bundlePath
+        print("📁 Bundle Path: \(bundlePath)")
+        
+        if let items = try? fm.contentsOfDirectory(atPath: bundlePath) {
+            print("📦 Bundle Root contains \(items.count) items")
+            if items.contains("icon_materials") {
+                print("✅ Found 'icon_materials' folder in bundle")
+                let themePath = bundlePath + "/icon_materials"
+                if let themes = try? fm.contentsOfDirectory(atPath: themePath) {
+                    print("📁 Themes found: \(themes.joined(separator: ", "))")
+                }
+            } else {
+                print("❌ 'icon_materials' NOT found in bundle root")
+                // Check if flattened
+                let hasIcons = items.contains { $0.contains("icon_") || $0.contains("boluo") }
+                if hasIcons {
+                    print("ℹ️ Icons appear to be FLATTENED in the bundle root")
+                }
+            }
+        }
+        // ---------------------------
+
         // Load difficulty-specific level
         let key = getLevelKey(for: self.state.difficulty)
         let savedLevel = UserDefaults.standard.integer(forKey: key)
@@ -146,8 +171,10 @@ class GameViewModel: ObservableObject {
         // Load theme or use a rich default (Pixel Fruit for industrial look)
         if let savedTheme = UserDefaults.standard.string(forKey: themeKey),
            let theme = GameTheme(rawValue: savedTheme) {
+            print("🎨 Theme: Loaded '\(theme.rawValue)' from storage")
             self.state.theme = theme
         } else {
+            print("🎨 Theme: No saved preference, defaulting to PIXEL FRUIT")
             self.state.theme = .pixelFruit
         }
         
@@ -163,6 +190,9 @@ class GameViewModel: ObservableObject {
 
     func saveTheme() {
         UserDefaults.standard.set(state.theme.rawValue, forKey: themeKey)
+        // Explicitly notify observers to ensure UI refreshes icons immediately
+        objectWillChange.send()
+        print("💾 System: Theme saved and UI refreshed (\(state.theme.rawValue))")
     }
 
     func showToast(_ message: String, type: ToastType = .info) {
@@ -502,7 +532,6 @@ class GameViewModel: ObservableObject {
             return
         }
 
-        let guess = lastAttempt.colors.compactMap { $0 }
         let feedback = lastAttempt.feedback
 
         let isWin: Bool

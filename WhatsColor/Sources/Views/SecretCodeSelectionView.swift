@@ -230,10 +230,10 @@ struct ColorSlotView: View {
                         icon
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 44, height: 44)
-                            .shadow(color: .black.opacity(0.35), radius: 2, x: 0, y: 1)
+                            .frame(width: 48, height: 48)
+                            .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
                     } else {
-                        RoundedRectangle(cornerRadius: 2)
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(color.color)
                             .padding(4)
                             .shadow(color: color.color.opacity(0.5), radius: 4, x: 0, y: 2)
@@ -271,39 +271,55 @@ struct SecretColorCard: View {
             ZStack {
                 // Glow effect for selection
                 if isSelected {
-                    Rectangle()
-                        .fill(color.color.opacity(0.4))
-                        .blur(radius: 12)
-                        .frame(width: 58, height: 58)
+                    if let icon = viewModel.state.theme.image(for: color) {
+                         Circle() // Circular glow for icons
+                            .fill(Color.white.opacity(0.3))
+                            .blur(radius: 12)
+                            .frame(width: 58, height: 58)
+                    } else {
+                        Rectangle()
+                            .fill(color.color.opacity(0.4))
+                            .blur(radius: 12)
+                            .frame(width: 58, height: 58)
+                    }
                 }
                 
-                // The Primary Square Block
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [color.color, color.color.opacity(0.8)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+                // The Visual Representation (Icon or Color block)
+                if let icon = viewModel.state.theme.image(for: color) {
+                    icon
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 48, height: 48)
+                        .background(
+                            Circle()
+                                .fill(Color.black.opacity(0.2))
+                                .frame(width: 42, height: 42)
+                                .blur(radius: 2)
                         )
-                    )
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        Group {
-                            if let icon = viewModel.state.theme.image(for: color) {
-                                icon
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 36, height: 36)
-                            }
-                        }
-                    )
-                    .overlay(
-                        Rectangle()
-                            .stroke(isSelected ? Color.white : Color.white.opacity(0.15), lineWidth: isSelected ? 3 : 1)
-                    )
-                    .shadow(color: color.color.opacity(0.35), radius: isSelected ? 8 : 2, x: 0, y: isSelected ? 4 : 1)
+                        .overlay(
+                            Circle()
+                                .stroke(isSelected ? Color.white : Color.clear, lineWidth: 2)
+                                .frame(width: 54, height: 54)
+                        )
+                } else {
+                    // Fallback: The Primary Square Block
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [color.color, color.color.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 50, height: 50)
+                        .overlay(
+                            Rectangle()
+                                .stroke(isSelected ? Color.white : Color.white.opacity(0.15), lineWidth: isSelected ? 3 : 1)
+                        )
+                        .shadow(color: color.color.opacity(0.35), radius: isSelected ? 8 : 2, x: 0, y: isSelected ? 4 : 1)
+                }
                 
-                // Selection checkmark overlay
+                // Selection checkmark overlay (only if no icon or as a clear indicator)
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.system(size: 22, weight: .black))

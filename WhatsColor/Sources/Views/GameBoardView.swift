@@ -113,8 +113,9 @@ struct SlotView: View {
                         icon
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 38, height: 38)
-                            .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
+                            .frame(width: 40, height: 40)
+                            .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 2)
+                            .transition(.scale.combined(with: .opacity))
                     } else {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(color.color)
@@ -125,6 +126,7 @@ struct SlotView: View {
                 .scaleEffect(showTargetEffect ? 0.9 : 1.0)
                 .opacity(viewModel.sourceSlotIndex == slotIndex && viewModel.sourceSlotRow == rowNumber ? 0.0 : 1.0) // Hide source while dragging
                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: viewModel.dropTargetIndex)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: color)
             }
 
             // Selection indicator for active slot

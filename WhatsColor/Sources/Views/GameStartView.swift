@@ -126,6 +126,38 @@ VStack(spacing: 18) {
                             )
                         }
                     }
+                    
+                    // NEW: Data Visualization Theme Selector
+                    VStack(spacing: 14) {
+                        HStack(spacing: 8) {
+                            Rectangle()
+                                .fill(Color.gameGreen)
+                                .frame(width: 4, height: 14)
+                                .shadow(color: .gameGreen.opacity(0.5), radius: 3)
+                            Text("VISUALIZATION ENGINE")
+                                .font(.system(size: 13, weight: .black, design: .monospaced))
+                                .tracking(1.5)
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                ForEach(GameTheme.allCases) { theme in
+                                    ThemePillButton(
+                                        title: theme.rawValue,
+                                        isSelected: viewModel.state.theme == theme,
+                                        onTap: {
+                                            viewModel.state.theme = theme
+                                            viewModel.saveTheme()
+                                        }
+                                    )
+                                }
+                            }
+                            .padding(.horizontal, 2)
+                            .padding(.vertical, 4)
+                        }
+                    }
                 }
                 .padding(28)
                 .background(
@@ -357,6 +389,35 @@ struct ScrewHead: View {
                     .frame(width: 6, height: 1)
                     .rotationEffect(.degrees(45))
             )
+    }
+}
+
+struct ThemePillButton: View {
+    let title: String
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            SoundManager.shared.playSelection()
+            SoundManager.shared.hapticLight()
+            onTap()
+        }) {
+            Text(title)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(isSelected ? .black : .white.opacity(0.5))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? Color.gameGreen : Color.white.opacity(0.08))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color.white.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1)
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

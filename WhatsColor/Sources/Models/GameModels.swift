@@ -108,26 +108,48 @@ enum GameTheme: String, CaseIterable, Identifiable, Codable {
 
     func image(for color: GameColor) -> Image? {
         let names = iconNames()
-        guard color.rawValue < names.count else { return nil }
+        guard color.rawValue < names.count else {
+            return nil
+        }
         let name = names[color.rawValue]
         
-        // Try simple Image(name) first as resources are often flattened
-        let image = Image(name)
-        // Note: SwiftUI's Image(name) doesn't return nil if not found easily, 
-        // it just shows nothing or logs. But we can check via UIImage.
-        if UIImage(named: name) != nil {
-            return self == .pixelFruit ? image.interpolation(.none) : image
+        // 1. Try simple named lookup (Asset Catalog or root)
+        if let uiImage = UIImage(named: name) {
+            return themeImage(uiImage)
         }
         
-        // Fallback to path-based if they are in folder references
-        if let folder = folderName,
-           let path = Bundle.main.path(forResource: name, ofType: "png", inDirectory: "icon_materials/\(folder)"),
-           let uiImage = UIImage(contentsOfFile: path) {
-            let img = Image(uiImage: uiImage)
-            return self == .pixelFruit ? img.interpolation(.none) : img
+        // 2. Try with theme folder prefix (if added as folder reference)
+        if let folder = folderName {
+            if let uiImage = UIImage(named: "icon_materials/\(folder)/\(name)") {
+                return themeImage(uiImage)
+            }
+            
+            // 3. Absolute bundle path lookup with variations
+            let exts = ["png", "jpg", "jpeg"]
+            for ext in exts {
+                // Try the standard path
+                if let path = Bundle.main.path(forResource: name, ofType: ext, inDirectory: "icon_materials/\(folder)") {
+                    if let uiImage = UIImage(contentsOfFile: path) {
+                        return themeImage(uiImage)
+                    }
+                }
+                
+                // Try flattened if it ended up in the root
+                if let path = Bundle.main.path(forResource: name, ofType: ext) {
+                    if let uiImage = UIImage(contentsOfFile: path) {
+                        return themeImage(uiImage)
+                    }
+                }
+            }
         }
         
+        // Final fallback: Recursive search in the bundle (only if it's there but we missed the path)
         return nil
+    }
+    
+    private func themeImage(_ uiImage: UIImage) -> Image {
+        let img = Image(uiImage: uiImage)
+        return self == .pixelFruit ? img.interpolation(.none) : img
     }
 }
 
