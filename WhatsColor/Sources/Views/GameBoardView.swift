@@ -115,8 +115,8 @@ struct SlotView: View {
                 .frame(width: 45, height: 45)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(isFixed ? Color.gameGreen : (showTargetEffect ? Color.white : (isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3)))), 
-                                lineWidth: showTargetEffect ? 4 : (isFixed ? 3 : (isSelected ? 3 : (isActive ? 2 : 1))))
+                        .stroke(isFixed ? Color.gameGreen.opacity(0.8) : (showTargetEffect ? Color.white : (isSelected ? Color.white : (isActive ? Color.white.opacity(0.5) : Color.gray.opacity(0.3)))), 
+                                lineWidth: showTargetEffect ? 4 : (isFixed ? 2 : (isSelected ? 3 : (isActive ? 2 : 1))))
                 )
                 .scaleEffect(showTargetEffect ? 1.15 : 1.0)
                 .animation(.spring(response: 0.2, dampingFraction: 0.6), value: showTargetEffect)
@@ -128,13 +128,13 @@ struct SlotView: View {
                         icon
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 40, height: 40)
+                            .frame(width: 38, height: 38)
                             .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 2)
                             .transition(.scale.combined(with: .opacity))
                     } else {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(color.color)
-                            .frame(width: 45, height: 45)
+                            .frame(width: 38, height: 38)
                             .shadow(color: isSelected ? color.color.opacity(0.8) : .white.opacity(0.3), radius: isSelected ? 6 : 2, x: 0, y: 0)
                     }
                 }
@@ -144,21 +144,32 @@ struct SlotView: View {
                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: color)
             }
 
-            // High-tech fixed indicator (top right corner)
+            // High-tech fixed indicator (Subtle Internal Bolts & Glow)
             if isFixed {
-                VStack {
-                    HStack {
+                ZStack {
+                    // Internal recessed bolt look in corners
+                    VStack {
+                        HStack {
+                            Circle().fill(Color.gameGreen).frame(width: 4, height: 4).padding(4)
+                            Spacer()
+                            Circle().fill(Color.gameGreen).frame(width: 4, height: 4).padding(4)
+                        }
                         Spacer()
-                        Circle()
-                            .fill(Color.gameGreen)
-                            .frame(width: 8, height: 8)
-                            .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1))
-                            .shadow(color: .gameGreen.opacity(0.8), radius: 4)
-                            .padding(4)
+                        HStack {
+                            Circle().fill(Color.gameGreen).frame(width: 4, height: 4).padding(4)
+                            Spacer()
+                            Circle().fill(Color.gameGreen).frame(width: 4, height: 4).padding(4)
+                        }
                     }
-                    Spacer()
+                    
+                    // Subtle scanline over fixed item
+                    Rectangle()
+                        .fill(Color.gameGreen.opacity(0.05))
+                        .frame(height: 2)
+                        .offset(y: -10)
                 }
                 .frame(width: 45, height: 45)
+                .transition(.opacity)
             }
 
             // Selection indicator for active slot

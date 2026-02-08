@@ -102,6 +102,9 @@ class GameViewModel: ObservableObject {
                     let activeRowNumber = getCurrentRowNumber()
                     if sourceRow == activeRowNumber && dropTargetRow == activeRowNumber {
                         if sourceIndex != targetIndex {
+                            // Prevent swapping with fixed slots
+                            guard !state.fixedSlots[sourceIndex] && !state.fixedSlots[targetIndex] else { return }
+                            
                             let targetColor = state.currentGuess[targetIndex]
                             state.currentGuess[sourceIndex] = targetColor
                             state.currentGuess[targetIndex] = color
@@ -141,6 +144,9 @@ class GameViewModel: ObservableObject {
 
     func setColor(_ color: GameColor, at index: Int) {
         guard !state.isGameOver else { return }
+        // Respect fixed slots
+        guard !state.fixedSlots[index] else { return }
+        
         withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
             state.currentGuess[index] = color
             
@@ -414,15 +420,25 @@ class GameViewModel: ObservableObject {
     }
 
     func generateSecretCode() -> [GameColor] {
-        // Simplified codes for the first two levels of each difficulty in SOLO mode
+        // Deterministic generation for SOLO mode ensures "RETRY" keeps the same sequence
         if gameMode == .solo {
             if state.level == 1 {
-                // Simplest order: first 4 colors
                 return [.red, .green, .orange, .blue]
             } else if state.level == 2 {
-                // Second simplest: reversed order of first 4 colors
                 return [.blue, .orange, .green, .red]
             }
+            
+            // Seeded selection for all other solo levels
+            var indices = Array(0..<7)
+            var code: [GameColor] = []
+            for i in 0..<4 {
+                // Simplified hash to select deterministic colors for each level
+                let seed = (state.level * 197) + (i * 13) + (state.level / 3)
+                let index = seed % indices.count
+                code.append(GameColor(rawValue: indices[index])!)
+                indices.remove(at: index)
+            }
+            return code
         }
         
         var indices = Array(0..<7)
@@ -589,38 +605,20 @@ class GameViewModel: ObservableObject {
         }
 
         if isWin {
+            state.isGameOver = true
+            state.message = "MISSION SUCCESS"
+            
             if gameMode == .solo {
+                // Update progress internally but don't start new game immediately
+                let clearedLevel = state.level
                 state.level += 1
-                saveProgress() // Persist level progress immediately
-                
-                if state.level > 500 {
-                    state.level = 1 
-                    saveProgress()
-                    state.isGameOver = true
-                    state.message = "ALL MISSIONS COMPLETE"
-                    showGameOverDialog = true
-                    stopTimer()
-                } else {
-                    showToast("LEVEL \(state.level - 1) CLEAR", type: .success)
-                    SoundManager.shared.playSuccess()
-                    SoundManager.shared.hapticSuccess()
-                    stopTimer() // Stop current level timer
-                    
-                    // Small delay before next level
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                        // Reset time for the next mission
-                        self.timeRemaining = self.state.difficulty.baseTime
-                        self.startNewGame()
-                    }
-                }
-            } else {
-                state.isGameOver = true
-                state.message = "UNLOCKED!"
-                showGameOverDialog = true
-                SoundManager.shared.playSuccess()
-                SoundManager.shared.hapticSuccess()
-                stopTimer()
+                saveProgress()
             }
+            
+            SoundManager.shared.playSuccess()
+            SoundManager.shared.hapticSuccess()
+            stopTimer()
+            showGameOverDialog = true
             return
         }
 
@@ -628,7 +626,7 @@ class GameViewModel: ObservableObject {
         let completedAttempts = state.attempts.filter { $0.isComplete }.count
         if completedAttempts >= 7 {
             state.isGameOver = true
-            state.message = "LOCKED! FAILED"
+            state.message = "MISSION FAILED"
             showGameOverDialog = true
             SoundManager.shared.playError()
             stopTimer()
@@ -716,6 +714,9 @@ class GameViewModel: ObservableObject {
 
     func toggleFixed(at index: Int) {
         guard !state.isGameOver else { return }
+        // Prevent locking empty cells
+        guard state.currentGuess[index] != nil else { return }
+        
         SoundManager.shared.playSelection()
         SoundManager.shared.hapticMedium()
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
