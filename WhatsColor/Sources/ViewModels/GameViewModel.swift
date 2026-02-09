@@ -142,7 +142,7 @@ class GameViewModel: ObservableObject {
         isOverBoard = false
     }
 
-    func setColor(_ color: GameColor, at index: Int) {
+    func setColor(_ color: GameColor, at index: Int, autoAdvance: Bool = true) {
         guard !state.isGameOver else { return }
         // Respect fixed slots
         guard !state.fixedSlots[index] else { return }
@@ -150,16 +150,18 @@ class GameViewModel: ObservableObject {
         withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
             state.currentGuess[index] = color
             
-            // Intelligence Auto-Advance Logic:
-            // 1. Check for empty cells to the right
-            if let nextEmptyRight = (index+1..<4).first(where: { state.currentGuess[$0] == nil }) {
-                state.activeIndex = nextEmptyRight
-            } 
-            // 2. If no empty right, check for empty cells to the left
-            else if let firstEmptyLeft = (0..<4).first(where: { state.currentGuess[$0] == nil }) {
-                state.activeIndex = firstEmptyLeft
+            if autoAdvance {
+                // Intelligence Auto-Advance Logic:
+                // 1. Check for empty cells to the right
+                if let nextEmptyRight = (index+1..<4).first(where: { state.currentGuess[$0] == nil }) {
+                    state.activeIndex = nextEmptyRight
+                } 
+                // 2. If no empty right, check for empty cells to the left
+                else if let firstEmptyLeft = (0..<4).first(where: { state.currentGuess[$0] == nil }) {
+                    state.activeIndex = firstEmptyLeft
+                }
+                // 3. If no empty cells left at all, stay at current index or cycle (user preferred to stay/move to next if space)
             }
-            // 3. If no empty cells left at all, stay at current index or cycle (user preferred to stay/move to next if space)
         }
     }
 
@@ -453,9 +455,9 @@ class GameViewModel: ObservableObject {
         return code
     }
 
-    func selectColor(_ color: GameColor) {
+    func selectColor(_ color: GameColor, autoAdvance: Bool = true) {
         guard !state.isGameOver else { return }
-        setColor(color, at: state.activeIndex)
+        setColor(color, at: state.activeIndex, autoAdvance: autoAdvance)
     }
 
     func cycleColor(forward: Bool = true) {
@@ -473,7 +475,7 @@ class GameViewModel: ObservableObject {
             nextIndex = (currentIndex - 1 + allColors.count) % allColors.count
         }
         
-        selectColor(allColors[nextIndex])
+        selectColor(allColors[nextIndex], autoAdvance: false)
     }
 
     func moveToNextSlot() {
