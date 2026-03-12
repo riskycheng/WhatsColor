@@ -183,12 +183,25 @@ struct IndustrialRotaryButton: View {
     var onPressStart: (() -> Void)? = nil
     var onPressEnd: (() -> Void)? = nil
     
-    // Industrial Dimensions (ULTRA-REFINED)
+    // Industrial Dimensions (Base values)
     private let housingSize: CGFloat = 110
     private let bezelSize: CGFloat = 102
-    private let plateSize: CGFloat = 72 // Enlarged from 56
+    private let plateBaseSize: CGFloat = 72
+    
+    // Dynamic interaction state
+    @State private var interactionMode: InteractionMode = .none
+    
+    enum InteractionMode {
+        case none
+        case rotation
+        case centralButton
+    }
     
     var body: some View {
+        // Dynamic radii based on touch location
+        let dynamicPlateSize: CGFloat = interactionMode == .rotation ? (plateBaseSize - 12) : 
+                                      (interactionMode == .centralButton ? (plateBaseSize + 8) : plateBaseSize)
+        
         ZStack {
             // 1. OUTER HOUSING / BASEPLATE (Deep Charcoal Metal)
             Circle()
@@ -237,19 +250,6 @@ struct IndustrialRotaryButton: View {
                 }
             }
             .rotationEffect(.degrees(rotation))
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        let center = bezelSize / 2
-                        let vector = CGVector(dx: value.location.x - center, dy: value.location.y - center)
-                        let angle = atan2(vector.dy, vector.dx)
-                        let newRotation = angle * 180 / .pi
-                        
-                        // Pass rotation to callback
-                        onRotate?(newRotation)
-                        rotation = newRotation
-                    }
-            )
             
             // 3. INNER CONTROL PLATE (Recessed Black Matte)
             ZStack {
@@ -261,7 +261,7 @@ struct IndustrialRotaryButton: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: plateSize, height: plateSize)
+                    .frame(width: dynamicPlateSize, height: dynamicPlateSize)
                     .overlay(
                         Circle()
                             .stroke(
@@ -274,7 +274,7 @@ struct IndustrialRotaryButton: View {
                 ZStack {
                     Circle()
                         .fill(Color.black)
-                        .frame(width: 14, height: 14) // Slightly larger for better balance
+                        .frame(width: 14, height: 14)
                     
                     Circle()
                         .fill(Color.gameGreen)
@@ -287,22 +287,46 @@ struct IndustrialRotaryButton: View {
                         .frame(width: 1.5, height: 1.5)
                         .offset(x: -0.8, y: -0.8)
                 }
+                .scaleEffect(interactionMode == .centralButton ? 1.2 : 1.0)
             }
             .scaleEffect(isPressed ? 0.95 : 1.0)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        if !isPressed {
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: interactionMode)
+        }
+        .contentShape(Circle())
+        .gesture(
+            DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                .onChanged { value in
+                    let center = CGPoint(x: housingSize/2, y: housingSize/2)
+                    let dx = value.location.x - center.x
+                    let dy = value.location.y - center.y
+                    let distance = sqrt(dx*dx + dy*dy)
+                    
+                    if interactionMode == .none {
+                        // Initial determination on press
+                        if distance < plateBaseSize / 2 {
+                            interactionMode = .centralButton
                             isPressed = true
                             onPressStart?()
+                        } else {
+                            interactionMode = .rotation
                         }
                     }
-                    .onEnded { _ in
+                    
+                    if interactionMode == .rotation {
+                        let angle = atan2(dy, dx)
+                        let newRotation = angle * 180 / .pi
+                        onRotate?(newRotation)
+                        rotation = newRotation
+                    }
+                }
+                .onEnded { _ in
+                    if interactionMode == .centralButton {
                         isPressed = false
                         onPressEnd?()
                     }
-            )
-        }
+                    interactionMode = .none
+                }
+        )
     }
 }
 
