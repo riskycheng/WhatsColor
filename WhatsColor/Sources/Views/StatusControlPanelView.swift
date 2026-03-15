@@ -185,7 +185,7 @@ struct IndustrialRotaryButton: View {
     
     // Industrial Dimensions (Base values)
     private let housingSize: CGFloat = 110
-    private let bezelSize: CGFloat = 102
+    private let bezelBaseSize: CGFloat = 102
     private let plateBaseSize: CGFloat = 72
     
     // Dynamic interaction state
@@ -198,9 +198,14 @@ struct IndustrialRotaryButton: View {
     }
     
     var body: some View {
-        // Dynamic radii based on touch location
-        let dynamicPlateSize: CGFloat = interactionMode == .rotation ? (plateBaseSize - 12) : 
+        // Dynamic sizes based on touch location
+        // When rotating: expand the bezel outward significantly, shrink the central plate more
+        let bezelExpand: CGFloat = interactionMode == .rotation ? 18 : 0
+        let dynamicBezelSize: CGFloat = bezelBaseSize + bezelExpand
+        let dynamicPlateSize: CGFloat = interactionMode == .rotation ? (plateBaseSize - 16) :
                                       (interactionMode == .centralButton ? (plateBaseSize + 8) : plateBaseSize)
+        // Adjust the central button threshold when bezel expands
+        let dynamicPlateThreshold: CGFloat = interactionMode == .rotation ? (plateBaseSize / 2 + bezelExpand / 2) : (plateBaseSize / 2)
         
         ZStack {
             // 1. OUTER HOUSING / BASEPLATE (Deep Charcoal Metal)
@@ -223,6 +228,7 @@ struct IndustrialRotaryButton: View {
                 .shadow(color: .black.opacity(0.6), radius: 8, y: 5)
             
             // 2. ROTATING BEZEL WITH TICKS (Refined Gunmetal)
+            // Expands when user touches the rotating region to avoid false central button presses
             ZStack {
                 // Background for ticks - Consistent Matte Metal
                 Circle()
@@ -233,7 +239,7 @@ struct IndustrialRotaryButton: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: bezelSize, height: bezelSize)
+                    .frame(width: dynamicBezelSize, height: dynamicBezelSize)
                     .overlay(
                         Circle()
                             .stroke(Color.black.opacity(0.3), lineWidth: 1.2)
@@ -245,11 +251,12 @@ struct IndustrialRotaryButton: View {
                     Rectangle()
                         .fill(Color.black.opacity(isMajor ? 0.6 : 0.3))
                         .frame(width: isMajor ? 0.8 : 0.4, height: isMajor ? 8 : 5)
-                        .offset(y: -(bezelSize/2 - (isMajor ? 6 : 4)))
+                        .offset(y: -(dynamicBezelSize/2 - (isMajor ? 6 : 4)))
                         .rotationEffect(.degrees(Double(i) * 3))
                 }
             }
             .rotationEffect(.degrees(rotation))
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: interactionMode)
             
             // 3. INNER CONTROL PLATE (Recessed Black Matte)
             ZStack {
@@ -303,7 +310,8 @@ struct IndustrialRotaryButton: View {
                     
                     if interactionMode == .none {
                         // Initial determination on press
-                        if distance < plateBaseSize / 2 {
+                        // Use dynamic threshold: when bezel is expanded, central button area shrinks relatively
+                        if distance < dynamicPlateThreshold {
                             interactionMode = .centralButton
                             isPressed = true
                             onPressStart?()
