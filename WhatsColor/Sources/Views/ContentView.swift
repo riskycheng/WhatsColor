@@ -560,6 +560,8 @@ struct GameOverDialogView: View {
                         viewModel.showGameOverDialog = false
                         viewModel.isShowingStartScreen = true
                         viewModel.gameStarted = false
+                        // Reset time to difficulty's base time when returning to base
+                        viewModel.timeRemaining = viewModel.state.difficulty.baseTime
                     }) {
                         Text("RETURN TO BASE")
                             .font(.system(size: 11, weight: .bold, design: .monospaced))

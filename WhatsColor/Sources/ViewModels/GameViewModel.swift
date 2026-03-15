@@ -448,7 +448,8 @@ class GameViewModel: ObservableObject {
             state.level = 1
         }
         
-        timeRemaining = 120
+        // Reset time to difficulty's base time
+        timeRemaining = state.difficulty.baseTime
         selectedSecretCode = [] 
         currentSecretSlot = 0
     }
