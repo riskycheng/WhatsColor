@@ -9,7 +9,7 @@ struct SecretCodeSelectionView: View {
     // Fixed dialog dimensions
     private let dialogWidth: CGFloat = 360
     private let dialogPadding: CGFloat = 24
-    private let pickerHeight: CGFloat = 140
+    private let pickerHeight: CGFloat = 110
     
     var body: some View {
         ZStack {
@@ -153,13 +153,23 @@ struct SecretCodeSelectionView: View {
         VStack(spacing: 8) {
             // Unified Hint Area - Pre-reserved space to prevent layout jumps
             HStack {
-                Text(viewModel.gameMode == .dual && viewModel.isSecretCodeComplete ? "READY? HAND TO THE CHALLENGER" : " ")
-                    .font(.system(size: 10, weight: .black, design: .monospaced))
-                    .foregroundColor(.gameGreen.opacity(0.6))
-                    .tracking(1)
+                if viewModel.showDuplicateWarning {
+                    Text("NO DUPLICATES ALLOWED")
+                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                        .foregroundColor(.gameRed.opacity(0.9))
+                        .tracking(1.5)
+                } else if viewModel.gameMode == .dual && viewModel.isSecretCodeComplete {
+                    Text("READY? HAND TO THE CHALLENGER")
+                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                        .foregroundColor(.gameGreen.opacity(0.8))
+                        .tracking(1.5)
+                } else {
+                    Text(" ")
+                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                }
             }
-            .frame(height: 14)
-            .padding(.top, 4)
+            .frame(height: 20)
+            .padding(.top, 8)
             
             HStack(spacing: 16) {
                 // Cancel button
@@ -205,6 +215,7 @@ struct SecretCodeSelectionView: View {
         .padding(.horizontal, dialogPadding)
         .padding(.vertical, 12)
         .animation(.spring(), value: viewModel.isSecretCodeComplete)
+        .animation(.spring(), value: viewModel.showDuplicateWarning)
     }
 }
 

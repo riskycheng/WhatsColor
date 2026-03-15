@@ -168,6 +168,8 @@ class GameViewModel: ObservableObject {
     // Secret code selection state
     @Published var selectedSecretCode: [GameColor] = []
     @Published var currentSecretSlot: Int = 0
+    @Published var showDuplicateWarning: Bool = false
+    private var duplicateWarningTimer: Timer?
 
     // Timer state
     @Published var timeRemaining: Int = 60 // Default 60 seconds
@@ -301,6 +303,35 @@ class GameViewModel: ObservableObject {
     }
 
     func selectSecretColor(_ color: GameColor) {
+        // Check for duplicates before adding/changing
+        if selectedSecretCode.contains(color) {
+            // Find which slot has this color
+            if let duplicateIndex = selectedSecretCode.firstIndex(of: color) {
+                // If clicking the same slot that's already selected, do nothing
+                if duplicateIndex == currentSecretSlot {
+                    return
+                }
+                // Show warning that this color is already used
+                showDuplicateWarning = true
+                showToast("ALREADY USED IN SLOT \(duplicateIndex + 1)", type: .warning)
+                SoundManager.shared.playError()
+                SoundManager.shared.hapticMedium()
+                
+                // Clear the warning after 2 seconds
+                duplicateWarningTimer?.invalidate()
+                duplicateWarningTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+                    withAnimation {
+                        self?.showDuplicateWarning = false
+                    }
+                }
+                return
+            }
+        }
+        
+        // Clear duplicate warning when a valid selection is made
+        showDuplicateWarning = false
+        duplicateWarningTimer?.invalidate()
+        
         if selectedSecretCode.count < 4 {
             selectedSecretCode.append(color)
             // Auto-advance currentSecretSlot only if we are filling sequentially
@@ -308,10 +339,7 @@ class GameViewModel: ObservableObject {
         } else if currentSecretSlot < 4 {
             // Replace specific slot
             selectedSecretCode[currentSecretSlot] = color
-            // Move focus to next slot if available
-            if currentSecretSlot < 3 {
-                currentSecretSlot += 1
-            }
+            // Do NOT auto-advance - keep current slot selected for adjustability
         }
     }
 
@@ -367,7 +395,11 @@ class GameViewModel: ObservableObject {
     }
 
     var isSecretCodeComplete: Bool {
-        selectedSecretCode.count == 4
+        selectedSecretCode.count == 4 && !hasDuplicateInSecretCode
+    }
+    
+    var hasDuplicateInSecretCode: Bool {
+        Set(selectedSecretCode).count != selectedSecretCode.count
     }
 
     // MARK: - Game Logic
