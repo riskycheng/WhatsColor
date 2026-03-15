@@ -11,6 +11,7 @@ class SoundManager {
     private let dropSound: SystemSoundID = 1118 // Tink
     private let errorSound: SystemSoundID = 1053 // Pulsing
     private let successSound: SystemSoundID = 1013 // Fanfare-like
+    private let victorySound: SystemSoundID = 1029 // Triumphant ascending chime
     private let incorrectSound: SystemSoundID = 1054 // Descending chime-like
     
     private init() {}
@@ -37,6 +38,10 @@ class SoundManager {
     
     func playIncorrect() {
         AudioServicesPlaySystemSound(incorrectSound)
+    }
+    
+    func playVictory() {
+        AudioServicesPlaySystemSound(victorySound)
     }
     
     func hapticLight() {

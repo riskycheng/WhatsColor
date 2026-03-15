@@ -682,7 +682,7 @@ class GameViewModel: ObservableObject {
                 saveProgress()
             }
             
-            SoundManager.shared.playSuccess()
+            SoundManager.shared.playVictory()
             SoundManager.shared.hapticSuccess()
             stopTimer()
             showGameOverDialog = true

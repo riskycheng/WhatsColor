@@ -421,169 +421,229 @@ struct DialogButton: View {
 
 struct GameOverDialogView: View {
     @ObservedObject var viewModel: GameViewModel
-    @State private var appearScale: CGFloat = 0.8
+    @State private var appearScale: CGFloat = 0.85
     @State private var appearOpacity: Double = 0
-    @State private var rotateShield: Double = 0
+    @State private var glowOpacity: Double = 0
+    @State private var iconScale: CGFloat = 0.5
 
     var body: some View {
         let isWin = viewModel.state.message.contains("SUCCESS") || viewModel.state.message.contains("UNLOCKED")
         
         ZStack {
-            Color.black.opacity(0.85)
+            // Deep backdrop with animated glow for success
+            Color.black.opacity(0.88)
                 .ignoresSafeArea()
-                .blur(radius: 10)
+            
+            if isWin {
+                // Animated success glow
+                RadialGradient(
+                    colors: [
+                        Color.gameGreen.opacity(0.15 * glowOpacity),
+                        Color.gameGreen.opacity(0.05 * glowOpacity),
+                        .clear
+                    ],
+                    center: .center,
+                    startRadius: 50,
+                    endRadius: 300
+                )
+                .ignoresSafeArea()
+                .blur(radius: 20)
+            }
 
-            VStack(spacing: 0) {
-                // Header Status Section
-                ZStack {
-                    RoundedRectangle(cornerRadius: 30, style: .continuous)
-                        .fill(isWin ? Color.gameGreen.opacity(0.1) : Color.gameRed.opacity(0.1))
-                        .frame(height: 120)
-                    
-                    VStack(spacing: 8) {
-                        Image(systemName: isWin ? "shield.fill" : "exclamationmark.shield.fill")
-                            .font(.system(size: 40))
-                            .foregroundColor(isWin ? .gameGreen : .gameRed)
-                            .rotationEffect(.degrees(rotateShield))
-                            .shadow(color: (isWin ? Color.gameGreen : Color.gameRed).opacity(0.6), radius: 15)
+            // Centered compact content
+            VStack(spacing: 18) {
+                // Header with icon
+                VStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .stroke(isWin ? Color.gameGreen.opacity(0.3) : Color.gameRed.opacity(0.2), lineWidth: 1)
+                            .frame(width: 68, height: 68)
                         
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: isWin ? 
+                                        [Color.gameGreen.opacity(0.18), Color.gameGreen.opacity(0.06)] :
+                                        [Color.gameRed.opacity(0.15), Color.gameRed.opacity(0.05)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: 56, height: 56)
+                        
+                        Image(systemName: isWin ? "checkmark.seal.fill" : "xmark.octagon.fill")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundColor(isWin ? .gameGreen : .gameRed)
+                    }
+                    
+                    VStack(spacing: 4) {
                         Text(viewModel.state.message)
-                            .font(.system(size: 26, weight: .black, design: .monospaced))
+                            .font(.system(size: 20, weight: .black, design: .monospaced))
                             .foregroundColor(isWin ? .gameGreen : .gameRed)
                             .tracking(2)
+                        
+                        Text(isWin ? "SEQUENCE DECRYPTED" : "ACCESS DENIED")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.4))
+                            .tracking(1.5)
                     }
                 }
-                .padding(.top, 10)
 
-                VStack(spacing: 25) {
-                    // Mission Stats Bay
-                    HStack(spacing: 30) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("MISSION_ID")
-                                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.3))
-                            Text(viewModel.currentLevelString)
-                                .font(.system(size: 22, weight: .black, design: .monospaced))
-                                .foregroundColor(.white)
-                        }
-                        
-                        Rectangle()
-                            .fill(Color.white.opacity(0.1))
-                            .frame(width: 1, height: 40)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("TIME_ELAPSED")
-                                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.3))
-                            Text("\(viewModel.timeRemaining)s")
-                                .font(.system(size: 22, weight: .black, design: .monospaced))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .padding(.horizontal, 25)
-                    .padding(.vertical, 20)
-                    .background(Color.black.opacity(0.4))
-                    .cornerRadius(15)
+                // Stats row
+                HStack(spacing: 0) {
+                    StatItem(label: "MISSION", value: viewModel.currentLevelString)
+                    Divider().background(Color.white.opacity(0.1)).frame(height: 28)
+                    StatItem(label: "TIME", value: "\(viewModel.timeRemaining)s")
+                    Divider().background(Color.white.opacity(0.1)).frame(height: 28)
+                    StatItem(label: "ATTEMPTS", value: "\(viewModel.state.attempts.filter { $0.isComplete }.count)/7")
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.3))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.08), lineWidth: 1))
+                )
+                .padding(.horizontal, 20)
 
-                    // Reveal sequence only in Dual mode or on a Solo Success (to confirm decode)
-                    if viewModel.gameMode == .dual || (isWin && viewModel.gameMode == .solo) {
-                        VStack(spacing: 12) {
-                            Text("DECODED_SEQUENCE")
-                                .font(.system(size: 10, weight: .black, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.25))
-                                .tracking(1)
-                            
-                            HStack(spacing: 15) {
-                                ForEach(0..<4, id: \.self) { index in
-                                    let color = viewModel.state.secretCode[index]
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color.black.opacity(0.5))
-                                            .frame(width: 44, height: 44)
-                                        
-                                        if let icon = viewModel.state.theme.image(for: color) {
-                                            icon.resizable().aspectRatio(contentMode: .fit).frame(width: 32, height: 32)
-                                        } else {
-                                            Circle().fill(color.color).frame(width: 28, height: 28)
-                                        }
-                                    }
-                                    .overlay(Circle().stroke(isWin ? Color.gameGreen.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1.5))
-                                }
-                            }
-                        }
-                        .padding(.bottom, 5)
-                    }
-
-                    // Command Actions
-                    VStack(spacing: 15) {
-                        DialogButton(title: isWin ? "NEXT MISSION" : "RETRY_SEQUENCE", action: {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                viewModel.showGameOverDialog = false
-                                if viewModel.gameMode == .solo {
-                                    // In Solo mode, we either advance or retry the fixed sequence
-                                    viewModel.timeRemaining = viewModel.state.difficulty.baseTime
-                                    viewModel.startNewGame()
+                // Secret code
+                if viewModel.gameMode == .dual || (isWin && viewModel.gameMode == .solo) {
+                    HStack(spacing: 10) {
+                        ForEach(0..<4, id: \.self) { index in
+                            let color = viewModel.state.secretCode[index]
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.black.opacity(0.4))
+                                    .frame(width: 48, height: 48)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(isWin ? Color.gameGreen.opacity(0.25) : Color.white.opacity(0.1), lineWidth: 1))
+                                
+                                if let icon = viewModel.state.theme.image(for: color) {
+                                    icon.resizable().aspectRatio(contentMode: .fit).frame(width: 34, height: 34)
                                 } else {
-                                    // In Dual mode, return to configuration setup
-                                    viewModel.confirmRestart()
+                                    Circle().fill(color.color).frame(width: 28, height: 28)
                                 }
                             }
-                        })
-                        .background(isWin ? Color.gameGreen.opacity(0.1) : Color.clear)
-                        .cornerRadius(12)
-
-                        Button(action: {
-                            viewModel.showGameOverDialog = false
-                            viewModel.isShowingStartScreen = true
-                            viewModel.gameStarted = false
-                        }) {
-                            Text("RETURN_TO_BASE")
-                                .font(.system(size: 12, weight: .black, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.5))
-                                .padding(.top, 5)
                         }
                     }
                 }
-                .padding(30)
+
+                // Buttons
+                VStack(spacing: 10) {
+                    Button(action: {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            viewModel.showGameOverDialog = false
+                            if viewModel.gameMode == .solo {
+                                viewModel.timeRemaining = viewModel.state.difficulty.baseTime
+                                viewModel.startNewGame()
+                            } else {
+                                viewModel.confirmRestart()
+                            }
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: isWin ? "arrow.right" : "arrow.counterclockwise")
+                                .font(.system(size: 14))
+                            Text(isWin ? "NEXT MISSION" : "RETRY")
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(isWin ? Color.gameGreen.opacity(0.8) : Color(white: 0.3))
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                    Button(action: {
+                        viewModel.showGameOverDialog = false
+                        viewModel.isShowingStartScreen = true
+                        viewModel.gameStarted = false
+                    }) {
+                        Text("RETURN TO BASE")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .padding(.horizontal, 20)
             }
+            .padding(.vertical, 28)
             .background(
                 ZStack {
-                    RoundedRectangle(cornerRadius: 32)
-                        .fill(LinearGradient(colors: [Color(white: 0.12), Color(white: 0.08)], startPoint: .top, endPoint: .bottom))
+                    // Main background
+                    RoundedRectangle(cornerRadius: 28)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(white: 0.14), Color(white: 0.09)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                     
-                    RoundedRectangle(cornerRadius: 32)
-                        .stroke(isWin ? Color.gameGreen.opacity(0.3) : Color.gameRed.opacity(0.3), lineWidth: 2)
+                    // Subtle border glow for success
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(
+                            isWin ?
+                            LinearGradient(
+                                colors: [
+                                    Color.gameGreen.opacity(0.4),
+                                    Color.gameGreen.opacity(0.1),
+                                    Color.gameGreen.opacity(0.3)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ) :
+                            LinearGradient(
+                                colors: [Color.gameRed.opacity(0.2), Color.gameRed.opacity(0.1)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: isWin ? 1.5 : 1
+                        )
                 }
             )
             .scaleEffect(appearScale)
             .opacity(appearOpacity)
-            .padding(.horizontal, 30)
+            .padding(.horizontal, 35)
         }
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+            // Staggered animation
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.75)) {
                 appearScale = 1.0
                 appearOpacity = 1.0
             }
-            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                rotateShield = isWin ? 5 : -5
+            
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6).delay(0.1)) {
+                iconScale = 1.0
+            }
+            
+            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
+                glowOpacity = 1.0
             }
         }
     }
 }
 
-struct ResultStatView: View {
+// MARK: - Stat Item Component
+
+struct StatItem: View {
     let label: String
     let value: String
     
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 4) {
             Text(label)
-                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                .foregroundColor(.white.opacity(0.3))
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(.white.opacity(0.35))
+                .tracking(1)
             Text(value)
                 .font(.system(size: 18, weight: .black, design: .monospaced))
                 .foregroundColor(.white)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
