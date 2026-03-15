@@ -292,17 +292,44 @@ class GameViewModel: ObservableObject {
     func startSecretCodeSelection() {
         showSettingsDialog = false
         showSecretCodeDialog = true
-        selectedSecretCode = []
+        selectedSecretCode = Array(repeating: .red, count: 4) // Default or empty placeholders
+        // Use nil-based representation for logic clarity if possible, but the current UI uses indices.
+        // Let's stick to a 4-element array with a clear 'waiting' state.
+        // Better: Initialize as empty and handle indices 0-3 separately.
+        selectedSecretCode = [] 
         currentSecretSlot = 0
     }
 
     func selectSecretColor(_ color: GameColor) {
-        guard currentSecretSlot < 4 else { return }
-        selectedSecretCode.append(color)
-        currentSecretSlot += 1
+        if selectedSecretCode.count < 4 {
+            selectedSecretCode.append(color)
+            // Auto-advance currentSecretSlot only if we are filling sequentially
+            currentSecretSlot = selectedSecretCode.count
+        } else if currentSecretSlot < 4 {
+            // Replace specific slot
+            selectedSecretCode[currentSecretSlot] = color
+            // Move focus to next slot if available
+            if currentSecretSlot < 3 {
+                currentSecretSlot += 1
+            }
+        }
+    }
+
+    func resetSecretCode(at index: Int) {
+        guard index < selectedSecretCode.count else { return }
+        // Instead of removing subrange, we just set the focus there or allow individual removal
+        // If the user clicks a slot, they likely want to change it.
+        currentSecretSlot = index
+    }
+
+    func swapSecretColors(from: Int, to: Int) {
+        guard from < selectedSecretCode.count, to < selectedSecretCode.count else { return }
+        selectedSecretCode.swapAt(from, to)
+        currentSecretSlot = to // Focus follows the item or stays at target
     }
 
     func resetSecretCode(from index: Int) {
+        // Keep this for compatibility if needed, but we'll use resetSecretCode(at:) for specific selection
         guard index < selectedSecretCode.count else { return }
         selectedSecretCode.removeSubrange(index..<selectedSecretCode.count)
         currentSecretSlot = selectedSecretCode.count

@@ -9,7 +9,7 @@ struct SecretCodeSelectionView: View {
     // Fixed dialog dimensions
     private let dialogWidth: CGFloat = 360
     private let dialogPadding: CGFloat = 24
-    private let pickerHeight: CGFloat = 200
+    private let pickerHeight: CGFloat = 140
     
     var body: some View {
         ZStack {
@@ -32,7 +32,7 @@ struct SecretCodeSelectionView: View {
                 
                 // Selected colors preview section
                 selectedColorsSection
-                    .frame(height: 80)
+                    .padding(.vertical, 16)
                 
                 // Divider
                 Rectangle()
@@ -50,7 +50,6 @@ struct SecretCodeSelectionView: View {
                 
                 // Action buttons section
                 actionButtonsSection
-                    .frame(height: 72)
             }
             .background(
                 RoundedRectangle(cornerRadius: 24)
@@ -92,8 +91,8 @@ struct SecretCodeSelectionView: View {
             }
         }
         .padding(.horizontal, dialogPadding)
-        .padding(.top, 20)
-        .padding(.bottom, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
     }
     
     // MARK: - Selected Colors Section
@@ -105,21 +104,29 @@ struct SecretCodeSelectionView: View {
                     color: viewModel.selectedSecretCode.indices.contains(index) ?
                            viewModel.selectedSecretCode[index] : nil,
                     slotIndex: index,
-                    isActive: index == viewModel.selectedSecretCode.count,
+                    isActive: index == viewModel.currentSecretSlot,
                     viewModel: viewModel,
                     onTap: {
-                        // Reset from this slot onwards
-                        if index < viewModel.selectedSecretCode.count {
-                            viewModel.resetSecretCode(from: index)
+                        withAnimation(.spring(response: 0.3)) {
+                            viewModel.currentSecretSlot = index
                         }
                     }
                 )
+                .contentShape(Rectangle())
+                .onDrag {
+                    guard viewModel.selectedSecretCode.indices.contains(index) else { return NSItemProvider() }
+                    return NSItemProvider(object: String(index) as NSString)
+                }
+                .onDrop(of: [.text], delegate: SecretSlotDropDelegate(
+                    targetIndex: index,
+                    viewModel: viewModel
+                ))
             }
             .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, dialogPadding)
     }
-    
+
     // MARK: - Color Picker Section
     
     private var colorPickerSection: some View {
@@ -128,7 +135,7 @@ struct SecretCodeSelectionView: View {
                 ForEach(GameColor.allCases, id: \.self) { color in
                     SecretColorCard(
                         color: color,
-                        isSelected: viewModel.selectedSecretCode.last == color,
+                        isSelected: viewModel.currentSecretSlot < 4 && viewModel.selectedSecretCode.indices.contains(viewModel.currentSecretSlot) && viewModel.selectedSecretCode[viewModel.currentSecretSlot] == color,
                         viewModel: viewModel,
                         action: {
                             viewModel.selectSecretColor(color)
@@ -157,7 +164,7 @@ struct SecretCodeSelectionView: View {
             HStack(spacing: 16) {
                 // Cancel button
                 Button(action: {
-                    viewModel.dismissSecretCodeSelection()
+                    viewModel.cancelSecretCodeSelection()
                 }) {
                     Text("CANCEL")
                         .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -198,6 +205,33 @@ struct SecretCodeSelectionView: View {
         .padding(.horizontal, dialogPadding)
         .padding(.vertical, 12)
         .animation(.spring(), value: viewModel.isSecretCodeComplete)
+    }
+}
+
+// MARK: - Drop Delegate for Secret Slots
+
+struct SecretSlotDropDelegate: DropDelegate {
+    let targetIndex: Int
+    @ObservedObject var viewModel: GameViewModel
+    
+    func performDrop(info: DropInfo) -> Bool {
+        guard let item = info.itemProviders(for: [.text]).first else { return false }
+        
+        item.loadObject(ofClass: NSString.self) { string, error in
+            DispatchQueue.main.async {
+                if let sourceIndexStr = string as? String, 
+                   let sourceIndex = Int(sourceIndexStr) {
+                    withAnimation(.spring()) {
+                        viewModel.swapSecretColors(from: sourceIndex, to: targetIndex)
+                    }
+                }
+            }
+        }
+        return true
+    }
+    
+    func dropEntered(info: DropInfo) {
+        SoundManager.shared.hapticLight()
     }
 }
 
