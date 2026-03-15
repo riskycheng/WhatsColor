@@ -51,7 +51,9 @@ class GameFlowManager: ObservableObject {
     func showToast(_ message: String, type: ToastType = .info) {
         toast = ToastInfo(message: message, type: type)
         toastTimer?.invalidate()
-        toastTimer = Timer.scheduledTimer(withTimeInterval: 2.2, repeats: false) { [weak self] _ in
+        // Longer duration for warning/error messages
+        let duration = (type == .warning || type == .error) ? 3.5 : 2.2
+        toastTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 withAnimation {
                     self?.toast = nil

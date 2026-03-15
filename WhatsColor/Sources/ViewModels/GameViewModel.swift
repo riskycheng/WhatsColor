@@ -246,7 +246,9 @@ class GameViewModel: ObservableObject {
     func showToast(_ message: String, type: ToastType = .info) {
         toast = ToastInfo(message: message, type: type)
         toastTimer?.invalidate()
-        toastTimer = Timer.scheduledTimer(withTimeInterval: 2.2, repeats: false) { [weak self] _ in
+        // Longer duration for warning/error messages
+        let duration = (type == .warning || type == .error) ? 3.5 : 2.2
+        toastTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
             withAnimation {
                 self?.toast = nil
             }
@@ -315,7 +317,7 @@ class GameViewModel: ObservableObject {
                 showDuplicateWarning = true
                 showToast("ALREADY USED IN SLOT \(duplicateIndex + 1)", type: .warning)
                 SoundManager.shared.playError()
-                SoundManager.shared.hapticMedium()
+                SoundManager.shared.hapticError()
                 
                 // Clear the warning after 2 seconds
                 duplicateWarningTimer?.invalidate()
@@ -556,6 +558,8 @@ class GameViewModel: ObservableObject {
 
         // Check if all slots are filled
         guard state.currentGuess.allSatisfy({ $0 != nil }) else {
+            SoundManager.shared.playError()
+            SoundManager.shared.hapticError()
             showToast("FILL ALL SLOTS", type: .warning)
             return
         }
@@ -563,6 +567,8 @@ class GameViewModel: ObservableObject {
         // Check for unique colors... (rest of function)
         let colors = state.currentGuess.compactMap { $0 }
         guard Set(colors).count == 4 else {
+            SoundManager.shared.playError()
+            SoundManager.shared.hapticError()
             showToast("USE UNIQUE COLORS", type: .warning)
             return
         }
@@ -694,6 +700,7 @@ class GameViewModel: ObservableObject {
         } else {
             // Show toast for incorrect guess
             showToast("TRY AGAIN", type: .info)
+            SoundManager.shared.playIncorrect()
             SoundManager.shared.hapticMedium()
         }
     }

@@ -11,6 +11,7 @@ class SoundManager {
     private let dropSound: SystemSoundID = 1118 // Tink
     private let errorSound: SystemSoundID = 1053 // Pulsing
     private let successSound: SystemSoundID = 1013 // Fanfare-like
+    private let incorrectSound: SystemSoundID = 1054 // Descending chime-like
     
     private init() {}
     
@@ -34,6 +35,10 @@ class SoundManager {
         AudioServicesPlaySystemSound(successSound)
     }
     
+    func playIncorrect() {
+        AudioServicesPlaySystemSound(incorrectSound)
+    }
+    
     func hapticLight() {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.prepare()
@@ -50,5 +55,11 @@ class SoundManager {
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
         generator.notificationOccurred(.success)
+    }
+    
+    func hapticError() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.error)
     }
 }

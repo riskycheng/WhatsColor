@@ -188,6 +188,9 @@ struct IndustrialRotaryButton: View {
     private let bezelBaseSize: CGFloat = 102
     private let plateBaseSize: CGFloat = 72
     
+    // Extended touch target for easier rotation triggering (invisible area outside bezel)
+    private let rotationTouchExtension: CGFloat = 60
+    
     // Dynamic interaction state
     @State private var interactionMode: InteractionMode = .none
     
@@ -199,13 +202,13 @@ struct IndustrialRotaryButton: View {
     
     var body: some View {
         // Dynamic sizes based on touch location
-        // When rotating: expand the bezel outward significantly, shrink the central plate more
-        let bezelExpand: CGFloat = interactionMode == .rotation ? 18 : 0
+        // When rotating: expand the bezel outward significantly, shrink the central plate much more
+        let bezelExpand: CGFloat = interactionMode == .rotation ? 22 : 0
         let dynamicBezelSize: CGFloat = bezelBaseSize + bezelExpand
-        let dynamicPlateSize: CGFloat = interactionMode == .rotation ? (plateBaseSize - 16) :
+        let dynamicPlateSize: CGFloat = interactionMode == .rotation ? (plateBaseSize - 28) :
                                       (interactionMode == .centralButton ? (plateBaseSize + 8) : plateBaseSize)
-        // Adjust the central button threshold when bezel expands
-        let dynamicPlateThreshold: CGFloat = interactionMode == .rotation ? (plateBaseSize / 2 + bezelExpand / 2) : (plateBaseSize / 2)
+        // Central button threshold: very small during rotation to prevent accidental clicks
+        let dynamicPlateThreshold: CGFloat = interactionMode == .rotation ? (plateBaseSize / 2 - 10) : (plateBaseSize / 2)
         
         ZStack {
             // 1. OUTER HOUSING / BASEPLATE (Deep Charcoal Metal)
@@ -310,12 +313,18 @@ struct IndustrialRotaryButton: View {
                     
                     if interactionMode == .none {
                         // Initial determination on press
-                        // Use dynamic threshold: when bezel is expanded, central button area shrinks relatively
+                        // Extended rotation touch area: includes bezel + extension area outside
+                        let rotationTriggerRadius = (bezelBaseSize / 2) + rotationTouchExtension
+                        
                         if distance < dynamicPlateThreshold {
                             interactionMode = .centralButton
                             isPressed = true
                             onPressStart?()
+                        } else if distance < rotationTriggerRadius {
+                            // User touched within the extended rotation area (even outside visible bezel)
+                            interactionMode = .rotation
                         } else {
+                            // Outside all touch targets - still allow rotation for convenience
                             interactionMode = .rotation
                         }
                     }
