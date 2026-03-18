@@ -12,6 +12,7 @@ class GameViewModel: ObservableObject {
     @Published var showSettingsDialog: Bool = false
     @Published var showSecretCodeDialog: Bool = false
     @Published var showGameOverDialog: Bool = false
+    @Published var showHowToPlay: Bool = false
 
     // Message/Toast state
     struct ToastInfo: Equatable {
@@ -272,6 +273,9 @@ class GameViewModel: ObservableObject {
     }
 
     func tickTimer() {
+        // Easy mode has no time limit
+        guard state.difficulty.hasTimeLimit else { return }
+        
         if timeRemaining > 0 {
             timeRemaining -= 1
         } else {
@@ -420,8 +424,8 @@ class GameViewModel: ObservableObject {
         state.activeIndex = 0
         state.isGameOver = false
         state.message = "READY"
-        // Start timer only if game has been started through the full setup flow
-        if gameStarted && timeRemaining > 0 {
+        // Start timer only if game has been started and difficulty has time limit
+        if gameStarted && state.difficulty.hasTimeLimit && timeRemaining > 0 {
             startTimer()
         }
     }
@@ -433,7 +437,8 @@ class GameViewModel: ObservableObject {
 
     func resumeGame() {
         showPauseDialog = false
-        if timeRemaining > 0 {
+        // Only resume timer if difficulty has time limit
+        if state.difficulty.hasTimeLimit && timeRemaining > 0 {
             startTimer()
         }
     }

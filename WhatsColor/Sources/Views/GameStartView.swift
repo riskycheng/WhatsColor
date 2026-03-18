@@ -287,6 +287,33 @@ VStack(spacing: 18) {
                 .padding(.horizontal, 24)
                 .buttonStyle(PressedButtonStyle())
                 
+                // How to Play Button
+                Button(action: {
+                    SoundManager.shared.playSelection()
+                    viewModel.showHowToPlay = true
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "questionmark.circle")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("HOW TO PLAY")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .tracking(1.5)
+                    }
+                    .foregroundColor(.white.opacity(0.5))
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 16)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.05))
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.top, 12)
+                
                 Spacer(minLength: 25)
             }
         }

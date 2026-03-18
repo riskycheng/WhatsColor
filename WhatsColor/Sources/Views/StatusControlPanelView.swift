@@ -30,19 +30,34 @@ struct StatusControlPanelView: View {
             HStack(alignment: .center, spacing: 12) {
                 // LEFT SIDE: Telemetry (Timer + Status)
                 VStack(alignment: .leading, spacing: 2) {
-                    // Timer Display
-                    HStack(alignment: .lastTextBaseline, spacing: 6) {
-                        Text("\(viewModel.timeRemaining)")
-                            .font(.system(size: 62, weight: .black, design: .monospaced))
-                            .foregroundColor(.gameRed)
-                            .shadow(color: .gameRed.opacity(0.4), radius: 8)
-                            .monospacedDigit()
-                            .minimumScaleFactor(0.5)
+                    // Timer Display (only show if difficulty has time limit)
+                    if viewModel.state.difficulty.hasTimeLimit {
+                        HStack(alignment: .lastTextBaseline, spacing: 6) {
+                            Text("\(viewModel.timeRemaining)")
+                                .font(.system(size: 62, weight: .black, design: .monospaced))
+                                .foregroundColor(.gameRed)
+                                .shadow(color: .gameRed.opacity(0.4), radius: 8)
+                                .monospacedDigit()
+                                .minimumScaleFactor(0.5)
 
-                        Text("SEC")
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                            .foregroundColor(.gameRed.opacity(0.5))
-                            .padding(.bottom, 10)
+                            Text("SEC")
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                                .foregroundColor(.gameRed.opacity(0.5))
+                                .padding(.bottom, 10)
+                        }
+                    } else {
+                        // Easy mode: show "NO LIMIT" text instead of timer
+                        HStack(alignment: .lastTextBaseline, spacing: 6) {
+                            Text("∞")
+                                .font(.system(size: 48, weight: .black, design: .monospaced))
+                                .foregroundColor(.gameGreen)
+                                .shadow(color: .gameGreen.opacity(0.4), radius: 8)
+
+                            Text("NO LIMIT")
+                                .font(.system(size: 12, weight: .black, design: .monospaced))
+                                .foregroundColor(.gameGreen.opacity(0.6))
+                                .padding(.bottom, 8)
+                        }
                     }
                     
                     // REDESIGNED: Advanced Mission Status Telemetry

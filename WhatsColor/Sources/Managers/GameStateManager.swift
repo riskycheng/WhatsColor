@@ -254,57 +254,38 @@ class GameStateManager: ObservableObject {
     // MARK: - Feedback Calculation
 
     func calculateFeedback(guess: [GameColor], secret: [GameColor]) -> [FeedbackType] {
-        if state.mode == .beginner {
-            // Beginner mode: feedback for each position
-            return guess.enumerated().map { index, color in
-                if color == secret[index] {
-                    return .correct
-                } else if secret.contains(color) {
-                    return .misplaced
-                } else {
-                    return .wrong
-                }
+        // Calculate position-by-position feedback first
+        let positionFeedback: [FeedbackType] = guess.enumerated().map { index, color in
+            if color == secret[index] {
+                return .correct
+            } else if secret.contains(color) {
+                return .misplaced
+            } else {
+                return .wrong
             }
-        } else {
-            // Advanced mode: aggregate feedback
-            var correct = 0
-            var misplaced = 0
-            var secretCopy = secret
-            var guessCopy = guess
-
-            // First pass: find correct positions
-            for i in 0..<4 {
-                if guessCopy[i] == secretCopy[i] {
-                    correct += 1
-                    secretCopy[i] = GameColor.cyan // Mark as used
-                    guessCopy[i] = GameColor.cyan
-                }
-            }
-
-            // Second pass: find misplaced colors
-            for i in 0..<4 {
-                if guessCopy[i] != GameColor.cyan {
-                    if let foundIndex = secretCopy.firstIndex(of: guessCopy[i]) {
-                        misplaced += 1
-                        secretCopy[foundIndex] = GameColor.cyan
-                    }
-                }
-            }
-
-            // Build feedback array
+        }
+        
+        // For Hard mode: aggregate feedback (no position information)
+        if state.difficulty == .hard {
+            let correctCount = positionFeedback.filter { $0 == .correct }.count
+            let misplacedCount = positionFeedback.filter { $0 == .misplaced }.count
+            
+            // Build aggregate feedback array: all correct first, then misplaced, then empty
             var feedback: [FeedbackType] = []
-            for _ in 0..<correct {
+            for _ in 0..<correctCount {
                 feedback.append(.correct)
             }
-            for _ in 0..<misplaced {
+            for _ in 0..<misplacedCount {
                 feedback.append(.misplaced)
             }
             while feedback.count < 4 {
                 feedback.append(.wrong)
             }
-
             return feedback
         }
+        
+        // For Easy and Normal modes: return position-based feedback
+        return positionFeedback
     }
 
     // MARK: - Game Status Checking
@@ -316,19 +297,17 @@ class GameStateManager: ObservableObject {
 
         let feedback = lastAttempt.feedback
 
-        let isWin: Bool
-        if state.mode == .advanced {
-            let correctCount = feedback.filter { $0 == .correct }.count
-            isWin = (correctCount == 4)
-        } else {
-            isWin = feedback.allSatisfy { $0 == .correct }
-        }
+        // For Hard mode, check if we have 4 correct (regardless of position in feedback array)
+        // For Easy/Normal, all feedback must be correct
+        let correctCount = feedback.filter { $0 == .correct }.count
+        let isWin = (correctCount == 4)
 
         if isWin {
             isGameOver = true
             message = "MISSION SUCCESS"
 
-            if state.mode == .advanced { // Solo mode
+            // Solo mode: advance level
+            if gameMode == .solo {
                 state.level += 1
                 saveProgress()
             }

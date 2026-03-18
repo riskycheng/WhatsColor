@@ -172,24 +172,45 @@ enum GameDifficulty: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    // Always return 7 for UI consistency - layout doesn't change with difficulty
+    // All modes have 7 attempts
     var maxAttempts: Int {
         7
     }
 
     var description: String {
         switch self {
-        case .easy: return "10 attempts"
-        case .normal: return "7 attempts"
-        case .hard: return "5 attempts"
+        case .easy: return "Limited colors"
+        case .normal: return "Position feedback"
+        case .hard: return "Aggregate only"
         }
     }
 
     var baseTime: Int {
         switch self {
-        case .easy: return 120
-        case .normal: return 90
-        case .hard: return 60
+        case .easy: return 0  // No time limit
+        case .normal: return 300
+        case .hard: return 300
+        }
+    }
+    
+    /// Whether this difficulty has a time limit
+    var hasTimeLimit: Bool {
+        baseTime > 0
+    }
+    
+    /// Number of colors enabled in the picker (Easy mode only enables 4)
+    var enabledColorCount: Int {
+        switch self {
+        case .easy: return 4
+        case .normal, .hard: return GameColor.allCases.count
+        }
+    }
+    
+    /// Whether feedback shows position information
+    var showsPositionFeedback: Bool {
+        switch self {
+        case .easy, .normal: return true
+        case .hard: return false
         }
     }
 }

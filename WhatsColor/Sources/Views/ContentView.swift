@@ -82,6 +82,13 @@ struct ContentView: View {
                         .animation(.easeInOut(duration: 0.2), value: viewModel.showSettingsDialog)
                 }
 
+                // How to Play dialog
+                if viewModel.showHowToPlay {
+                    HowToPlayView(viewModel: viewModel)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.showHowToPlay)
+                }
+
                 // Secret code selection dialog
                 if viewModel.showSecretCodeDialog {
                     SecretCodeSelectionView(viewModel: viewModel)
@@ -754,4 +761,285 @@ struct ScrewHeadSmall: View {
 
 #Preview {
     ContentView()
+}
+
+// MARK: - How To Play View
+
+struct HowToPlayView: View {
+    @ObservedObject var viewModel: GameViewModel
+    
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.85)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        SoundManager.shared.playSelection()
+                        viewModel.showHowToPlay = false
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        // Title
+                        VStack(spacing: 8) {
+                            Image(systemName: "book.closed.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.gameGreen)
+                            
+                            Text("MISSION BRIEFING")
+                                .font(.system(size: 20, weight: .black, design: .monospaced))
+                                .foregroundColor(.white)
+                                .tracking(2)
+                        }
+                        .padding(.top, 10)
+                        
+                        // Basic Rules
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("OBJECTIVE")
+                                .font(.system(size: 10, weight: .black, design: .monospaced))
+                                .foregroundColor(.gameGreen)
+                                .tracking(1.5)
+                            
+                            Text("Decode the secret 4-color sequence within the time limit. You have 7 attempts to crack the code.")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.white.opacity(0.8))
+                                .lineSpacing(4)
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.white.opacity(0.05))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.gameGreen.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                        
+                        // Feedback Explanation
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("FEEDBACK SYSTEM")
+                                .font(.system(size: 10, weight: .black, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.5))
+                                .tracking(1.5)
+                            
+                            HStack(spacing: 16) {
+                                FeedbackExample(
+                                    color: .gameGreen,
+                                    label: "GREEN",
+                                    description: "Correct color\nCorrect position"
+                                )
+                                
+                                FeedbackExample(
+                                    color: .white,
+                                    label: "WHITE",
+                                    description: "Correct color\nWrong position"
+                                )
+                                
+                                FeedbackExample(
+                                    color: .clear,
+                                    label: "NONE",
+                                    description: "Color not in\nsecret code"
+                                )
+                            }
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.white.opacity(0.03))
+                        )
+                        
+                        // Difficulty Modes
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("DIFFICULTY MODES")
+                                .font(.system(size: 10, weight: .black, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.5))
+                                .tracking(1.5)
+                            
+                            DifficultyCard(
+                                title: "EASY",
+                                timeLimit: "No limit",
+                                features: [
+                                    "Only 4 colors enabled",
+                                    "Colors auto-skip disabled ones",
+                                    "Best for learning"
+                                ],
+                                color: .gameGreen
+                            )
+                            
+                            DifficultyCard(
+                                title: "NORMAL",
+                                timeLimit: "300 seconds",
+                                features: [
+                                    "Position-by-position feedback",
+                                    "Shows which slot is correct",
+                                    "Standard challenge"
+                                ],
+                                color: .yellow
+                            )
+                            
+                            DifficultyCard(
+                                title: "HARD",
+                                timeLimit: "300 seconds",
+                                features: [
+                                    "Aggregate feedback only",
+                                    "No position information",
+                                    "True codebreaker test"
+                                ],
+                                color: .gameRed
+                            )
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.white.opacity(0.03))
+                        )
+                        
+                        // Controls
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("CONTROLS")
+                                .font(.system(size: 10, weight: .black, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.5))
+                                .tracking(1.5)
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                ControlRow(icon: "hand.tap.fill", text: "Tap color to select")
+                                ControlRow(icon: "arrow.clockwise.circle.fill", text: "Rotate dial to change slot")
+                                ControlRow(icon: "checkmark.circle.fill", text: "Tap center to submit")
+                            }
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.white.opacity(0.03))
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 30)
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(white: 0.12), Color(white: 0.08)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            .padding(20)
+        }
+    }
+}
+
+struct FeedbackExample: View {
+    let color: Color
+    let label: String
+    let description: String
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Circle()
+                .fill(color == .clear ? Color.white.opacity(0.1) : color)
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                )
+            
+            Text(label)
+                .font(.system(size: 8, weight: .black, design: .monospaced))
+                .foregroundColor(.white.opacity(0.5))
+            
+            Text(description)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundColor(.white.opacity(0.6))
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct DifficultyCard: View {
+    let title: String
+    let timeLimit: String
+    let features: [String]
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(title)
+                    .font(.system(size: 12, weight: .black, design: .monospaced))
+                    .foregroundColor(color)
+                    .tracking(1.5)
+                
+                Spacer()
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 10))
+                    Text(timeLimit)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                }
+                .foregroundColor(.white.opacity(0.4))
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(features, id: \.self) { feature in
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(color.opacity(0.6))
+                            .frame(width: 4, height: 4)
+                        Text(feature)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black.opacity(0.3))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(color.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct ControlRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundColor(.gameGreen.opacity(0.8))
+                .frame(width: 20)
+            
+            Text(text)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white.opacity(0.7))
+        }
+    }
 }
