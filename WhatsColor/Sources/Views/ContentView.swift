@@ -776,7 +776,13 @@ struct HowToPlayView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
+                    Text("MISSION BRIEFING")
+                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                        .foregroundColor(.white)
+                        .tracking(2)
+                    
                     Spacer()
+                    
                     Button(action: {
                         SoundManager.shared.playSelection()
                         viewModel.showHowToPlay = false
@@ -790,146 +796,224 @@ struct HowToPlayView: View {
                 .padding(.top, 20)
                 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 24) {
-                        // Title
-                        VStack(spacing: 8) {
-                            Image(systemName: "book.closed.fill")
-                                .font(.system(size: 32))
+                    VStack(spacing: 16) {
+                        // Objective
+                        HStack(spacing: 10) {
+                            Image(systemName: "target")
+                                .font(.system(size: 18))
                                 .foregroundColor(.gameGreen)
                             
-                            Text("MISSION BRIEFING")
-                                .font(.system(size: 20, weight: .black, design: .monospaced))
-                                .foregroundColor(.white)
-                                .tracking(2)
+                            Text("Decode the secret 4-color sequence. You have 7 attempts to crack the code.")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white.opacity(0.85))
+                                .lineSpacing(3)
                         }
-                        .padding(.top, 10)
-                        
-                        // Basic Rules
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("OBJECTIVE")
-                                .font(.system(size: 10, weight: .black, design: .monospaced))
-                                .foregroundColor(.gameGreen)
-                                .tracking(1.5)
-                            
-                            Text("Decode the secret 4-color sequence within the time limit. You have 7 attempts to crack the code.")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.white.opacity(0.8))
-                                .lineSpacing(4)
-                        }
-                        .padding(16)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.white.opacity(0.05))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.gameGreen.opacity(0.2), lineWidth: 1)
-                                )
                         )
                         
-                        // Feedback Explanation
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("FEEDBACK SYSTEM")
-                                .font(.system(size: 10, weight: .black, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.5))
-                                .tracking(1.5)
-                            
-                            HStack(spacing: 16) {
-                                FeedbackExample(
-                                    color: .gameGreen,
-                                    label: "GREEN",
-                                    description: "Correct color\nCorrect position"
-                                )
-                                
-                                FeedbackExample(
-                                    color: .white,
-                                    label: "WHITE",
-                                    description: "Correct color\nWrong position"
-                                )
-                                
-                                FeedbackExample(
-                                    color: .clear,
-                                    label: "NONE",
-                                    description: "Color not in\nsecret code"
-                                )
-                            }
-                        }
-                        .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white.opacity(0.03))
-                        )
-                        
-                        // Difficulty Modes
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("DIFFICULTY MODES")
-                                .font(.system(size: 10, weight: .black, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.5))
-                                .tracking(1.5)
-                            
-                            DifficultyCard(
-                                title: "EASY",
-                                timeLimit: "No limit",
-                                features: [
-                                    "Only 4 colors enabled",
-                                    "Colors auto-skip disabled ones",
-                                    "Best for learning"
-                                ],
+                        // Game Modes
+                        HStack(spacing: 12) {
+                            ModeCard(
+                                title: "SOLO",
+                                icon: "person.fill",
+                                description: "Play against AI.\nProgress through levels.",
                                 color: .gameGreen
                             )
                             
-                            DifficultyCard(
-                                title: "NORMAL",
-                                timeLimit: "300 seconds",
-                                features: [
-                                    "Position-by-position feedback",
-                                    "Shows which slot is correct",
-                                    "Standard challenge"
-                                ],
-                                color: .yellow
-                            )
-                            
-                            DifficultyCard(
-                                title: "HARD",
-                                timeLimit: "300 seconds",
-                                features: [
-                                    "Aggregate feedback only",
-                                    "No position information",
-                                    "True codebreaker test"
-                                ],
-                                color: .gameRed
+                            ModeCard(
+                                title: "DUAL",
+                                icon: "person.2.fill",
+                                description: "Two players.\nOne sets, one guesses.",
+                                color: .blue
                             )
                         }
-                        .padding(16)
+                        
+                        // Feedback System - using generic terms for multi-theme support
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "lightbulb.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gameGreen)
+                                Text("FEEDBACK")
+                                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.5))
+                                    .tracking(1)
+                            }
+                            
+                            // Using generic terms (item/symbol) to support all themes
+                            HStack(spacing: 0) {
+                                FeedbackItem(
+                                    color: .gameGreen,
+                                    label: "GREEN",
+                                    line1: "Correct item",
+                                    line2: "& position"
+                                )
+                                
+                                FeedbackItem(
+                                    color: .white,
+                                    label: "WHITE",
+                                    line1: "Correct item,",
+                                    line2: "wrong position"
+                                )
+                                
+                                FeedbackItem(
+                                    color: .clear,
+                                    label: "NONE",
+                                    line1: "Item not",
+                                    line2: "in code"
+                                )
+                            }
+                        }
+                        .padding(12)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.white.opacity(0.03))
                         )
                         
-                        // Controls
+                        // Difficulty Modes - 无时间显示，更详细描述
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("CONTROLS")
-                                .font(.system(size: 10, weight: .black, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.5))
-                                .tracking(1.5)
+                            HStack(spacing: 8) {
+                                Image(systemName: "gauge.with.dots.needle.67percent")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gameGreen)
+                                Text("DIFFICULTY")
+                                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.5))
+                                    .tracking(1)
+                            }
                             
-                            VStack(alignment: .leading, spacing: 8) {
-                                ControlRow(icon: "hand.tap.fill", text: "Tap color to select")
-                                ControlRow(icon: "arrow.clockwise.circle.fill", text: "Rotate dial to change slot")
-                                ControlRow(icon: "checkmark.circle.fill", text: "Tap center to submit")
+                            VStack(spacing: 6) {
+                                DifficultyDescRow(
+                                    title: "EASY",
+                                    desc: "Limited palette with position hints",
+                                    color: .gameGreen
+                                )
+                                
+                                DifficultyDescRow(
+                                    title: "NORMAL",
+                                    desc: "Full palette with position hints",
+                                    color: .yellow
+                                )
+                                
+                                DifficultyDescRow(
+                                    title: "HARD",
+                                    desc: "Full palette with count-only hints",
+                                    color: .gameRed
+                                )
                             }
                         }
-                        .padding(16)
+                        .padding(12)
                         .background(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.white.opacity(0.03))
+                        )
+                        
+                        // Controls - 双栏布局，无图标，单行
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "gamecontroller.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gameGreen)
+                                Text("CONTROLS")
+                                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.5))
+                                    .tracking(1)
+                            }
+                            
+                            HStack(alignment: .top, spacing: 12) {
+                                // Rotary Controller Block
+                                VStack(alignment: .leading, spacing: 0) {
+                                    // Header with fixed height for alignment
+                                    HStack(spacing: 6) {
+                                        MiniRotaryIcon()
+                                        
+                                        Text("DIAL")
+                                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                                            .foregroundColor(.white.opacity(0.6))
+                                    }
+                                    .frame(height: 24)
+                                    .padding(.bottom, 8)
+                                    
+                                    // Content lines with fixed height for alignment
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text("• Tap: Advance slot")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.75))
+                                            .frame(height: 18, alignment: .leading)
+                                        Text("• Hold: Submit guess")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.75))
+                                            .frame(height: 18, alignment: .leading)
+                                        Text("• Drag edge: Rotate")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.75))
+                                            .frame(height: 18, alignment: .leading)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.black.opacity(0.2))
+                                )
+                                
+                                // Color Cell Block
+                                VStack(alignment: .leading, spacing: 0) {
+                                    // Header with fixed height for alignment
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "square.grid.2x2")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.gameGreen.opacity(0.8))
+                                            .frame(width: 24, height: 24)
+                                        
+                                        Text("CELLS")
+                                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                                            .foregroundColor(.white.opacity(0.6))
+                                    }
+                                    .frame(height: 24)
+                                    .padding(.bottom, 8)
+                                    
+                                    // Content lines with fixed height for alignment
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text("• Tap: Select item")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.75))
+                                            .frame(height: 18, alignment: .leading)
+                                        Text("• Drag: Swap slots")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.75))
+                                            .frame(height: 18, alignment: .leading)
+                                        Text("• Hold: Lock/unlock")
+                                            .font(.system(size: 11, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.75))
+                                            .frame(height: 18, alignment: .leading)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.black.opacity(0.2))
+                                )
+                            }
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.white.opacity(0.03))
                         )
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 30)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 20)
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 24)
+                RoundedRectangle(cornerRadius: 20)
                     .fill(
                         LinearGradient(
                             colors: [Color(white: 0.12), Color(white: 0.08)],
@@ -938,108 +1022,189 @@ struct HowToPlayView: View {
                         )
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 24)
+                        RoundedRectangle(cornerRadius: 20)
                             .stroke(Color.white.opacity(0.1), lineWidth: 1)
                     )
             )
-            .padding(20)
+            .padding(16)
         }
     }
 }
 
-struct FeedbackExample: View {
-    let color: Color
-    let label: String
+struct ModeCard: View {
+    let title: String
+    let icon: String
     let description: String
+    let color: Color
     
     var body: some View {
         VStack(spacing: 8) {
-            Circle()
-                .fill(color == .clear ? Color.white.opacity(0.1) : color)
-                .frame(width: 24, height: 24)
-                .overlay(
-                    Circle()
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                )
+            Image(systemName: icon)
+                .font(.system(size: 22))
+                .foregroundColor(color)
             
-            Text(label)
-                .font(.system(size: 8, weight: .black, design: .monospaced))
-                .foregroundColor(.white.opacity(0.5))
+            Text(title)
+                .font(.system(size: 13, weight: .black, design: .monospaced))
+                .foregroundColor(color)
             
             Text(description)
-                .font(.system(size: 9, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
                 .lineSpacing(2)
         }
         .frame(maxWidth: .infinity)
-    }
-}
-
-struct DifficultyCard: View {
-    let title: String
-    let timeLimit: String
-    let features: [String]
-    let color: Color
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(title)
-                    .font(.system(size: 12, weight: .black, design: .monospaced))
-                    .foregroundColor(color)
-                    .tracking(1.5)
-                
-                Spacer()
-                
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 10))
-                    Text(timeLimit)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                }
-                .foregroundColor(.white.opacity(0.4))
-            }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                ForEach(features, id: \.self) { feature in
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(color.opacity(0.6))
-                            .frame(width: 4, height: 4)
-                        Text(feature)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                }
-            }
-        }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.black.opacity(0.3))
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.black.opacity(0.25))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(color.opacity(0.2), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(color.opacity(0.25), lineWidth: 1)
                 )
         )
     }
 }
 
-struct ControlRow: View {
-    let icon: String
-    let text: String
+struct FeedbackItem: View {
+    let color: Color
+    let label: String
+    let line1: String
+    let line2: String
     
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundColor(.gameGreen.opacity(0.8))
-                .frame(width: 20)
+        VStack(spacing: 8) {
+            // 固定高度的circle容器
+            ZStack {
+                Circle()
+                    .fill(color == .clear ? Color.white.opacity(0.12) : color)
+                    .frame(width: 24, height: 24)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+            }
+            .frame(height: 24)
             
-            Text(text)
+            Text(label)
+                .font(.system(size: 9, weight: .black, design: .monospaced))
+                .foregroundColor(.white.opacity(0.6))
+            
+            // 固定高度的文本区域
+            VStack(spacing: 1) {
+                Text(line1)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+                Text(line2)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            .multilineTextAlignment(.center)
+            .frame(height: 28)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct DifficultyDescRow: View {
+    let title: String
+    let desc: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(title)
+                .font(.system(size: 13, weight: .black, design: .monospaced))
+                .foregroundColor(color)
+                .frame(width: 55, alignment: .leading)
+            
+            Text(desc)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.white.opacity(0.75))
+            
+            Spacer()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black.opacity(0.2))
+        )
+    }
+}
+
+struct MiniRotaryIcon: View {
+    var body: some View {
+        ZStack {
+            // Outer housing
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color(white: 0.22), Color(white: 0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Circle()
+                        .stroke(
+                            LinearGradient(colors: [.white.opacity(0.1), .black.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 0.5
+                        )
+                )
+            
+            // Bezel with ticks
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(white: 0.35), Color(white: 0.28)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 20, height: 20)
+                
+                // Ticks
+                ForEach(0..<12) { i in
+                    Rectangle()
+                        .fill(Color.black.opacity(i % 3 == 0 ? 0.6 : 0.3))
+                        .frame(width: i % 3 == 0 ? 0.6 : 0.3, height: i % 3 == 0 ? 2.5 : 1.5)
+                        .offset(y: -8)
+                        .rotationEffect(.degrees(Double(i) * 30))
+                }
+            }
+            
+            // Inner plate
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color(white: 0.15), Color(white: 0.08)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 14, height: 14)
+                .overlay(
+                    Circle()
+                        .stroke(
+                            LinearGradient(colors: [.white.opacity(0.08), .black.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 0.5
+                        )
+                )
+            
+            // Central LED
+            ZStack {
+                Circle()
+                    .fill(Color.black)
+                    .frame(width: 4, height: 4)
+                
+                Circle()
+                    .fill(Color.gameGreen)
+                    .frame(width: 2, height: 2)
+                    .shadow(color: .gameGreen.opacity(0.8), radius: 2)
+            }
         }
     }
 }
