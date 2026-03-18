@@ -27,13 +27,13 @@ struct GameStartView: View {
             }
 
             VStack(spacing: 0) {
-                Spacer(minLength: 40)
+                Spacer(minLength: 10)
                 
-                // App Title - Stylized hardware logo
+                // App Title - Stylized hardware logo (LARGER)
                 VStack(spacing: 8) {
                     ZStack {
                         // Metallic backing plate
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 20)
                             .fill(
                                 LinearGradient(
                                     colors: [Color(white: 0.95), Color(white: 0.75)],
@@ -41,64 +41,51 @@ struct GameStartView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 300, height: 160)
-                            .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+                            .frame(width: 340, height: 220)
+                            .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 6)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 12)
+                                RoundedRectangle(cornerRadius: 20)
                                     .stroke(Color.white.opacity(0.5), lineWidth: 1)
                             )
                         
                         VStack(spacing: 0) {
                             Text("WHATS")
-                                .font(.system(size: 16, weight: .black, design: .monospaced))
+                                .font(.system(size: 20, weight: .black, design: .monospaced))
                                 .tracking(6)
                                 .foregroundColor(Color(white: 0.3))
-                                .padding(.top, 12)
+                                .padding(.top, 14)
                             
                             // BRAND THEME GEAR SELECTOR
                             LogoThemeGear(viewModel: viewModel)
-                                .frame(height: 100)
+                                .frame(height: 120)
                             
-                            // Glowing red status line
-                            RoundedRectangle(cornerRadius: 1)
-                                .fill(Color.gameRed)
-                                .frame(width: 160, height: 2)
-                                .shadow(color: .gameRed.opacity(0.6), radius: 4)
+                            // Theme Preview Strip - Shows items from selected theme
+                            ThemePreviewStrip(theme: viewModel.state.theme)
+                                .padding(.horizontal, 20)
                                 .padding(.bottom, 12)
                         }
                     }
                 }
                 
-                Spacer(minLength: 50)
+                Spacer(minLength: 12)
                 
-                // Main Console Panel
-                VStack(spacing: 40) {
+                // Main Console Panel (LARGER)
+                VStack(spacing: 32) {
                     // Difficulty Section
-                    VStack(spacing: 18) {
+                    VStack(spacing: 20) {
                         HStack(spacing: 8) {
                             Rectangle()
                                 .fill(Color.gameGreen)
-                                .frame(width: 4, height: 14)
+                                .frame(width: 4, height: 18)
                                 .shadow(color: .gameGreen.opacity(0.5), radius: 3)
                             Text("DIFFICULTY SELECTOR")
-                                .font(.system(size: 13, weight: .black, design: .monospaced))
+                                .font(.system(size: 15, weight: .black, design: .monospaced))
                                 .tracking(1.5)
                                 .foregroundColor(.white)
                             Spacer()
-                            
-                            // How to Play Button - moved to header
-                            Button(action: {
-                                SoundManager.shared.playSelection()
-                                viewModel.showHowToPlay = true
-                            }) {
-                                Image(systemName: "questionmark.circle.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundColor(.white.opacity(0.4))
-                            }
-                            .buttonStyle(PlainButtonStyle())
                         }
                         
-                        HStack(spacing: 12) {
+                        HStack(spacing: 16) {
                             ForEach(GameDifficulty.allCases) { diff in
                                 IndustrialSwitch(
                                     title: diff.rawValue,
@@ -110,20 +97,20 @@ struct GameStartView: View {
                     }
                     
                     // Mission Section
-VStack(spacing: 18) {
+                    VStack(spacing: 20) {
                         HStack(spacing: 8) {
                             Rectangle()
                                 .fill(Color.gameGreen)
-                                .frame(width: 4, height: 14)
+                                .frame(width: 4, height: 18)
                                 .shadow(color: .gameGreen.opacity(0.5), radius: 3)
                             Text("MISSION TYPE BUS")
-                                .font(.system(size: 13, weight: .black, design: .monospaced))
+                                .font(.system(size: 15, weight: .black, design: .monospaced))
                                 .tracking(1.5)
                                 .foregroundColor(.white)
                             Spacer()
                         }
                         
-                        HStack(spacing: 15) {
+                        HStack(spacing: 18) {
                             IndustrialSwitch(
                                 title: "SOLO",
                                 isSelected: viewModel.state.mode == .advanced,
@@ -138,7 +125,7 @@ VStack(spacing: 18) {
                         }
                     }
                 }
-                .padding(28)
+                .padding(32)
                 .background(
                     ZStack {
                         // Main Panel Body
@@ -178,7 +165,7 @@ VStack(spacing: 18) {
                                     lineWidth: 2
                                 )
                         )
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 16)
 
                 // Dedicated Statistics Area - High-Tech Telemetry Bay
                 ZStack {
@@ -193,7 +180,7 @@ VStack(spacing: 18) {
                             // Technical progress graph indicator
                             VStack(alignment: .trailing, spacing: 4) {
                                 Text("COMPLETION")
-                                    .font(.system(size: 7, weight: .black, design: .monospaced))
+                                    .font(.system(size: 9, weight: .black, design: .monospaced))
                                     .foregroundColor(.white.opacity(0.15))
                                 
                                 HStack(spacing: 2) {
@@ -221,86 +208,177 @@ VStack(spacing: 18) {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 64) 
-                .padding(.horizontal, 24)
-                .padding(.top, 15)
+                .padding(.horizontal, 16)
+                .padding(.top, 10)
                 
                 Spacer()
                 
-                // Redesigned Industrial Initialization Trigger - Now matching the "Ready" aesthetic
-                Button(action: {
-                    SoundManager.shared.playSuccess()
-                    SoundManager.shared.hapticSuccess()
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        viewModel.startGame()
-                    }
-                }) {
-                    ZStack {
-                        // Safety Housing - Deep Metallic
-                        RoundedRectangle(cornerRadius: 24)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(white: 0.12), Color(white: 0.05)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(height: 90)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24)
-                                    .stroke(Color.white.opacity(0.1), lineWidth: 1.5)
-                            )
-                        
-                        // Internal Component Path
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.black.opacity(0.6))
-                            .frame(height: 70)
-                            .padding(.horizontal, 10)
-                        
-                        // The Primary Actuator - High-Fidelity Gunmetal with Green Glow
+                // Bottom Action Row: How to Play + Engage Mission (LARGER)
+                HStack(spacing: 16) {
+                    // How to Play Button - More prominent design
+                    Button(action: {
+                        SoundManager.shared.playSelection()
+                        viewModel.showHowToPlay = true
+                    }) {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 18)
+                            RoundedRectangle(cornerRadius: 16)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color(white: 0.25), Color(white: 0.15)],
+                                        colors: [Color(white: 0.2), Color(white: 0.12)],
                                         startPoint: .top,
                                         endPoint: .bottom
                                     )
                                 )
-                                .shadow(color: .gameGreen.opacity(0.15), radius: 10, y: 5)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                )
                             
-                            // Mechanical highlights (Screw heads or tabs)
-                            HStack {
-                                Circle().fill(Color.white.opacity(0.05)).frame(width: 4, height: 4).padding(.leading, 12)
-                                Spacer()
-                                Circle().fill(Color.white.opacity(0.05)).frame(width: 4, height: 4).padding(.trailing, 12)
-                            }
-                            
-                            HStack(spacing: 12) {
-                                Image(systemName: "power")
-                                    .font(.system(size: 16, weight: .black))
-                                    .foregroundColor(.gameGreen.opacity(0.6))
+                            HStack(spacing: 10) {
+                                Image(systemName: "book.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.gameGreen)
                                 
-                                Text("ENGAGE MISSION")
-                                    .font(.system(size: 20, weight: .black, design: .monospaced))
-                                    .tracking(2)
-                                    .foregroundColor(.white)
-                                    .shadow(color: .gameGreen.opacity(0.5), radius: 8)
-                                
-                                Image(systemName: "chevron.right.2")
-                                    .font(.system(size: 14, weight: .black))
-                                    .foregroundColor(.gameGreen.opacity(0.6))
+                                Text("RULES")
+                                    .font(.system(size: 15, weight: .black, design: .monospaced))
+                                    .tracking(1)
+                                    .foregroundColor(.white.opacity(0.9))
                             }
                         }
-                        .frame(height: 64)
-                        .padding(.horizontal, 13)
+                        .frame(width: 110, height: 68)
                     }
+                    .buttonStyle(PressedButtonStyle())
+                    
+                    // Engage Mission Button
+                    Button(action: {
+                        SoundManager.shared.playSuccess()
+                        SoundManager.shared.hapticSuccess()
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            viewModel.startGame()
+                        }
+                    }) {
+                        ZStack {
+                            // Safety Housing - Deep Metallic
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(white: 0.12), Color(white: 0.05)],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.white.opacity(0.1), lineWidth: 1.5)
+                                )
+                            
+                            // Internal Component Path
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.black.opacity(0.6))
+                                .padding(4)
+                            
+                            // The Primary Actuator
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(white: 0.25), Color(white: 0.15)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .shadow(color: .gameGreen.opacity(0.15), radius: 10, y: 5)
+                                
+                                HStack(spacing: 14) {
+                                    Image(systemName: "power")
+                                        .font(.system(size: 18, weight: .black))
+                                        .foregroundColor(.gameGreen.opacity(0.6))
+                                    
+                                    Text("ENGAGE MISSION")
+                                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                                        .tracking(1.5)
+                                        .foregroundColor(.white)
+                                    
+                                    Image(systemName: "chevron.right.2")
+                                        .font(.system(size: 16, weight: .black))
+                                        .foregroundColor(.gameGreen.opacity(0.6))
+                                }
+                            }
+                            .padding(6)
+                        }
+                        .frame(height: 68)
+                    }
+                    .buttonStyle(PressedButtonStyle())
                 }
-                .padding(.horizontal, 24)
-                .buttonStyle(PressedButtonStyle())
+                .padding(.horizontal, 16)
                 
-                Spacer(minLength: 25)
+                Spacer(minLength: 8)
             }
         }
+    }
+}
+
+// MARK: - Theme Preview Strip
+
+struct ThemePreviewStrip: View {
+    let theme: GameTheme
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            if theme == .classic {
+                // For classic theme, show colored circles
+                ForEach(0..<4) { i in
+                    Circle()
+                        .fill(colorForIndex(i))
+                        .frame(width: 36, height: 36)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                        )
+                }
+            } else {
+                // For image themes, show sample images
+                let icons = theme.iconNames()
+                let displayIcons = Array(icons.prefix(4))
+                
+                ForEach(displayIcons.indices, id: \.self) { index in
+                    if let image = loadImage(named: displayIcons[index], folder: theme.folderName) {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 36, height: 36)
+                    } else {
+                        // Fallback placeholder
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.white.opacity(0.1))
+                            .frame(width: 36, height: 36)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.black.opacity(0.08))
+        )
+    }
+    
+    private func colorForIndex(_ index: Int) -> Color {
+        let colors: [Color] = [.gameRed, .gameGreen, .gameBlue, .gameYellow, .gamePurple, .gameCyan, .gameOrange]
+        return colors[index % colors.count]
+    }
+    
+    private func loadImage(named: String, folder: String?) -> Image? {
+        if let uiImage = UIImage(named: named) {
+            return Image(uiImage: uiImage)
+        }
+        if let folder = folder {
+            if let uiImage = UIImage(named: "icon_materials/\(folder)/\(named)") {
+                return Image(uiImage: uiImage)
+            }
+        }
+        return nil
     }
 }
 
@@ -606,7 +684,7 @@ struct IndustrialSwitch: View {
                 // Button Base (Recessed look)
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.black.opacity(0.6))
-                    .frame(height: 54)
+                    .frame(height: 62)
                 
                 // Button Face
                 RoundedRectangle(cornerRadius: 10)
@@ -619,7 +697,7 @@ struct IndustrialSwitch: View {
                             endPoint: .bottom
                         )
                     )
-                    .frame(height: 50)
+                    .frame(height: 58)
                     .padding(2)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -627,15 +705,15 @@ struct IndustrialSwitch: View {
                             .padding(2)
                     )
                 
-                VStack(spacing: 4) {
+                VStack(spacing: 6) {
                     // Indicator LED
                     Circle()
                         .fill(isSelected ? Color.gameGreen : Color(white: 0.2))
-                        .frame(width: 4, height: 4)
+                        .frame(width: 5, height: 5)
                         .shadow(color: isSelected ? Color.gameGreen.opacity(0.8) : .clear, radius: 2)
                     
                     Text(title)
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                        .font(.system(size: 15, weight: .black, design: .monospaced))
                         .tracking(1)
                         .foregroundColor(isSelected ? .white : .white.opacity(0.4))
                 }

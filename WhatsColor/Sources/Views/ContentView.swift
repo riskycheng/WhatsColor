@@ -55,7 +55,7 @@ struct ContentView: View {
                 .padding(.horizontal, 14) // Standard handheld outer margin
                 .frame(maxHeight: .infinity)
                 .padding(.top, 12)
-                .padding(.bottom, 60) // Slightly more space for the external bar
+                .padding(.bottom, viewModel.isShowingStartScreen ? 20 : 60) // Less padding on start screen
                 
                 // EXTERNAL SYSTEM STATUS BAR - Only shown during mission, hidden on start screen
                 if !viewModel.isShowingStartScreen {
