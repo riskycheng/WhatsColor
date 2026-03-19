@@ -91,16 +91,22 @@ class GameStateManager: ObservableObject {
     // MARK: - Secret Code Generation
 
     func generateSecretCode() -> [GameColor] {
+        // Get the number of enabled colors based on difficulty
+        let enabledCount = state.difficulty.enabledColorCount
+        
         // Deterministic generation for SOLO mode ensures "RETRY" keeps the same sequence
         if state.mode == .advanced { // Solo mode
             if state.level == 1 {
-                return [.red, .green, .orange, .blue]
+                // Use only enabled colors (first 4 for easy mode)
+                let enabledColors = Array(GameColor.allCases.prefix(enabledCount))
+                return Array(enabledColors.prefix(4))
             } else if state.level == 2 {
-                return [.blue, .orange, .green, .red]
+                let enabledColors = Array(GameColor.allCases.prefix(enabledCount))
+                return [enabledColors[1], enabledColors[2], enabledColors[0], enabledColors[3]]
             }
 
-            // Seeded selection for all other solo levels
-            var indices = Array(0..<7)
+            // Seeded selection for all other solo levels - only from enabled colors
+            var indices = Array(0..<enabledCount)
             var code: [GameColor] = []
             for i in 0..<4 {
                 // Simplified hash to select deterministic colors for each level
@@ -112,8 +118,8 @@ class GameStateManager: ObservableObject {
             return code
         }
 
-        // Random generation for dual/beginner mode
-        var indices = Array(0..<7)
+        // Random generation for dual/beginner mode - only from enabled colors
+        var indices = Array(0..<enabledCount)
         var code: [GameColor] = []
 
         for _ in 0..<4 {

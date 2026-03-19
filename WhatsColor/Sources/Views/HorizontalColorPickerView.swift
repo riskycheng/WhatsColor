@@ -20,38 +20,23 @@ struct HorizontalColorPickerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Color options - evenly distributed across full width
             HStack(spacing: 0) {
-                // Color options - evenly spaced to fill width
-                HStack(spacing: 0) { 
-                    Spacer(minLength: 0)
-                    
-                    // Enabled colors (interactive)
-                    ForEach(enabledColors) { color in
-                        HorizontalColorButton(
-                            color: color,
-                            isSelected: viewModel.state.currentGuess[viewModel.state.activeIndex] == color,
-                            isEnabled: true,
-                            viewModel: viewModel,
-                            onTap: {
+                let allColors = enabledColors + disabledColors
+                
+                ForEach(Array(allColors.enumerated()), id: \.element) { index, color in
+                    HorizontalColorButton(
+                        color: color,
+                        isSelected: viewModel.state.currentGuess[viewModel.state.activeIndex] == color,
+                        isEnabled: enabledColors.contains(color),
+                        viewModel: viewModel,
+                        onTap: {
+                            if enabledColors.contains(color) {
                                 viewModel.selectColor(color)
                             }
-                        )
-                        .id("enabled-\(color)")
-                    }
-                    
-                    // Disabled colors (grayed out, non-interactive)
-                    ForEach(disabledColors) { color in
-                        HorizontalColorButton(
-                            color: color,
-                            isSelected: false,
-                            isEnabled: false,
-                            viewModel: viewModel,
-                            onTap: {}
-                        )
-                        .id("disabled-\(color)")
-                    }
-                    
-                    Spacer(minLength: 0)
+                        }
+                    )
+                    .frame(maxWidth: .infinity)
                 }
             }
             .padding(.horizontal, 10)
