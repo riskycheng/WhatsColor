@@ -7,12 +7,14 @@ struct GameStartView: View {
         ZStack {
             // Background hardware details
             VStack {
+                // Move serial number to top left to avoid white block
                 HStack {
-                    Spacer()
                     Text("SER. NO. WC-2026-XMT")
                         .font(.system(size: 8, weight: .bold, design: .monospaced))
                         .foregroundColor(.black.opacity(0.15))
-                        .padding(20)
+                        .padding(.leading, 20)
+                        .padding(.top, 20)
+                    Spacer()
                 }
                 Spacer()
                 // Ventilation grilles pattern
@@ -167,49 +169,117 @@ struct GameStartView: View {
                         )
                 .padding(.horizontal, 16)
 
-                // Dedicated Statistics Area - High-Tech Telemetry Bay
+                // Solo Mode Progress Panel - Fixed height container to prevent ANY layout shifts
                 ZStack {
+                    // Invisible placeholder to maintain exact height
+                    Color.clear
+                        .frame(height: 76)
+                    
                     if viewModel.state.mode == .advanced {
-                        HStack(spacing: 25) {
-                            DataModuleSmall(label: "LOG", value: "\(viewModel.state.level)/500", color: .gameGreen)
-                            
-                            DataModuleSmall(label: "MISSION", value: viewModel.state.difficulty.rawValue, color: .gameGreen)
+                        HStack(spacing: 0) {
+                            // Level Counter Block
+                            HStack(spacing: 12) {
+                                // Level indicator with icon
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "number.circle.fill")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.gameGreen.opacity(0.6))
+                                        Text("LEVEL")
+                                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                                            .foregroundColor(.white.opacity(0.4))
+                                    }
+                                    
+                                    HStack(alignment: .lastTextBaseline, spacing: 2) {
+                                        Text("\(viewModel.state.level)")
+                                            .font(.system(size: 28, weight: .black, design: .monospaced))
+                                            .foregroundColor(.gameGreen)
+                                            .shadow(color: .gameGreen.opacity(0.4), radius: 4)
+                                        
+                                        Text("/500")
+                                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                            .foregroundColor(.gameGreen.opacity(0.5))
+                                            .padding(.bottom, 4)
+                                    }
+                                }
+                                
+                                // Vertical divider
+                                Rectangle()
+                                    .fill(Color.white.opacity(0.1))
+                                    .frame(width: 1, height: 36)
+                                
+                                // Difficulty display
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "gauge.with.dots.needle.67percent")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.gameGreen.opacity(0.6))
+                                        Text("RANK")
+                                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                                            .foregroundColor(.white.opacity(0.4))
+                                    }
+                                    
+                                    Text(viewModel.state.difficulty.rawValue)
+                                        .font(.system(size: 18, weight: .black, design: .monospaced))
+                                        .foregroundColor(.white.opacity(0.9))
+                                }
+                            }
                             
                             Spacer()
                             
-                            // Technical progress graph indicator
-                            VStack(alignment: .trailing, spacing: 4) {
-                                Text("COMPLETION")
+                            // Progress bar section
+                            VStack(alignment: .trailing, spacing: 6) {
+                                Text("PROGRESS")
                                     .font(.system(size: 9, weight: .black, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.15))
+                                    .foregroundColor(.white.opacity(0.3))
                                 
-                                HStack(spacing: 2) {
+                                // Segmented progress bar
+                                HStack(spacing: 3) {
                                     ForEach(0..<10) { i in
-                                        Rectangle()
-                                            .fill(Double(i + 1) <= (Double(viewModel.state.level) / 50.0) ? Color.gameGreen : Color.black.opacity(0.4))
-                                            .frame(width: 3, height: 8)
+                                        RoundedRectangle(cornerRadius: 1.5)
+                                            .fill(Double(i + 1) <= (Double(viewModel.state.level) / 50.0) ? Color.gameGreen : Color.white.opacity(0.08))
+                                            .frame(width: 8, height: 18)
                                     }
                                 }
+                                
+                                // Percentage text
+                                Text("\(Int(Double(viewModel.state.level) / 500.0 * 100))%")
+                                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                                    .foregroundColor(.gameGreen.opacity(0.7))
                             }
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 14)
                         .background(
                             ZStack {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.black.opacity(0.45))
+                                // Main background
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.black.opacity(0.5), Color.black.opacity(0.4)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
                                 
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                                // Border glow
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.gameGreen.opacity(0.15), .white.opacity(0.05), .clear],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
                             }
                         )
                         .transition(.opacity)
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 64) 
+                .frame(maxWidth: .infinity, minHeight: 76, maxHeight: 76)
                 .padding(.horizontal, 16)
-                .padding(.top, 10)
+                .padding(.top, 8)
                 
                 Spacer()
                 
@@ -570,7 +640,7 @@ struct LogoThemeGear: View {
                     .font(.system(size: 7, weight: .black, design: .monospaced))
                     .foregroundColor(isTouching ? .gameGreen.opacity(0.6) : .black.opacity(0.2))
                     .tracking(2.5)
-                    .offset(y: -42)
+                    .offset(y: -50)
 
                 // Pulsing Tactical Chevrons
                 VStack(spacing: 65) {

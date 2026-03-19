@@ -767,11 +767,17 @@ struct ScrewHeadSmall: View {
 
 struct HowToPlayView: View {
     @ObservedObject var viewModel: GameViewModel
+    @State private var dragOffset: CGFloat = 0
+    @State private var isDragging = false
     
     var body: some View {
         ZStack {
             Color.black.opacity(0.85)
                 .ignoresSafeArea()
+                .onTapGesture {
+                    SoundManager.shared.playSelection()
+                    viewModel.showHowToPlay = false
+                }
             
             VStack(spacing: 0) {
                 // Header
@@ -794,6 +800,7 @@ struct HowToPlayView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
+                .padding(.bottom, 12)
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 16) {
@@ -1027,6 +1034,31 @@ struct HowToPlayView: View {
                     )
             )
             .padding(16)
+            .offset(y: dragOffset)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if value.translation.height > 0 {
+                            dragOffset = value.translation.height
+                            isDragging = true
+                        }
+                    }
+                    .onEnded { value in
+                        isDragging = false
+                        if value.translation.height > 100 || value.velocity.height > 500 {
+                            // Close if dragged down more than 100pt or with high velocity
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                SoundManager.shared.playSelection()
+                                viewModel.showHowToPlay = false
+                            }
+                        } else {
+                            // Spring back to original position
+                            withAnimation(.spring()) {
+                                dragOffset = 0
+                            }
+                        }
+                    }
+            )
         }
     }
 }
