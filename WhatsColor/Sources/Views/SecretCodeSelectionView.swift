@@ -243,72 +243,66 @@ struct SecretColorSlotView: View {
     let slotIndex: Int
     let isActive: Bool
     @ObservedObject var viewModel: GameViewModel
+    @State private var isPressing = false
     
     var body: some View {
         let isPreciseTarget = viewModel.secretDropTargetIndex == slotIndex
         let showTargetEffect = isPreciseTarget
         
-        Button(action: {
-            withAnimation(.spring(response: 0.3)) {
-                viewModel.currentSecretSlot = slotIndex
+        ZStack {
+            // Slot background
+            RoundedRectangle(cornerRadius: 4)
+                .fill(showTargetEffect ? Color.white.opacity(0.15) : Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(
+                            isActive ? Color.gameGreen.opacity(0.6) : (showTargetEffect ? Color.white : Color.white.opacity(0.1)),
+                            lineWidth: isActive ? 2 : (showTargetEffect ? 3 : 1)
+                        )
+                )
+                .scaleEffect(showTargetEffect ? 1.1 : (isPressing ? 0.95 : 1.0))
+                .animation(.spring(response: 0.2, dampingFraction: 0.6), value: showTargetEffect)
+            
+            if let color = color {
+                // Selected color/icon
+                if let icon = viewModel.state.theme.image(for: color) {
+                    icon
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 48, height: 48)
+                        .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
+                        .scaleEffect(showTargetEffect ? 0.9 : 1.0)
+                        .opacity(viewModel.secretDragSourceIndex == slotIndex ? 0.0 : 1.0)
+                } else {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(color.color)
+                        .padding(4)
+                        .shadow(color: color.color.opacity(0.5), radius: 4, x: 0, y: 2)
+                        .scaleEffect(showTargetEffect ? 0.9 : 1.0)
+                        .opacity(viewModel.secretDragSourceIndex == slotIndex ? 0.0 : 1.0)
+                }
+            } else {
+                // Empty slot indicator
+                VStack(spacing: 4) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 14, weight: .light))
+                        .foregroundColor(.white.opacity(0.2))
+                }
             }
-        }) {
-            ZStack {
-                // Slot background
+            
+            // Selection indicator
+            if isActive && !showTargetEffect {
                 RoundedRectangle(cornerRadius: 4)
-                    .fill(showTargetEffect ? Color.white.opacity(0.15) : Color.white.opacity(0.05))
+                    .fill(Color.clear)
                     .overlay(
                         RoundedRectangle(cornerRadius: 4)
-                            .stroke(
-                                isActive ? Color.gameGreen.opacity(0.6) : (showTargetEffect ? Color.white : Color.white.opacity(0.1)),
-                                lineWidth: isActive ? 2 : (showTargetEffect ? 3 : 1)
-                            )
+                            .stroke(Color.white, lineWidth: 2)
+                            .scaleEffect(1.05)
                     )
-                    .scaleEffect(showTargetEffect ? 1.1 : 1.0)
-                    .animation(.spring(response: 0.2, dampingFraction: 0.6), value: showTargetEffect)
-                
-                if let color = color {
-                    // Selected color/icon
-                    if let icon = viewModel.state.theme.image(for: color) {
-                        icon
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 48, height: 48)
-                            .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
-                            .scaleEffect(showTargetEffect ? 0.9 : 1.0)
-                            .opacity(viewModel.secretDragSourceIndex == slotIndex ? 0.0 : 1.0)
-                    } else {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(color.color)
-                            .padding(4)
-                            .shadow(color: color.color.opacity(0.5), radius: 4, x: 0, y: 2)
-                            .scaleEffect(showTargetEffect ? 0.9 : 1.0)
-                            .opacity(viewModel.secretDragSourceIndex == slotIndex ? 0.0 : 1.0)
-                    }
-                } else {
-                    // Empty slot indicator
-                    VStack(spacing: 4) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .light))
-                            .foregroundColor(.white.opacity(0.2))
-                    }
-                }
-                
-                // Selection indicator
-                if isActive && !showTargetEffect {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.white, lineWidth: 2)
-                                .scaleEffect(1.05)
-                        )
-                }
             }
-            .frame(width: 60, height: 60)
         }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isActive ? 1.05 : 1.0)
+        .frame(width: 60, height: 60)
+        .scaleEffect(isActive && !showTargetEffect ? 1.05 : 1.0)
         .animation(.spring(response: 0.3), value: isActive)
         .background(
             GeometryReader { geo in
@@ -326,14 +320,18 @@ struct SecretColorSlotView: View {
             DragGesture(minimumDistance: 0, coordinateSpace: .global)
                 .onChanged { value in
                     if viewModel.secretDragSourceIndex == nil {
-                        // Start dragging if we have a color and moved enough (lower threshold for better response)
+                        // Start dragging if we have a color and moved enough
                         if abs(value.translation.width) > 5 || abs(value.translation.height) > 5 {
                             if color != nil {
+                                isPressing = false
                                 viewModel.secretDragSourceIndex = slotIndex
                                 viewModel.secretDragColor = color
                                 SoundManager.shared.playDragStart()
                                 SoundManager.shared.hapticMedium()
                             }
+                        } else {
+                            // Show press feedback while deciding if it's a drag
+                            isPressing = true
                         }
                     }
                     
@@ -342,11 +340,15 @@ struct SecretColorSlotView: View {
                         viewModel.updateSecretDragPosition(value.location)
                     }
                 }
-                .onEnded { value in
+                .onEnded { _ in
+                    isPressing = false
+                    
                     if viewModel.secretDragSourceIndex == nil {
                         // If we never triggered the drag threshold, treat as tap
                         withAnimation(.spring(response: 0.3)) {
                             viewModel.currentSecretSlot = slotIndex
+                            SoundManager.shared.playSelection()
+                            SoundManager.shared.hapticLight()
                         }
                     } else {
                         // Check if we are releasing over a valid target

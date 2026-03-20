@@ -367,8 +367,25 @@ class GameViewModel: ObservableObject {
     }
 
     func swapSecretColors(from: Int, to: Int) {
-        guard from < selectedSecretCode.count, to < selectedSecretCode.count else { return }
-        selectedSecretCode.swapAt(from, to)
+        // Ensure both indices are within bounds of the 4 slots
+        guard from >= 0, from < 4, to >= 0, to < 4 else { return }
+        
+        // Ensure source has a color
+        guard from < selectedSecretCode.count else { return }
+        
+        let fromColor = selectedSecretCode[from]
+        
+        // If target is within bounds, swap; otherwise just move
+        if to < selectedSecretCode.count {
+            let toColor = selectedSecretCode[to]
+            selectedSecretCode[from] = toColor
+            selectedSecretCode[to] = fromColor
+        } else {
+            // Target is beyond current array - need to expand
+            // This shouldn't happen with 4 slots, but handle it gracefully
+            selectedSecretCode[from] = fromColor // No-op, just for safety
+        }
+        
         currentSecretSlot = to // Focus follows the item or stays at target
     }
     
