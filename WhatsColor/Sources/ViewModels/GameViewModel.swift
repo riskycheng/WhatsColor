@@ -42,6 +42,9 @@ class GameViewModel: ObservableObject {
     // Game Flow State
     @Published var isShowingStartScreen: Bool = true
     
+    // Enabled colors for current game (used in Easy mode to ensure consistency)
+    @Published var enabledColorsForCurrentGame: [GameColor] = []
+    
     // Frames for each slot: unique key "row-slot"
     @Published var slotFrames: [String: CGRect] = [:]
     @Published var boardFrame: CGRect = .zero
@@ -166,10 +169,17 @@ class GameViewModel: ObservableObject {
         }
     }
 
-    // Secret code selection state
+    // Secret Code Selection
     @Published var selectedSecretCode: [GameColor] = []
     @Published var currentSecretSlot: Int = 0
     @Published var showDuplicateWarning: Bool = false
+    
+    // Secret Code Drag State (consistent with main game)
+    @Published var secretDragColor: GameColor? = nil
+    @Published var secretDragPosition: CGPoint = .zero
+    @Published var secretDragSourceIndex: Int? = nil
+    @Published var secretDropTargetIndex: Int? = nil
+    @Published var secretSlotFrames: [Int: CGRect] = [:]
     private var duplicateWarningTimer: Timer?
 
     // Timer state
@@ -361,6 +371,78 @@ class GameViewModel: ObservableObject {
         selectedSecretCode.swapAt(from, to)
         currentSecretSlot = to // Focus follows the item or stays at target
     }
+    
+    // MARK: - Secret Code Drag Handling (consistent with main game)
+    
+    func registerSecretSlotFrame(_ frame: CGRect, slot: Int) {
+        secretSlotFrames[slot] = frame
+    }
+    
+    func updateSecretDragPosition(_ position: CGPoint) {
+        secretDragPosition = position
+        
+        let oldTargetIndex = secretDropTargetIndex
+        var newTargetIndex: Int? = nil
+        
+        // Find which slot we're over
+        for (slotIndex, frame) in secretSlotFrames {
+            if frame.contains(position) {
+                newTargetIndex = slotIndex
+                break
+            }
+        }
+        
+        // Only update if changed to avoid excessive updates
+        if newTargetIndex != oldTargetIndex {
+            secretDropTargetIndex = newTargetIndex
+            if newTargetIndex != nil {
+                SoundManager.shared.hapticLight()
+            }
+        }
+    }
+    
+    func endSecretDragging() {
+        if let sourceIndex = secretDragSourceIndex,
+           let targetIndex = secretDropTargetIndex,
+           sourceIndex != targetIndex {
+            // Perform swap
+            withAnimation(.spring()) {
+                swapSecretColors(from: sourceIndex, to: targetIndex)
+                SoundManager.shared.playDrop()
+                SoundManager.shared.hapticMedium()
+            }
+        }
+        
+        // Reset drag state
+        secretDragColor = nil
+        secretDragSourceIndex = nil
+        secretDropTargetIndex = nil
+        secretDragPosition = .zero
+    }
+    
+    // MARK: - Random Secret Code Generation
+    
+    func generateRandomSecretCode() {
+        // Generate 4 unique random colors
+        var availableColors = GameColor.allCases
+        var randomCode: [GameColor] = []
+        
+        for _ in 0..<4 {
+            guard !availableColors.isEmpty else { break }
+            let randomIndex = Int.random(in: 0..<availableColors.count)
+            randomCode.append(availableColors[randomIndex])
+            availableColors.remove(at: randomIndex)
+        }
+        
+        withAnimation(.spring()) {
+            selectedSecretCode = randomCode
+            currentSecretSlot = 4 // All slots filled
+            showDuplicateWarning = false
+        }
+        
+        SoundManager.shared.playSuccess()
+        SoundManager.shared.hapticSuccess()
+    }
 
     func resetSecretCode(from index: Int) {
         // Keep this for compatibility if needed, but we'll use resetSecretCode(at:) for specific selection
@@ -492,37 +574,59 @@ class GameViewModel: ObservableObject {
         // Get the number of enabled colors based on difficulty
         let enabledCount = state.difficulty.enabledColorCount
         
+        // For Easy mode, we need to ensure consistency between secret code and picker
+        // Generate or use existing enabled colors for the game
+        let availableColors: [GameColor]
+        if enabledColorsForCurrentGame.count == enabledCount {
+            // Use the already determined enabled colors for this game
+            availableColors = enabledColorsForCurrentGame
+        } else {
+            // Generate new enabled colors for this game
+            if state.difficulty == .easy {
+                // In Easy mode, randomly select 4 colors from all 7 to be enabled
+                var allIndices = Array(0..<GameColor.allCases.count)
+                var selectedIndices: [Int] = []
+                for _ in 0..<enabledCount {
+                    let randomIndex = Int.random(in: 0..<allIndices.count)
+                    selectedIndices.append(allIndices[randomIndex])
+                    allIndices.remove(at: randomIndex)
+                }
+                selectedIndices.sort() // Keep consistent order
+                availableColors = selectedIndices.map { GameColor.allCases[$0] }
+            } else {
+                // Normal/Hard mode: use first N colors
+                availableColors = Array(GameColor.allCases.prefix(enabledCount))
+            }
+            enabledColorsForCurrentGame = availableColors
+        }
+        
         // Deterministic generation for SOLO mode ensures "RETRY" keeps the same sequence
         if gameMode == .solo {
             if state.level == 1 {
-                // Use only enabled colors (first 4 for easy mode)
-                let enabledColors = Array(GameColor.allCases.prefix(enabledCount))
-                return Array(enabledColors.prefix(4))
+                return Array(availableColors.prefix(4))
             } else if state.level == 2 {
-                let enabledColors = Array(GameColor.allCases.prefix(enabledCount))
-                return [enabledColors[1], enabledColors[2], enabledColors[0], enabledColors[3]]
+                return [availableColors[1], availableColors[2], availableColors[0], availableColors[3]]
             }
             
-            // Seeded selection for all other solo levels - only from enabled colors
-            var indices = Array(0..<enabledCount)
+            // Seeded selection for all other solo levels
+            var indices = Array(0..<availableColors.count)
             var code: [GameColor] = []
             for i in 0..<4 {
-                // Simplified hash to select deterministic colors for each level
                 let seed = (state.level * 197) + (i * 13) + (state.level / 3)
                 let index = seed % indices.count
-                code.append(GameColor(rawValue: indices[index])!)
+                code.append(availableColors[indices[index]])
                 indices.remove(at: index)
             }
             return code
         }
         
-        // Random generation for dual mode - only from enabled colors
-        var indices = Array(0..<enabledCount)
+        // Random generation for dual mode
+        var indices = Array(0..<availableColors.count)
         var code: [GameColor] = []
 
         for _ in 0..<4 {
             let randomIndex = Int.random(in: 0..<indices.count)
-            code.append(GameColor(rawValue: indices[randomIndex])!)
+            code.append(availableColors[indices[randomIndex]])
             indices.remove(at: randomIndex)
         }
 

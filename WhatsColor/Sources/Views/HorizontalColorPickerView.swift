@@ -3,8 +3,13 @@ import SwiftUI
 struct HorizontalColorPickerView: View {
     @ObservedObject var viewModel: GameViewModel
     
-    /// Returns the colors that should be shown based on difficulty
+    /// Returns the colors that should be enabled based on difficulty and current game
     private var enabledColors: [GameColor] {
+        // If we have specific enabled colors for this game (Easy mode), use those
+        if !viewModel.enabledColorsForCurrentGame.isEmpty {
+            return viewModel.enabledColorsForCurrentGame
+        }
+        // Otherwise use default based on difficulty
         let allColors = GameColor.allCases
         let enabledCount = viewModel.state.difficulty.enabledColorCount
         return Array(allColors.prefix(enabledCount))
@@ -13,9 +18,8 @@ struct HorizontalColorPickerView: View {
     /// Returns colors that are disabled (grayed out)
     private var disabledColors: [GameColor] {
         let allColors = GameColor.allCases
-        let enabledCount = viewModel.state.difficulty.enabledColorCount
-        guard enabledCount < allColors.count else { return [] }
-        return Array(allColors.suffix(from: enabledCount))
+        let enabled = enabledColors
+        return allColors.filter { !enabled.contains($0) }
     }
 
     var body: some View {
