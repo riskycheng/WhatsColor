@@ -2,9 +2,80 @@ import SwiftUI
 
 struct GameBoardView: View {
     @ObservedObject var viewModel: GameViewModel
+    @State private var showDebugCode = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // DEBUG: Secret Code Display (tap to toggle)
+            VStack(spacing: 8) {
+                Button(action: {
+                    withAnimation(.spring()) {
+                        showDebugCode.toggle()
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "eye.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.yellow)
+                        Text("DEBUG: SHOW SECRET CODE")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .foregroundColor(.yellow)
+                        Spacer()
+                        Image(systemName: showDebugCode ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 12))
+                            .foregroundColor(.yellow.opacity(0.7))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.red.opacity(0.3))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.yellow.opacity(0.5), lineWidth: 1)
+                    )
+                }
+                
+                if showDebugCode {
+                    HStack(spacing: 12) {
+                        ForEach(viewModel.state.secretCode.indices, id: \.self) { index in
+                            let color = viewModel.state.secretCode[index]
+                            VStack(spacing: 4) {
+                                if let icon = viewModel.state.theme.image(for: color) {
+                                    icon
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 40, height: 40)
+                                } else {
+                                    Circle()
+                                        .fill(color.color)
+                                        .frame(width: 40, height: 40)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.white, lineWidth: 2)
+                                        )
+                                }
+                                Text("\(index + 1)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                        }
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.black.opacity(0.5))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
+                    )
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            
             // Board panel
             VStack(spacing: 12) {
                 ForEach(viewModel.state.attempts) { row in
