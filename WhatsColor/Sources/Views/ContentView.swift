@@ -187,24 +187,24 @@ struct DeviceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 10)
+            Spacer(minLength: 8)
             
             // Game board area - height adjusted to match GameStartView
             GameBoardView(viewModel: viewModel)
                 .padding(.horizontal, 16)
-                .frame(height: 510)
+                .frame(height: 500)
 
             // Inline Color Picker
             HorizontalColorPickerView(viewModel: viewModel)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.vertical, 6)
 
             // Bottom panel - status and knob
             StatusControlPanelView(viewModel: viewModel)
                 .padding(.horizontal, 16)
                 .frame(height: 140)
             
-            Spacer(minLength: 12)
+            Spacer(minLength: 10)
         }
     }
 }
@@ -351,10 +351,10 @@ struct ResetButtonView: View {
                 
                 // Menu icon
                 Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.white.opacity(0.8))
             }
-            .frame(width: 52, height: 44)
+            .frame(width: 56, height: 52)
             .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
         }
         .buttonStyle(PressedButtonStyle())
@@ -453,7 +453,7 @@ struct ExternalHintButtonView: View {
                     .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
                 }
             }
-            .frame(width: 64, height: 60)
+            .frame(width: 68, height: 64)
             .shadow(
                 color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.3) : .black.opacity(0.4),
                 radius: 4,
