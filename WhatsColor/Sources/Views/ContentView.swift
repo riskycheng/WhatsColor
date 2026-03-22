@@ -17,7 +17,7 @@ struct ContentView: View {
                     if !viewModel.isShowingStartScreen {
                         HStack {
                             // Left: Reset/Menu Button
-                            ResetButtonView(onTap: {
+                            ResetButtonView(viewModel: viewModel, onTap: {
                                 viewModel.pauseGame()
                             })
                             .padding(.leading, 50)
@@ -194,10 +194,16 @@ struct DeviceView: View {
                 .padding(.horizontal, 16)
                 .frame(height: 500)
 
-            // Inline Color Picker
+            // Larger spacer above to push color picker slightly upward
+            Spacer()
+
+            // Inline Color Picker - centered in available space
             HorizontalColorPickerView(viewModel: viewModel)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 6)
+
+            // Smaller spacer below to fine-tune centering
+            Spacer()
+            Spacer()
 
             // Bottom panel - status and knob
             StatusControlPanelView(viewModel: viewModel)
@@ -331,11 +337,15 @@ struct SystemStatusBar: View {
 }
 
 struct ResetButtonView: View {
+    @ObservedObject var viewModel: GameViewModel
     let onTap: () -> Void
 
     var body: some View {
         Button(action: {
-            // Mechanical feedback - Standard selection click + Medium impact
+            // Don't trigger action if debug mode is active (both buttons pressed)
+            guard !viewModel.isDebugModeActive else { return }
+            
+            // Enhanced mechanical feedback - click sound + medium haptic
             SoundManager.shared.playSelection()
             SoundManager.shared.hapticMedium()
             onTap()
@@ -387,8 +397,11 @@ struct ExternalHintButtonView: View {
     
     var body: some View {
         Button(action: {
+            // Don't trigger action if debug mode is active (both buttons pressed)
+            guard !viewModel.isDebugModeActive else { return }
             guard !viewModel.state.isGameOver else { return }
             
+            // Enhanced mechanical feedback - click sound + medium haptic
             SoundManager.shared.playSelection()
             SoundManager.shared.hapticMedium()
             
@@ -444,19 +457,6 @@ struct ExternalHintButtonView: View {
                     .font(.system(size: 40, weight: .semibold))
                     .foregroundColor(HintManager.shared.hasHintsAvailable ? .gameYellow : .white.opacity(0.4))
                     .shadow(color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.8) : .clear, radius: 6)
-                
-                // Small square indicators showing remaining hints - positioned at top right
-                if HintManager.shared.hasHintsAvailable {
-                    HStack(spacing: 3) {
-                        ForEach(0..<3) { index in
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(index < HintManager.shared.remainingHints ? Color.gameYellow : Color.gameYellow.opacity(0.25))
-                                .frame(width: 7, height: 7)
-                        }
-                    }
-                    .offset(x: 28, y: -24)
-                    .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
-                }
             }
             .frame(width: 90, height: 80)
             .shadow(

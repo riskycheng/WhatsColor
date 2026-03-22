@@ -23,39 +23,37 @@ struct HorizontalColorPickerView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Color options - evenly distributed across full width
-            HStack(spacing: 0) {
-                let allColors = enabledColors + disabledColors
-                
-                ForEach(Array(allColors.enumerated()), id: \.element) { index, color in
-                    HorizontalColorButton(
-                        color: color,
-                        isSelected: viewModel.state.currentGuess[viewModel.state.activeIndex] == color,
-                        isEnabled: enabledColors.contains(color),
-                        viewModel: viewModel,
-                        onTap: {
-                            if enabledColors.contains(color) {
-                                viewModel.selectColor(color)
-                            }
+        // Color options - evenly distributed across full width, vertically centered
+        HStack(spacing: 0) {
+            let allColors = enabledColors + disabledColors
+            
+            ForEach(Array(allColors.enumerated()), id: \.element) { index, color in
+                HorizontalColorButton(
+                    color: color,
+                    isSelected: viewModel.state.currentGuess[viewModel.state.activeIndex] == color,
+                    isEnabled: enabledColors.contains(color),
+                    viewModel: viewModel,
+                    onTap: {
+                        if enabledColors.contains(color) {
+                            viewModel.selectColor(color)
                         }
-                    )
-                    .frame(maxWidth: .infinity)
-                }
+                    }
+                )
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 14)
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.black.opacity(0.4))
-                    
-                    // Internal shadow/recessed look
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
-                }
-            )
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 12)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.black.opacity(0.4))
+                
+                // Internal shadow/recessed look
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            }
+        )
     }
 }
 

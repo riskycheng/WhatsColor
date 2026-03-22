@@ -36,10 +36,9 @@ class HintManager: ObservableObject {
     }
     
     private init() {
-        self.remainingHints = UserDefaults.standard.integer(forKey: hintsKey)
-        if self.remainingHints == 0 {
-            self.remainingHints = 3 // Default starting hints
-        }
+        // Start with 1 hint per fresh session (app launch)
+        self.remainingHints = 1
+        saveHints()
         checkDailyReset()
     }
     
@@ -50,13 +49,13 @@ class HintManager: ObservableObject {
         let calendar = Calendar.current
         
         if !calendar.isDateInToday(lastReset) {
-            // It's a new day, reset hints
-            remainingHints = 3
+            // It's a new day, reset hints to 1
+            remainingHints = 1
             saveHints()
             UserDefaults.standard.set(Date(), forKey: lastResetKey)
             
             #if DEBUG
-            print("🎯 Hints: Daily reset - 3 hints restored")
+            print("🎯 Hints: Daily reset - 1 hint restored")
             #endif
         }
     }
@@ -124,7 +123,7 @@ class HintManager: ObservableObject {
     }
     
     func resetHints() {
-        remainingHints = 3
+        remainingHints = 1
         saveHints()
     }
     

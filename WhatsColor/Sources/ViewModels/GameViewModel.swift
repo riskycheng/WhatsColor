@@ -910,16 +910,28 @@ class GameViewModel: ObservableObject {
     }
     
     private func checkDebugCombination() {
-        // Top left and top right buttons must be pressed simultaneously to reveal secret code
+        // Top left and top right buttons must be pressed simultaneously to toggle secret code
         if debugButtonStates.topLeft && debugButtonStates.topRight {
             withAnimation(.spring()) {
-                showDebugSecretCode = true
+                showDebugSecretCode.toggle()
             }
-        } else {
-            withAnimation(.spring()) {
-                showDebugSecretCode = false
+            // Provide feedback when toggling
+            if showDebugSecretCode {
+                SoundManager.shared.playSuccess()
+                SoundManager.shared.hapticSuccess()
+            } else {
+                SoundManager.shared.playSelection()
+                SoundManager.shared.hapticMedium()
+            }
+            // Reset button states after toggle to prevent rapid toggling
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.debugButtonStates = (topLeft: false, topRight: false, top: false)
             }
         }
+    }
+    
+    var isDebugModeActive: Bool {
+        return showDebugSecretCode
     }
     
     enum DebugButtonPosition {
