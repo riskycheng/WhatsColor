@@ -242,10 +242,29 @@ struct SystemStatusBar: View {
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(statusColor)
                                 
+                                // Show hint icon if this is a hint toast with a color
+                                if let hintColor = toast.hintColor {
+                                    if let icon = viewModel.state.theme.image(for: hintColor) {
+                                        icon
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 18, height: 18)
+                                    } else {
+                                        Circle()
+                                            .fill(hintColor.color)
+                                            .frame(width: 14, height: 14)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                                            )
+                                    }
+                                }
+                                
                                 Text(toast.message)
                                     .font(.system(size: 11, weight: .black, design: .monospaced))
                                     .tracking(1.5)
                                     .foregroundColor(statusColor)
+                                    .lineLimit(1)
                                 
                                 Spacer()
                                 
@@ -268,14 +287,14 @@ struct SystemStatusBar: View {
                                 Text("SYSTEM: NOMINAL")
                                     .font(.system(size: 9, weight: .bold, design: .monospaced))
                                     .tracking(2.5)
-                                    .foregroundColor(.white.opacity(0.12))
+                                    .foregroundColor(.white.opacity(0.6))
                                 
                                 Spacer()
                                 
                                 // Internal system timer/clock simulation
                                 Text("LOG_B\(Int(viewModel.timeRemaining))")
                                     .font(.system(size: 8, weight: .medium, design: .monospaced))
-                                    .foregroundColor(.white.opacity(0.08))
+                                    .foregroundColor(.white.opacity(0.4))
                             }
                             .transition(.opacity)
                         }
@@ -378,13 +397,13 @@ struct ExternalHintButtonView: View {
                 currentGuess: viewModel.state.currentGuess,
                 attempts: viewModel.state.attempts
             ) {
-                viewModel.showToast("💡 \(hint.description(for: viewModel.state.theme))", type: .info)
+                viewModel.showToast(hint.description(for: viewModel.state.theme), type: .info, hintColor: hint.color)
             } else if !HintManager.shared.hasHintsAvailable {
-                viewModel.showToast("❌ NO HINTS REMAINING", type: .warning)
+                viewModel.showToast("NO HINTS REMAINING", type: .warning)
                 SoundManager.shared.playError()
             }
         }) {
-            // Large metallic/Hardware tab with hint icon and badge - MUCH LARGER for visibility
+            // Large metallic/Hardware tab with hint icon and square indicators
             ZStack {
                 // Base structure with metallic gradient - hint themed
                 RoundedRectangle(cornerRadius: 16)
@@ -420,38 +439,23 @@ struct ExternalHintButtonView: View {
                         lineWidth: 2
                     )
                 
-                // Content: Lightbulb icon with glow effect - MUCH LARGER
+                // Content: Lightbulb icon with glow effect
                 Image(systemName: "lightbulb.fill")
                     .font(.system(size: 40, weight: .semibold))
                     .foregroundColor(HintManager.shared.hasHintsAvailable ? .gameYellow : .white.opacity(0.4))
                     .shadow(color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.8) : .clear, radius: 6)
                 
-                // Badge showing remaining hints - positioned at top right with enhanced styling - LARGER
+                // Small square indicators showing remaining hints - positioned at top right
                 if HintManager.shared.hasHintsAvailable {
-                    ZStack {
-                        // Outer ring with glow
-                        Circle()
-                            .stroke(Color.gameYellow.opacity(0.6), lineWidth: 2.5)
-                            .frame(width: 36, height: 36)
-                            .shadow(color: .gameYellow.opacity(0.4), radius: 3)
-                        
-                        // Inner filled circle
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.gameYellow, Color.gameYellow.opacity(0.9)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(width: 28, height: 28)
-                        
-                        Text("\(HintManager.shared.remainingHints)")
-                            .font(.system(size: 16, weight: .black, design: .monospaced))
-                            .foregroundColor(.black)
+                    HStack(spacing: 3) {
+                        ForEach(0..<3) { index in
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(index < HintManager.shared.remainingHints ? Color.gameYellow : Color.gameYellow.opacity(0.25))
+                                .frame(width: 7, height: 7)
+                        }
                     }
-                    .offset(x: 20, y: -20)
-                    .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
+                    .offset(x: 28, y: -24)
+                    .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
                 }
             }
             .frame(width: 90, height: 80)
@@ -465,6 +469,17 @@ struct ExternalHintButtonView: View {
         .buttonStyle(PressedButtonStyle())
         .disabled(viewModel.state.isGameOver)
         .opacity(viewModel.state.isGameOver ? 0.5 : 1.0)
+        #if DEBUG
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    viewModel.setDebugButtonState(position: .topRight, pressed: true)
+                }
+                .onEnded { _ in
+                    viewModel.setDebugButtonState(position: .topRight, pressed: false)
+                }
+        )
+        #endif
     }
 }
 

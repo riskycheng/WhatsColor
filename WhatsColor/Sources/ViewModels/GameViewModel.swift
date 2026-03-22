@@ -18,6 +18,11 @@ class GameViewModel: ObservableObject {
     struct ToastInfo: Equatable {
         let message: String
         let type: ToastType
+        let hintColor: GameColor?
+        
+        static func == (lhs: ToastInfo, rhs: ToastInfo) -> Bool {
+            lhs.message == rhs.message && lhs.type == rhs.type && lhs.hintColor == rhs.hintColor
+        }
     }
     
     enum ToastType {
@@ -270,11 +275,11 @@ class GameViewModel: ObservableObject {
         #endif
     }
 
-    func showToast(_ message: String, type: ToastType = .info) {
-        toast = ToastInfo(message: message, type: type)
+    func showToast(_ message: String, type: ToastType = .info, hintColor: GameColor? = nil) {
+        toast = ToastInfo(message: message, type: type, hintColor: hintColor)
         toastTimer?.invalidate()
-        // Longer duration for warning/error messages
-        let duration = (type == .warning || type == .error) ? 3.5 : 2.2
+        // Longer duration for all messages to ensure readability
+        let duration = (type == .warning || type == .error) ? 5.0 : 4.0
         toastTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
             withAnimation {
                 self?.toast = nil
@@ -905,8 +910,8 @@ class GameViewModel: ObservableObject {
     }
     
     private func checkDebugCombination() {
-        // All three buttons must be pressed simultaneously to reveal secret code
-        if debugButtonStates.topLeft && debugButtonStates.topRight && debugButtonStates.top {
+        // Top left and top right buttons must be pressed simultaneously to reveal secret code
+        if debugButtonStates.topLeft && debugButtonStates.topRight {
             withAnimation(.spring()) {
                 showDebugSecretCode = true
             }

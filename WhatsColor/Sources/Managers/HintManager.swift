@@ -17,11 +17,20 @@ class HintManager: ObservableObject {
         func description(for theme: GameTheme) -> String {
             switch self {
             case .correctPosition(let pos, let color):
-                return "Position \(pos + 1) is \(color.displayName(for: theme))"
+                return "Position \(pos + 1)"
             case .colorExists(let color):
-                return "\(color.displayName(for: theme)) is in the code"
+                return "Is in code"
             case .colorNotExists(let color):
-                return "\(color.displayName(for: theme)) is NOT in the code"
+                return "NOT in code"
+            }
+        }
+        
+        var color: GameColor {
+            switch self {
+            case .correctPosition(_, let color),
+                 .colorExists(let color),
+                 .colorNotExists(let color):
+                return color
             }
         }
     }
