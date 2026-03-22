@@ -39,6 +39,37 @@ enum GameColor: Int, CaseIterable, Identifiable, Codable {
         case .cyan: return "Cyan"
         }
     }
+    
+    func displayName(for theme: GameTheme) -> String {
+        switch theme {
+        case .classic:
+            return name
+        case .pixelFruit:
+            let names = ["Strawberry", "Broccoli", "Raspberry", "Blueberry", "Kiwi", "Avocado", "Cauliflower"]
+            return names[safe: rawValue] ?? name
+        case .cuteCat:
+            let names = ["White Cat", "Persian", "Black Cat", "Orange Cat", "Cow Cat", "Calico", "Grey Cat"]
+            return names[safe: rawValue] ?? name
+        case .cuteDog:
+            let names = ["Tibetan Mastiff", "Shiba", "Frenchie", "Husky", "Golden", "Dachshund", "Corgi"]
+            return names[safe: rawValue] ?? name
+        case .fastFood:
+            let names = ["Burger", "Macaron", "Pizza", "Sandwich", "Fries", "Donut", "Bubble Tea"]
+            return names[safe: rawValue] ?? name
+        case .fruit:
+            let names = ["Pineapple", "Strawberry", "Orange", "Tomato", "Pear", "Durian", "Avocado"]
+            return names[safe: rawValue] ?? name
+        case .vegetables:
+            let names = ["Bitter Melon", "Chili", "Radish", "Pumpkin", "Broccoli", "Onion", "Corn"]
+            return names[safe: rawValue] ?? name
+        }
+    }
+}
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
 }
 
 enum FeedbackType: Equatable {

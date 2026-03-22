@@ -73,6 +73,13 @@
 		F712C32FB4DDDB411D166F29 /* GameStateManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7334F259517C3CBC488133E /* GameStateManagerTests.swift */; };
 		F82D540272438394839B66DB /* StatusControlPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7B997EE635E23D54C7ED040 /* StatusControlPanelView.swift */; };
 		FCBDAB23939EC7D16FC4469A /* icon_baximei.png in Resources */ = {isa = PBXBuildFile; fileRef = C322E78F3B9077A87B831205 /* icon_baximei.png */; };
+		2E07E1D3ED7D4030B1B0B1BF /* HintManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25EC23482F8C44D4A3B2B1BF /* HintManager.swift */; };
+		2BF45E8114684C33B0C32D75 /* StatisticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 029C2BB1EF14463E879B5A82 /* StatisticsManager.swift */; };
+		764127EC434940C8ACC0A193 /* ThemeUnlockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19BC5DAA7AA437498ACFFF1 /* ThemeUnlockManager.swift */; };
+		51C674E7B81C4298A7610541 /* DailyChallengeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B786ACEB31664EE49C5AC009 /* DailyChallengeManager.swift */; };
+		00C4166B431047E69C7B9A06 /* GameStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF624A09F87F4DA68FC03404 /* GameStatistics.swift */; };
+		B233AC514C5444459FB862DB /* StatisticsManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2DBD2B03A1477BBDFC8709 /* StatisticsManagerTests.swift */; };
+		F2270542CC5449C59813DD4A /* ThemeUnlockManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CD09C2FDFF4E84BBBF768F /* ThemeUnlockManagerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -155,6 +162,13 @@
 		F567525EF3E21C2E75A5A6C6 /* boluo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = boluo.png; sourceTree = "<group>"; };
 		F771A39612FA97758F422B4A /* GameFlowManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameFlowManagerTests.swift; sourceTree = "<group>"; };
 		FE55C9DFA182FC262620DF97 /* GameFlowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameFlowManager.swift; sourceTree = "<group>"; };
+		25EC23482F8C44D4A3B2B1BF /* HintManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HintManager.swift; sourceTree = "<group>"; };
+		029C2BB1EF14463E879B5A82 /* StatisticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsManager.swift; sourceTree = "<group>"; };
+		F19BC5DAA7AA437498ACFFF1 /* ThemeUnlockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeUnlockManager.swift; sourceTree = "<group>"; };
+		B786ACEB31664EE49C5AC009 /* DailyChallengeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyChallengeManager.swift; sourceTree = "<group>"; };
+		DF624A09F87F4DA68FC03404 /* GameStatistics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStatistics.swift; sourceTree = "<group>"; };
+		2C2DBD2B03A1477BBDFC8709 /* StatisticsManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatisticsManagerTests.swift; sourceTree = "<group>"; };
+		54CD09C2FDFF4E84BBBF768F /* ThemeUnlockManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeUnlockManagerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -219,7 +233,11 @@
 				1BBB5DDB7659AC6448888F34 /* GameStateManager.swift */,
 				01BDA355C6DFC19469AFA88B /* ThemeManager.swift */,
 				7F1DE0796EA1A61EEADAC6AA /* TimerManager.swift */,
-			);
+							25EC23482F8C44D4A3B2B1BF /* HintManager.swift */,
+				029C2BB1EF14463E879B5A82 /* StatisticsManager.swift */,
+				F19BC5DAA7AA437498ACFFF1 /* ThemeUnlockManager.swift */,
+				B786ACEB31664EE49C5AC009 /* DailyChallengeManager.swift */,
+);
 			path = Managers;
 			sourceTree = "<group>";
 		};
@@ -331,7 +349,9 @@
 				F771A39612FA97758F422B4A /* GameFlowManagerTests.swift */,
 				B7334F259517C3CBC488133E /* GameStateManagerTests.swift */,
 				F3405A80C92715874E3A732D /* ThemeManagerTests.swift */,
-			);
+							2C2DBD2B03A1477BBDFC8709 /* StatisticsManagerTests.swift */,
+				54CD09C2FDFF4E84BBBF768F /* ThemeUnlockManagerTests.swift */,
+);
 			path = WhatsColorTests;
 			sourceTree = "<group>";
 		};
@@ -353,7 +373,8 @@
 			isa = PBXGroup;
 			children = (
 				08B1D46D9B3407A146894BB0 /* GameModels.swift */,
-			);
+							DF624A09F87F4DA68FC03404 /* GameStatistics.swift */,
+);
 			path = Models;
 			sourceTree = "<group>";
 		};
@@ -510,7 +531,9 @@
 				E8EE782BBF3814CE4C5D8D02 /* GameFlowManagerTests.swift in Sources */,
 				F712C32FB4DDDB411D166F29 /* GameStateManagerTests.swift in Sources */,
 				61414EF4DB9B50CD0E7FC766 /* ThemeManagerTests.swift in Sources */,
-			);
+							B233AC514C5444459FB862DB /* StatisticsManagerTests.swift in Sources */,
+				F2270542CC5449C59813DD4A /* ThemeUnlockManagerTests.swift in Sources */,
+);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		8CCD31BAA4B34A08FBDCA03C /* Sources */ = {
@@ -535,6 +558,11 @@
 				7DFA776BB9E0E7CEF0BD5D69 /* TimeWheelPicker.swift in Sources */,
 				AE4B76D308F9C47F56F94361 /* TimerManager.swift in Sources */,
 				C8B17EBCC5F48317F571B9F1 /* WhatsColorApp.swift in Sources */,
+				2E07E1D3ED7D4030B1B0B1BF /* HintManager.swift in Sources */,
+				2BF45E8114684C33B0C32D75 /* StatisticsManager.swift in Sources */,
+				764127EC434940C8ACC0A193 /* ThemeUnlockManager.swift in Sources */,
+				51C674E7B81C4298A7610541 /* DailyChallengeManager.swift in Sources */,
+				00C4166B431047E69C7B9A06 /* GameStatistics.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

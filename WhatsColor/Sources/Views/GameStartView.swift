@@ -726,6 +726,7 @@ struct LogoThemeGear: View {
                     
                     withAnimation(.interpolatingSpring(stiffness: 300, damping: 20)) {
                         let newIndex = max(0, min(themes.count - 1, currentThemeIndex + indexChange))
+                        
                         if newIndex != currentThemeIndex {
                             viewModel.state.theme = themes[newIndex]
                             SoundManager.shared.playDrop() // Engagement "Thud"

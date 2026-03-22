@@ -132,6 +132,75 @@ struct StatusControlPanelView: View {
         .background(Color.deviceGreen)
 }
 
+struct HintButtonView: View {
+    @ObservedObject var viewModel: GameViewModel
+    @State private var isPressed = false
+    @State private var showHintToast = false
+    @State private var hintMessage = ""
+    
+    var body: some View {
+        Button(action: {
+            guard !viewModel.state.isGameOver else { return }
+            
+            if let hint = HintManager.shared.useHint(
+                secretCode: viewModel.state.secretCode,
+                currentGuess: viewModel.state.currentGuess,
+                attempts: viewModel.state.attempts
+            ) {
+                hintMessage = hint.description(for: viewModel.state.theme)
+                viewModel.showToast("💡 \(hintMessage)", type: .info)
+            } else if !HintManager.shared.hasHintsAvailable {
+                viewModel.showToast("❌ NO HINTS REMAINING", type: .warning)
+                SoundManager.shared.playError()
+            }
+        }) {
+            VStack(spacing: 6) {
+                ZStack {
+                    // Button background
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            LinearGradient(
+                                colors: HintManager.shared.hasHintsAvailable ?
+                                    [Color(white: 0.25), Color(white: 0.15)] :
+                                    [Color(white: 0.15), Color(white: 0.08)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    HintManager.shared.hasHintsAvailable ?
+                                        Color.gameYellow.opacity(0.5) :
+                                        Color.white.opacity(0.1),
+                                    lineWidth: 1.5
+                                )
+                        )
+                    
+                    // Lightbulb icon
+                    Image(systemName: "lightbulb.fill")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(HintManager.shared.hasHintsAvailable ? .gameYellow : .white.opacity(0.3))
+                        .shadow(
+                            color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.5) : .clear,
+                            radius: 4
+                        )
+                }
+                
+                // Hint count label
+                Text(HintManager.shared.hintButtonText)
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .foregroundColor(HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.8) : .white.opacity(0.3))
+                    .tracking(0.5)
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(viewModel.state.isGameOver)
+        .opacity(viewModel.state.isGameOver ? 0.5 : 1.0)
+    }
+}
+
 struct SubmitKnobView: View {
     @ObservedObject var viewModel: GameViewModel
     @State private var rotation: Double = 0

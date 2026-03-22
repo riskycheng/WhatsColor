@@ -2,28 +2,21 @@ import SwiftUI
 
 struct GameBoardView: View {
     @ObservedObject var viewModel: GameViewModel
-    @State private var showDebugCode = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // DEBUG: Secret Code Display (tap to toggle)
-            VStack(spacing: 8) {
-                Button(action: {
-                    withAnimation(.spring()) {
-                        showDebugCode.toggle()
-                    }
-                }) {
+            #if DEBUG
+            // DEBUG: Secret Code Display - shown only when all three buttons are pressed
+            if viewModel.showDebugSecretCode {
+                VStack(spacing: 8) {
                     HStack(spacing: 8) {
                         Image(systemName: "eye.fill")
                             .font(.system(size: 12))
                             .foregroundColor(.yellow)
-                        Text("DEBUG: SHOW SECRET CODE")
+                        Text("DEBUG: SECRET CODE REVEALED")
                             .font(.system(size: 11, weight: .black, design: .monospaced))
                             .foregroundColor(.yellow)
                         Spacer()
-                        Image(systemName: showDebugCode ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 12))
-                            .foregroundColor(.yellow.opacity(0.7))
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -35,9 +28,7 @@ struct GameBoardView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.yellow.opacity(0.5), lineWidth: 1)
                     )
-                }
-                
-                if showDebugCode {
+                    
                     HStack(spacing: 12) {
                         ForEach(viewModel.state.secretCode.indices, id: \.self) { index in
                             let color = viewModel.state.secretCode[index]
@@ -72,12 +63,14 @@ struct GameBoardView: View {
                             .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
                     )
                 }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            #endif
             
             // Board panel
-            VStack(spacing: 12) {
+            VStack(spacing: 14) {
                 ForEach(viewModel.state.attempts) { row in
                     GameRowView(
                         row: row,
@@ -87,7 +80,8 @@ struct GameBoardView: View {
                     )
                 }
             }
-            .padding(18)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
             .background(
                 ZStack {
                     // Deep recessed screen background
@@ -316,6 +310,7 @@ struct SlotView: View {
 struct FeedbackView: View {
     let feedback: [FeedbackType]
     let mode: FeedbackMode
+    @State private var rowAppeared = false
 
     var body: some View {
         VStack(spacing: 4) {
@@ -324,17 +319,40 @@ struct FeedbackView: View {
                     ForEach(0..<2, id: \.self) { col in
                         let index = row * 2 + col
                         FeedbackDot(type: feedback[index], mode: mode)
+                            .offset(y: rowAppeared ? 0 : -10)
+                            .opacity(rowAppeared ? 1 : 0)
+                            .animation(
+                                .spring(response: 0.4, dampingFraction: 0.6)
+                                .delay(Double(index) * 0.08),
+                                value: rowAppeared
+                            )
                     }
                 }
             }
         }
         .padding(.leading, 18)
+        .onAppear {
+            // Trigger staggered animation when view appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                rowAppeared = true
+            }
+        }
+        .onChange(of: feedback) { _ in
+            // Reset and re-trigger animation when feedback changes
+            rowAppeared = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                rowAppeared = true
+            }
+        }
     }
 }
 
 struct FeedbackDot: View {
     let type: FeedbackType
     let mode: FeedbackMode
+    @State private var isAnimating = false
+    @State private var scale: CGFloat = 1.0
+    @State private var glowOpacity: Double = 0.5
 
     var body: some View {
         Circle()
@@ -344,7 +362,47 @@ struct FeedbackDot: View {
                 Circle()
                     .stroke(dotBorderColor, lineWidth: 1)
             )
-            .shadow(color: dotColor.opacity(0.5), radius: 2, x: 0, y: 0)
+            .shadow(color: dotColor.opacity(glowOpacity), radius: isAnimating ? 6 : 2, x: 0, y: 0)
+            .scaleEffect(scale)
+            .onAppear {
+                if type != .empty {
+                    startAnimation()
+                }
+            }
+            .onChange(of: type) { newType in
+                if newType != .empty {
+                    startAnimation()
+                } else {
+                    stopAnimation()
+                }
+            }
+    }
+    
+    private func startAnimation() {
+        // Entry animation
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.5)) {
+            scale = 1.3
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                scale = 1.0
+            }
+        }
+        
+        // Continuous glow animation for correct and misplaced
+        if type == .correct || type == .misplaced {
+            isAnimating = true
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                glowOpacity = 0.9
+            }
+        }
+    }
+    
+    private func stopAnimation() {
+        isAnimating = false
+        scale = 1.0
+        glowOpacity = 0.5
     }
 
     var dotColor: Color {

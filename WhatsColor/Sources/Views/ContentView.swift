@@ -13,16 +13,44 @@ struct ContentView: View {
 
                 // Main game content
                 ZStack(alignment: .top) {
-                    // Peek-out Button (External Reset) - Only in mission mode
+                    // Peek-out Buttons - Only in mission mode
                     if !viewModel.isShowingStartScreen {
                         HStack {
+                            // Left: Reset/Menu Button
                             ResetButtonView(onTap: {
                                 viewModel.pauseGame()
                             })
-                            .padding(.leading, 45)
+                            .padding(.leading, 50)
+                            #if DEBUG
+                            .simultaneousGesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { _ in
+                                        viewModel.setDebugButtonState(position: .topLeft, pressed: true)
+                                    }
+                                    .onEnded { _ in
+                                        viewModel.setDebugButtonState(position: .topLeft, pressed: false)
+                                    }
+                            )
+                            #endif
+                            
                             Spacer()
+                            
+                            // Right: Hint Button
+                            ExternalHintButtonView(viewModel: viewModel)
+                                .padding(.trailing, 50)
+                                #if DEBUG
+                                .simultaneousGesture(
+                                    DragGesture(minimumDistance: 0)
+                                        .onChanged { _ in
+                                            viewModel.setDebugButtonState(position: .topRight, pressed: true)
+                                        }
+                                        .onEnded { _ in
+                                            viewModel.setDebugButtonState(position: .topRight, pressed: false)
+                                        }
+                                )
+                                #endif
                         }
-                        .offset(y: -14)
+                        .offset(y: -12)
                     }
 
                     // Main Device Body Shell
@@ -50,6 +78,26 @@ struct ContentView: View {
                     .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
                     .blur(radius: viewModel.showPauseDialog || viewModel.showGameOverDialog ? 15 : 0)
                     .animation(.easeInOut(duration: 0.3), value: viewModel.showPauseDialog || viewModel.showGameOverDialog)
+                    #if DEBUG
+                    .overlay(
+                        // Invisible debug button at top center
+                        GeometryReader { geo in
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .frame(width: 100, height: 40)
+                                .position(x: geo.size.width / 2, y: 20)
+                                .gesture(
+                                    DragGesture(minimumDistance: 0)
+                                        .onChanged { _ in
+                                            viewModel.setDebugButtonState(position: .top, pressed: true)
+                                        }
+                                        .onEnded { _ in
+                                            viewModel.setDebugButtonState(position: .top, pressed: false)
+                                        }
+                                )
+                        }
+                    )
+                    #endif
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 14) // Standard handheld outer margin
@@ -139,25 +187,24 @@ struct DeviceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 12) // Slightly tighter top
+            Spacer(minLength: 10)
             
-            // Game board area
+            // Game board area - height adjusted to match GameStartView
             GameBoardView(viewModel: viewModel)
                 .padding(.horizontal, 16)
-
-            Spacer(minLength: 12)
+                .frame(height: 510)
 
             // Inline Color Picker
             HorizontalColorPickerView(viewModel: viewModel)
                 .padding(.horizontal, 16)
-
-            Spacer()
+                .padding(.vertical, 8)
 
             // Bottom panel - status and knob
             StatusControlPanelView(viewModel: viewModel)
                 .padding(.horizontal, 16)
+                .frame(height: 140)
             
-            Spacer(minLength: 25) // Standardized internal gap from the shell bottom
+            Spacer(minLength: 12)
         }
     }
 }
@@ -274,16 +321,16 @@ struct ResetButtonView: View {
             SoundManager.shared.hapticMedium()
             onTap()
         }) {
-            // Squared metallic/Hardware tab with realistic lighting
+            // Compact metallic/Hardware tab with icon
             ZStack {
-                // Base structure with metallic gradient - NO RADIUS
-                Rectangle()
+                // Base structure with metallic gradient
+                RoundedRectangle(cornerRadius: 6)
                     .fill(
                         LinearGradient(
                             stops: [
-                                .init(color: Color(white: 0.15), location: 0),
-                                .init(color: Color(white: 0.25), location: 0.45),
-                                .init(color: Color(white: 0.20), location: 0.55),
+                                .init(color: Color(white: 0.18), location: 0),
+                                .init(color: Color(white: 0.28), location: 0.45),
+                                .init(color: Color(white: 0.22), location: 0.55),
                                 .init(color: Color(white: 0.12), location: 1)
                             ],
                             startPoint: .top,
@@ -291,25 +338,132 @@ struct ResetButtonView: View {
                         )
                     )
                 
-                // Top bevel highlight (specular hit)
-                Rectangle()
+                // Top bevel highlight
+                RoundedRectangle(cornerRadius: 6)
                     .stroke(
                         LinearGradient(
-                            colors: [.white.opacity(0.35), .clear],
+                            colors: [.white.opacity(0.3), .clear],
+                            startPoint: .top,
+                            endPoint: .center
+                        ),
+                        lineWidth: 1
+                    )
+                
+                // Menu icon
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+            .frame(width: 52, height: 44)
+            .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
+        }
+        .buttonStyle(PressedButtonStyle())
+    }
+}
+
+// MARK: - External Hint Button (Top Right)
+
+struct ExternalHintButtonView: View {
+    @ObservedObject var viewModel: GameViewModel
+    
+    var body: some View {
+        Button(action: {
+            guard !viewModel.state.isGameOver else { return }
+            
+            SoundManager.shared.playSelection()
+            SoundManager.shared.hapticMedium()
+            
+            if let hint = HintManager.shared.useHint(
+                secretCode: viewModel.state.secretCode,
+                currentGuess: viewModel.state.currentGuess,
+                attempts: viewModel.state.attempts
+            ) {
+                viewModel.showToast("💡 \(hint.description(for: viewModel.state.theme))", type: .info)
+            } else if !HintManager.shared.hasHintsAvailable {
+                viewModel.showToast("❌ NO HINTS REMAINING", type: .warning)
+                SoundManager.shared.playError()
+            }
+        }) {
+            // Enhanced metallic/Hardware tab with hint icon and badge
+            ZStack {
+                // Base structure with metallic gradient - hint themed
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color(white: 0.2), location: 0),
+                                .init(color: Color(white: 0.32), location: 0.45),
+                                .init(color: Color(white: 0.25), location: 0.55),
+                                .init(color: Color(white: 0.15), location: 1)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                
+                // Inner glow effect when hints available
+                if HintManager.shared.hasHintsAvailable {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gameYellow.opacity(0.3), lineWidth: 1.5)
+                }
+                
+                // Top bevel highlight - yellow tint when hints available
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(
+                        LinearGradient(
+                            colors: HintManager.shared.hasHintsAvailable ? 
+                                [.gameYellow.opacity(0.6), .clear] :
+                                [.white.opacity(0.2), .clear],
                             startPoint: .top,
                             endPoint: .center
                         ),
                         lineWidth: 1.5
                     )
                 
-                // Fine industrial texture/noise layer (subtle stroke)
-                Rectangle()
-                    .stroke(Color.black.opacity(0.4), lineWidth: 0.5)
+                // Content: Lightbulb icon with glow effect
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(HintManager.shared.hasHintsAvailable ? .gameYellow : .white.opacity(0.35))
+                    .shadow(color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.6) : .clear, radius: 4)
+                
+                // Badge showing remaining hints - positioned at top right with enhanced styling
+                if HintManager.shared.hasHintsAvailable {
+                    ZStack {
+                        // Outer ring
+                        Circle()
+                            .stroke(Color.gameYellow.opacity(0.5), lineWidth: 2)
+                            .frame(width: 26, height: 26)
+                        
+                        // Inner filled circle
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.gameYellow, Color.gameYellow.opacity(0.8)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .frame(width: 22, height: 22)
+                        
+                        Text("\(HintManager.shared.remainingHints)")
+                            .font(.system(size: 13, weight: .black, design: .monospaced))
+                            .foregroundColor(.black)
+                    }
+                    .offset(x: 14, y: -14)
+                    .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
+                }
             }
-            .frame(width: 85, height: 28)
-            .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
+            .frame(width: 64, height: 60)
+            .shadow(
+                color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.3) : .black.opacity(0.4),
+                radius: 4,
+                x: 0,
+                y: 3
+            )
         }
-        .buttonStyle(PressedButtonStyle()) // Custom style for tactile press feel
+        .buttonStyle(PressedButtonStyle())
+        .disabled(viewModel.state.isGameOver)
+        .opacity(viewModel.state.isGameOver ? 0.5 : 1.0)
     }
 }
 

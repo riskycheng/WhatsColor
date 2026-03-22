@@ -45,6 +45,12 @@ class GameViewModel: ObservableObject {
     // Enabled colors for current game (used in Easy mode to ensure consistency)
     @Published var enabledColorsForCurrentGame: [GameColor] = []
     
+    #if DEBUG
+    // Debug secret code reveal - requires combination of button presses
+    @Published var debugButtonStates: (topLeft: Bool, topRight: Bool, top: Bool) = (false, false, false)
+    @Published var showDebugSecretCode: Bool = false
+    #endif
+    
     // Frames for each slot: unique key "row-slot"
     @Published var slotFrames: [String: CGRect] = [:]
     @Published var boardFrame: CGRect = .zero
@@ -195,9 +201,12 @@ class GameViewModel: ObservableObject {
     private let themeKey = "WhatsColor_Theme"
 
     init() {
+        #if DEBUG
         print("🛠️ System: Initializing Handheld Console...")
+        #endif
         self.state = GameStateModel.initial
         
+        #if DEBUG
         // --- BUNDLE DIAGNOSTICS ---
         let fm = FileManager.default
         let bundlePath = Bundle.main.bundlePath
@@ -221,6 +230,7 @@ class GameViewModel: ObservableObject {
             }
         }
         // ---------------------------
+        #endif
 
         // Load difficulty-specific level
         let key = getLevelKey(for: self.state.difficulty)
@@ -230,10 +240,14 @@ class GameViewModel: ObservableObject {
         // Load theme or use a rich default (Pixel Fruit for industrial look)
         if let savedTheme = UserDefaults.standard.string(forKey: themeKey),
            let theme = GameTheme(rawValue: savedTheme) {
+            #if DEBUG
             print("🎨 Theme: Loaded '\(theme.rawValue)' from storage")
+            #endif
             self.state.theme = theme
         } else {
+            #if DEBUG
             print("🎨 Theme: No saved preference, defaulting to PIXEL FRUIT")
+            #endif
             self.state.theme = .pixelFruit
         }
         
@@ -251,7 +265,9 @@ class GameViewModel: ObservableObject {
         UserDefaults.standard.set(state.theme.rawValue, forKey: themeKey)
         // Explicitly notify observers to ensure UI refreshes icons immediately
         objectWillChange.send()
+        #if DEBUG
         print("💾 System: Theme saved and UI refreshed (\(state.theme.rawValue))")
+        #endif
     }
 
     func showToast(_ message: String, type: ToastType = .info) {
@@ -510,6 +526,10 @@ class GameViewModel: ObservableObject {
     // MARK: - Game Logic
 
     func startNewGame() {
+        // Reset enabled colors for Easy mode to ensure consistency
+        // This ensures each new game gets a fresh set of enabled colors
+        enabledColorsForCurrentGame = []
+        
         // Use selected secret code if available, otherwise generate random
         if selectedSecretCode.count == 4 {
             state.secretCode = selectedSecretCode
@@ -559,6 +579,9 @@ class GameViewModel: ObservableObject {
     }
 
     func startGame() {
+        // Start statistics tracking
+        StatisticsManager.shared.startGame()
+        
         if gameMode == .dual {
             // DUAL mode: full pipeline (Time -> Color -> Play)
             showSettingsDialog = true
@@ -795,7 +818,21 @@ class GameViewModel: ObservableObject {
                 let clearedLevel = state.level
                 state.level += 1
                 saveProgress()
+                
+                // Check for newly unlocked themes
+                let newlyUnlocked = ThemeUnlockManager.shared.checkAndUnlockThemes(currentLevel: state.level)
+                if !newlyUnlocked.isEmpty {
+                    // Show toast for newly unlocked themes
+                    if let firstTheme = newlyUnlocked.first {
+                        showToast("🎨 THEME UNLOCKED: \(firstTheme.rawValue)!", type: .success)
+                    }
+                }
             }
+            
+            // Record statistics
+            let completedAttempts = state.attempts.filter { $0.isComplete }.count
+            StatisticsManager.shared.recordAttempt()
+            StatisticsManager.shared.endGame(won: true, difficulty: state.difficulty, mode: gameMode)
             
             SoundManager.shared.playVictory()
             SoundManager.shared.hapticSuccess()
@@ -809,10 +846,17 @@ class GameViewModel: ObservableObject {
         if completedAttempts >= 7 {
             state.isGameOver = true
             state.message = "MISSION FAILED"
+            
+            // Record statistics for loss
+            StatisticsManager.shared.recordAttempt()
+            StatisticsManager.shared.endGame(won: false, difficulty: state.difficulty, mode: gameMode)
+            
             showGameOverDialog = true
             SoundManager.shared.playError()
             stopTimer()
         } else {
+            // Record attempt for statistics
+            StatisticsManager.shared.recordAttempt()
             // Show toast for incorrect guess
             showToast("TRY AGAIN", type: .info)
             SoundManager.shared.playIncorrect()
@@ -844,6 +888,39 @@ class GameViewModel: ObservableObject {
         SoundManager.shared.playSelection()
         SoundManager.shared.hapticLight()
     }
+
+    #if DEBUG
+    // MARK: - Debug Secret Code Reveal
+    
+    func setDebugButtonState(position: DebugButtonPosition, pressed: Bool) {
+        switch position {
+        case .topLeft:
+            debugButtonStates.topLeft = pressed
+        case .topRight:
+            debugButtonStates.topRight = pressed
+        case .top:
+            debugButtonStates.top = pressed
+        }
+        checkDebugCombination()
+    }
+    
+    private func checkDebugCombination() {
+        // All three buttons must be pressed simultaneously to reveal secret code
+        if debugButtonStates.topLeft && debugButtonStates.topRight && debugButtonStates.top {
+            withAnimation(.spring()) {
+                showDebugSecretCode = true
+            }
+        } else {
+            withAnimation(.spring()) {
+                showDebugSecretCode = false
+            }
+        }
+    }
+    
+    enum DebugButtonPosition {
+        case topLeft, topRight, top
+    }
+    #endif
 
     // MARK: - Computed Properties
 
