@@ -321,17 +321,17 @@ struct ResetButtonView: View {
             SoundManager.shared.hapticMedium()
             onTap()
         }) {
-            // Compact metallic/Hardware tab with icon
+            // Large metallic/Hardware tab with icon - MUCH LARGER for visibility
             ZStack {
                 // Base structure with metallic gradient
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(
                             stops: [
-                                .init(color: Color(white: 0.18), location: 0),
-                                .init(color: Color(white: 0.28), location: 0.45),
-                                .init(color: Color(white: 0.22), location: 0.55),
-                                .init(color: Color(white: 0.12), location: 1)
+                                .init(color: Color(white: 0.2), location: 0),
+                                .init(color: Color(white: 0.32), location: 0.45),
+                                .init(color: Color(white: 0.25), location: 0.55),
+                                .init(color: Color(white: 0.15), location: 1)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -339,23 +339,23 @@ struct ResetButtonView: View {
                     )
                 
                 // Top bevel highlight
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 16)
                     .stroke(
                         LinearGradient(
-                            colors: [.white.opacity(0.3), .clear],
+                            colors: [.white.opacity(0.4), .clear],
                             startPoint: .top,
                             endPoint: .center
                         ),
-                        lineWidth: 1
+                        lineWidth: 2
                     )
                 
-                // Menu icon
+                // Menu icon - MUCH LARGER
                 Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.8))
+                    .font(.system(size: 36, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.9))
             }
-            .frame(width: 56, height: 52)
-            .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
+            .frame(width: 90, height: 80)
+            .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 3)
         }
         .buttonStyle(PressedButtonStyle())
     }
@@ -384,17 +384,17 @@ struct ExternalHintButtonView: View {
                 SoundManager.shared.playError()
             }
         }) {
-            // Enhanced metallic/Hardware tab with hint icon and badge
+            // Large metallic/Hardware tab with hint icon and badge - MUCH LARGER for visibility
             ZStack {
                 // Base structure with metallic gradient - hint themed
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(
                         LinearGradient(
                             stops: [
-                                .init(color: Color(white: 0.2), location: 0),
-                                .init(color: Color(white: 0.32), location: 0.45),
-                                .init(color: Color(white: 0.25), location: 0.55),
-                                .init(color: Color(white: 0.15), location: 1)
+                                .init(color: Color(white: 0.22), location: 0),
+                                .init(color: Color(white: 0.35), location: 0.45),
+                                .init(color: Color(white: 0.28), location: 0.55),
+                                .init(color: Color(white: 0.18), location: 1)
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -403,60 +403,61 @@ struct ExternalHintButtonView: View {
                 
                 // Inner glow effect when hints available
                 if HintManager.shared.hasHintsAvailable {
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.gameYellow.opacity(0.3), lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.gameYellow.opacity(0.5), lineWidth: 2.5)
                 }
                 
                 // Top bevel highlight - yellow tint when hints available
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 16)
                     .stroke(
                         LinearGradient(
                             colors: HintManager.shared.hasHintsAvailable ? 
-                                [.gameYellow.opacity(0.6), .clear] :
-                                [.white.opacity(0.2), .clear],
+                                [.gameYellow.opacity(0.8), .clear] :
+                                [.white.opacity(0.3), .clear],
                             startPoint: .top,
                             endPoint: .center
                         ),
-                        lineWidth: 1.5
+                        lineWidth: 2
                     )
                 
-                // Content: Lightbulb icon with glow effect
+                // Content: Lightbulb icon with glow effect - MUCH LARGER
                 Image(systemName: "lightbulb.fill")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(HintManager.shared.hasHintsAvailable ? .gameYellow : .white.opacity(0.35))
-                    .shadow(color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.6) : .clear, radius: 4)
+                    .font(.system(size: 40, weight: .semibold))
+                    .foregroundColor(HintManager.shared.hasHintsAvailable ? .gameYellow : .white.opacity(0.4))
+                    .shadow(color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.8) : .clear, radius: 6)
                 
-                // Badge showing remaining hints - positioned at top right with enhanced styling
+                // Badge showing remaining hints - positioned at top right with enhanced styling - LARGER
                 if HintManager.shared.hasHintsAvailable {
                     ZStack {
-                        // Outer ring
+                        // Outer ring with glow
                         Circle()
-                            .stroke(Color.gameYellow.opacity(0.5), lineWidth: 2)
-                            .frame(width: 26, height: 26)
+                            .stroke(Color.gameYellow.opacity(0.6), lineWidth: 2.5)
+                            .frame(width: 36, height: 36)
+                            .shadow(color: .gameYellow.opacity(0.4), radius: 3)
                         
                         // Inner filled circle
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color.gameYellow, Color.gameYellow.opacity(0.8)],
+                                    colors: [Color.gameYellow, Color.gameYellow.opacity(0.9)],
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
                             )
-                            .frame(width: 22, height: 22)
+                            .frame(width: 28, height: 28)
                         
                         Text("\(HintManager.shared.remainingHints)")
-                            .font(.system(size: 13, weight: .black, design: .monospaced))
+                            .font(.system(size: 16, weight: .black, design: .monospaced))
                             .foregroundColor(.black)
                     }
-                    .offset(x: 14, y: -14)
-                    .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
+                    .offset(x: 20, y: -20)
+                    .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
                 }
             }
-            .frame(width: 68, height: 64)
+            .frame(width: 90, height: 80)
             .shadow(
-                color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.3) : .black.opacity(0.4),
-                radius: 4,
+                color: HintManager.shared.hasHintsAvailable ? .gameYellow.opacity(0.4) : .black.opacity(0.5),
+                radius: 5,
                 x: 0,
                 y: 3
             )
