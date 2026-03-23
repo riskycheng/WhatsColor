@@ -29,7 +29,8 @@ struct GameBoardView: View {
                             .stroke(Color.yellow.opacity(0.5), lineWidth: 1)
                     )
                     
-                    HStack(spacing: 12) {
+                    // Secret code icons with close button - centered and evenly distributed
+                    HStack(spacing: 0) {
                         ForEach(viewModel.state.secretCode.indices, id: \.self) { index in
                             let color = viewModel.state.secretCode[index]
                             VStack(spacing: 4) {
@@ -51,9 +52,23 @@ struct GameBoardView: View {
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundColor(.white.opacity(0.6))
                             }
+                            .frame(maxWidth: .infinity)
+                        }
+                        
+                        // Close button to hide secret code
+                        Button(action: {
+                            viewModel.hideDebugSecretCode()
+                            SoundManager.shared.playSelection()
+                            SoundManager.shared.hapticMedium()
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.yellow)
+                                .frame(width: 44, height: 44)
                         }
                     }
-                    .padding(12)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.black.opacity(0.5))
@@ -63,7 +78,7 @@ struct GameBoardView: View {
                             .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
                     )
                 }
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .transition(.move(edge: .top).combined(with: .opacity))
             }

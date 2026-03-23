@@ -897,6 +897,13 @@ class GameViewModel: ObservableObject {
     #if DEBUG
     // MARK: - Debug Secret Code Reveal
     
+    // Tracks whether we've already toggled while buttons are currently held
+    private var hasToggledThisPress = false
+    // Tracks whether both debug buttons are currently pressed
+    private(set) var isDebugCombinationActive = false
+    // Tracks whether a combination occurred during this press session (to prevent button actions on release)
+    private(set) var didTriggerCombinationThisSession = false
+    
     func setDebugButtonState(position: DebugButtonPosition, pressed: Bool) {
         switch position {
         case .topLeft:
@@ -910,8 +917,21 @@ class GameViewModel: ObservableObject {
     }
     
     private func checkDebugCombination() {
+        // Update combination active state
+        let wasCombinationActive = isDebugCombinationActive
+        isDebugCombinationActive = debugButtonStates.topLeft && debugButtonStates.topRight
+        
+        // If combination just became active, mark that it happened this session
+        if isDebugCombinationActive && !wasCombinationActive {
+            didTriggerCombinationThisSession = true
+        }
+        
         // Top left and top right buttons must be pressed simultaneously to toggle secret code
-        if debugButtonStates.topLeft && debugButtonStates.topRight {
+        // Only toggle if we haven't already toggled during this button press session
+        if isDebugCombinationActive && !hasToggledThisPress {
+            // Mark that we've toggled so we don't toggle again until buttons are released
+            hasToggledThisPress = true
+            
             withAnimation(.spring()) {
                 showDebugSecretCode.toggle()
             }
@@ -923,15 +943,30 @@ class GameViewModel: ObservableObject {
                 SoundManager.shared.playSelection()
                 SoundManager.shared.hapticMedium()
             }
-            // Reset button states after toggle to prevent rapid toggling
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.debugButtonStates = (topLeft: false, topRight: false, top: false)
+        }
+        
+        // Reset flags when both buttons are released
+        // This allows the next simultaneous press to toggle again
+        if !debugButtonStates.topLeft && !debugButtonStates.topRight {
+            hasToggledThisPress = false
+            // Delay resetting didTriggerCombinationThisSession to ensure button action guards work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.didTriggerCombinationThisSession = false
             }
         }
     }
     
     var isDebugModeActive: Bool {
         return showDebugSecretCode
+    }
+    
+    func hideDebugSecretCode() {
+        withAnimation(.spring()) {
+            showDebugSecretCode = false
+        }
+        // Reset the toggle flag so buttons work normally again
+        hasToggledThisPress = false
+        didTriggerCombinationThisSession = false
     }
     
     enum DebugButtonPosition {

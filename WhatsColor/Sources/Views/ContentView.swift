@@ -38,17 +38,6 @@ struct ContentView: View {
                             // Right: Hint Button
                             ExternalHintButtonView(viewModel: viewModel)
                                 .padding(.trailing, 50)
-                                #if DEBUG
-                                .simultaneousGesture(
-                                    DragGesture(minimumDistance: 0)
-                                        .onChanged { _ in
-                                            viewModel.setDebugButtonState(position: .topRight, pressed: true)
-                                        }
-                                        .onEnded { _ in
-                                            viewModel.setDebugButtonState(position: .topRight, pressed: false)
-                                        }
-                                )
-                                #endif
                         }
                         .offset(y: -12)
                     }
@@ -342,8 +331,10 @@ struct ResetButtonView: View {
 
     var body: some View {
         Button(action: {
-            // Don't trigger action if debug mode is active (both buttons pressed)
-            guard !viewModel.isDebugModeActive else { return }
+            // Don't trigger if both debug buttons were pressed together this session
+            #if DEBUG
+            guard !viewModel.didTriggerCombinationThisSession else { return }
+            #endif
             
             // Enhanced mechanical feedback - click sound + medium haptic
             SoundManager.shared.playSelection()
@@ -397,8 +388,10 @@ struct ExternalHintButtonView: View {
     
     var body: some View {
         Button(action: {
-            // Don't trigger action if debug mode is active (both buttons pressed)
-            guard !viewModel.isDebugModeActive else { return }
+            // Don't trigger if both debug buttons were pressed together this session
+            #if DEBUG
+            guard !viewModel.didTriggerCombinationThisSession else { return }
+            #endif
             guard !viewModel.state.isGameOver else { return }
             
             // Enhanced mechanical feedback - click sound + medium haptic
