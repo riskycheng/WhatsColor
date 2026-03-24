@@ -27,8 +27,8 @@ struct StatusControlPanelView: View {
                 )
                 .shadow(color: .black.opacity(0.6), radius: 15, x: 0, y: 8)
 
-            HStack(alignment: .center, spacing: 12) {
-                // LEFT SIDE: Telemetry (Timer + Status)
+            HStack(alignment: .center, spacing: 0) {
+                // LEFT SIDE: Telemetry (Timer + Status) - Fixed width to prevent squeezing
                 VStack(alignment: .leading, spacing: 2) {
                     // Timer Display (only show if difficulty has time limit)
                     if viewModel.state.difficulty.hasTimeLimit {
@@ -102,11 +102,12 @@ struct StatusControlPanelView: View {
                     }
                     .padding(.top, 6)
                 }
+                .frame(width: 180, alignment: .leading)
                 .padding(.leading, 20)
                 
-                Spacer()
+                Spacer(minLength: 20)
                 
-                // RIGHT SIDE: Control Instrument (Rotary Knob)
+                // RIGHT SIDE: Control Instrument (Rotary Knob) - Fixed size, no expansion beyond bounds
                 ZStack {
                     // Shadow for the knob
                     Circle()
@@ -118,6 +119,7 @@ struct StatusControlPanelView: View {
 
                     SubmitKnobView(viewModel: viewModel)
                 }
+                .frame(width: 110, height: 110)
                 .padding(.trailing, 16)
             }
         }
@@ -286,13 +288,13 @@ struct IndustrialRotaryButton: View {
     
     var body: some View {
         // Dynamic sizes based on touch location
-        // When rotating: expand the bezel outward significantly, shrink the central plate much more
-        let bezelExpand: CGFloat = interactionMode == .rotation ? 22 : 0
+        // Bezel expansion reduced to prevent layout shifts in fixed-size container
+        let bezelExpand: CGFloat = interactionMode == .rotation ? 8 : 0
         let dynamicBezelSize: CGFloat = bezelBaseSize + bezelExpand
-        let dynamicPlateSize: CGFloat = interactionMode == .rotation ? (plateBaseSize - 28) :
-                                      (interactionMode == .centralButton ? (plateBaseSize + 8) : plateBaseSize)
-        // Central button threshold: very small during rotation to prevent accidental clicks
-        let dynamicPlateThreshold: CGFloat = interactionMode == .rotation ? (plateBaseSize / 2 - 10) : (plateBaseSize / 2)
+        let dynamicPlateSize: CGFloat = interactionMode == .rotation ? (plateBaseSize - 12) :
+                                      (interactionMode == .centralButton ? (plateBaseSize + 4) : plateBaseSize)
+        // Central button threshold: smaller during rotation to prevent accidental clicks
+        let dynamicPlateThreshold: CGFloat = interactionMode == .rotation ? (plateBaseSize / 2 - 6) : (plateBaseSize / 2)
         
         ZStack {
             // 1. OUTER HOUSING / BASEPLATE (Deep Charcoal Metal)
