@@ -3,6 +3,7 @@ import AudioToolbox
 
 struct ContentView: View {
     @StateObject private var viewModel = GameViewModel()
+    @StateObject private var tutorialManager = TutorialManager.shared
 
     var body: some View {
         GeometryReader { geometry in
@@ -21,6 +22,11 @@ struct ContentView: View {
                                 viewModel.pauseGame()
                             })
                             .padding(.leading, 50)
+                            .overlay(
+                                FrameReader { frame in
+                                    viewModel.registerMenuButtonFrame(frame)
+                                }
+                            )
                             #if DEBUG
                             .simultaneousGesture(
                                 DragGesture(minimumDistance: 0)
@@ -38,6 +44,11 @@ struct ContentView: View {
                             // Right: Hint Button
                             ExternalHintButtonView(viewModel: viewModel)
                                 .padding(.trailing, 50)
+                                .overlay(
+                                    FrameReader { frame in
+                                        viewModel.registerHintButtonFrame(frame)
+                                    }
+                                )
                         }
                         .offset(y: -12)
                     }
@@ -47,7 +58,7 @@ struct ContentView: View {
                         if viewModel.isShowingStartScreen {
                             GameStartView(viewModel: viewModel)
                         } else {
-                            DeviceView(viewModel: viewModel)
+                            DeviceView(viewModel: viewModel, tutorialManager: tutorialManager)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -140,6 +151,13 @@ struct ContentView: View {
                         .animation(.easeInOut(duration: 0.2), value: viewModel.showGameOverDialog)
                 }
 
+                // Hint Confirmation Dialog
+                if viewModel.showHintConfirmationDialog {
+                    HintConfirmationDialogView(viewModel: viewModel)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.showHintConfirmationDialog)
+                }
+
                 // Manual Drag Overlay - instant response, no plus badge, finger-offset
                 if let dragColor = viewModel.activeDragColor {
                     ZStack {
@@ -165,6 +183,17 @@ struct ContentView: View {
                     .ignoresSafeArea()
                     .allowsHitTesting(false) // CRITICAL: Stop overlay from stealing drag events
                 }
+
+                // Tutorial Overlay
+                if tutorialManager.isActive {
+                    TutorialOverlayView(
+                        tutorialManager: tutorialManager,
+                        viewModel: viewModel
+                    )
+                    .transition(.opacity)
+                    .zIndex(100) // Ensure tutorial is above everything
+                    .ignoresSafeArea() // Match window coordinates for accurate frame alignment
+                }
             }
         }
         .preferredColorScheme(.dark)
@@ -173,13 +202,14 @@ struct ContentView: View {
 
 struct DeviceView: View {
     @ObservedObject var viewModel: GameViewModel
+    var tutorialManager: TutorialManager? = nil
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 8)
-            
+
             // Game board area - height adjusted to match GameStartView
-            GameBoardView(viewModel: viewModel)
+            GameBoardView(viewModel: viewModel, tutorialManager: tutorialManager)
                 .padding(.horizontal, 16)
                 .frame(height: 500)
 
@@ -385,7 +415,7 @@ struct ResetButtonView: View {
 
 struct ExternalHintButtonView: View {
     @ObservedObject var viewModel: GameViewModel
-    
+
     var body: some View {
         Button(action: {
             // Don't trigger if both debug buttons were pressed together this session
@@ -393,18 +423,14 @@ struct ExternalHintButtonView: View {
             guard !viewModel.didTriggerCombinationThisSession else { return }
             #endif
             guard !viewModel.state.isGameOver else { return }
-            
+
             // Enhanced mechanical feedback - click sound + medium haptic
             SoundManager.shared.playSelection()
             SoundManager.shared.hapticMedium()
-            
-            if let hint = HintManager.shared.useHint(
-                secretCode: viewModel.state.secretCode,
-                currentGuess: viewModel.state.currentGuess,
-                attempts: viewModel.state.attempts
-            ) {
-                viewModel.showToast(hint.description(for: viewModel.state.theme), type: .info, hintColor: hint.color)
-            } else if !HintManager.shared.hasHintsAvailable {
+
+            if HintManager.shared.hasHintsAvailable {
+                viewModel.showHintConfirmationDialog = true
+            } else {
                 viewModel.showToast("NO HINTS REMAINING", type: .warning)
                 SoundManager.shared.playError()
             }
@@ -799,6 +825,113 @@ struct GameOverDialogView: View {
     }
 }
 
+// MARK: - Hint Confirmation Dialog
+
+struct HintConfirmationDialogView: View {
+    @ObservedObject var viewModel: GameViewModel
+    @State private var appearScale: CGFloat = 0.9
+    @State private var appearOpacity: Double = 0
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        viewModel.showHintConfirmationDialog = false
+                    }
+                }
+
+            VStack(spacing: 20) {
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 32))
+                    .foregroundColor(.gameYellow)
+                    .shadow(color: .gameYellow.opacity(0.6), radius: 8)
+
+                Text("USE HINT?")
+                    .font(.system(size: 20, weight: .black, design: .monospaced))
+                    .foregroundColor(.white)
+                    .tracking(1.5)
+
+                Text("You have \(HintManager.shared.remainingHints) hint\(HintManager.shared.remainingHints == 1 ? "" : "s") remaining. Using a hint will reveal intel about the secret code.")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.75))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 8)
+
+                VStack(spacing: 10) {
+                    Button(action: {
+                        SoundManager.shared.playSuccess()
+                        SoundManager.shared.hapticSuccess()
+                        viewModel.showHintConfirmationDialog = false
+                        if let hint = HintManager.shared.useHint(
+                            secretCode: viewModel.state.secretCode,
+                            currentGuess: viewModel.state.currentGuess,
+                            attempts: viewModel.state.attempts
+                        ) {
+                            viewModel.showToast(hint.description(for: viewModel.state.theme), type: .info, hintColor: hint.color)
+                        }
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "lightbulb.fill")
+                                .font(.system(size: 14))
+                            Text("CONFIRM")
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.gameYellow.opacity(0.85))
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                    Button(action: {
+                        SoundManager.shared.playSelection()
+                        viewModel.showHintConfirmationDialog = false
+                    }) {
+                        Text("CANCEL")
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.5))
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .padding(.top, 4)
+            }
+            .padding(.horizontal, 30)
+            .padding(.vertical, 28)
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(white: 0.15), Color(white: 0.1)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+            )
+            .frame(width: 320)
+            .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+            .scaleEffect(appearScale)
+            .opacity(appearOpacity)
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                appearScale = 1.0
+                appearOpacity = 1.0
+            }
+        }
+    }
+}
+
 // MARK: - Stat Item Component
 
 struct StatItem: View {
@@ -930,6 +1063,7 @@ struct ScrewHeadSmall: View {
 
 struct HowToPlayView: View {
     @ObservedObject var viewModel: GameViewModel
+    @StateObject private var tutorialManager = TutorialManager.shared
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
     
@@ -1177,6 +1311,65 @@ struct HowToPlayView: View {
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.white.opacity(0.03))
                         )
+
+                        // Start Training Button
+                        Button(action: {
+                            SoundManager.shared.playSuccess()
+                            SoundManager.shared.hapticSuccess()
+                            viewModel.showHowToPlay = false
+                            viewModel.startTutorial()
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "graduationcap.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+
+                                Text("START TRAINING")
+                                    .font(.system(size: 13, weight: .black, design: .monospaced))
+                                    .tracking(1)
+                                    .foregroundColor(.white)
+
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.gameGreen.opacity(0.85))
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal, 16)
+                        .padding(.top, 4)
+                        .padding(.bottom, 6)
+
+                        // Show Training Button Toggle
+                        HStack(spacing: 10) {
+                            Image(systemName: tutorialManager.showTrainingButton ? "checkmark.square.fill" : "square")
+                                .font(.system(size: 16))
+                                .foregroundColor(tutorialManager.showTrainingButton ? .gameGreen : .white.opacity(0.3))
+
+                            Text("Show Training button on main screen")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.white.opacity(0.7))
+
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.black.opacity(0.2))
+                        )
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 10)
+                        .onTapGesture {
+                            SoundManager.shared.playSelection()
+                            SoundManager.shared.hapticLight()
+                            tutorialManager.showTrainingButton.toggle()
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 20)

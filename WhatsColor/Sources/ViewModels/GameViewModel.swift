@@ -13,6 +13,7 @@ class GameViewModel: ObservableObject {
     @Published var showSecretCodeDialog: Bool = false
     @Published var showGameOverDialog: Bool = false
     @Published var showHowToPlay: Bool = false
+    @Published var showHintConfirmationDialog: Bool = false
 
     // Message/Toast state
     struct ToastInfo: Equatable {
@@ -60,16 +61,58 @@ class GameViewModel: ObservableObject {
     @Published var slotFrames: [String: CGRect] = [:]
     @Published var boardFrame: CGRect = .zero
     @Published var isOverBoard: Bool = false
-    
+
+    // Frames for tutorial highlights
+    @Published var paletteFrame: CGRect = .zero
+    @Published var dialFrame: CGRect = .zero
+    @Published var statusPanelFrame: CGRect = .zero
+    @Published var menuButtonFrame: CGRect = .zero
+    @Published var hintButtonFrame: CGRect = .zero
+    @Published var themeSelectorFrame: CGRect = .zero
+    @Published var difficultySelectorFrame: CGRect = .zero
+    @Published var gameModeSelectorFrame: CGRect = .zero
+
     func registerSlotFrame(_ frame: CGRect, row: Int, slot: Int) {
         let key = "\(row)-\(slot)"
         slotFrames[key] = frame
     }
-    
+
     func registerBoardFrame(_ frame: CGRect) {
         boardFrame = frame
     }
-    
+
+    func registerPaletteFrame(_ frame: CGRect) {
+        paletteFrame = frame
+    }
+
+    func registerDialFrame(_ frame: CGRect) {
+        dialFrame = frame
+    }
+
+    func registerStatusPanelFrame(_ frame: CGRect) {
+        statusPanelFrame = frame
+    }
+
+    func registerMenuButtonFrame(_ frame: CGRect) {
+        menuButtonFrame = frame
+    }
+
+    func registerHintButtonFrame(_ frame: CGRect) {
+        hintButtonFrame = frame
+    }
+
+    func registerThemeSelectorFrame(_ frame: CGRect) {
+        themeSelectorFrame = frame
+    }
+
+    func registerDifficultySelectorFrame(_ frame: CGRect) {
+        difficultySelectorFrame = frame
+    }
+
+    func registerGameModeSelectorFrame(_ frame: CGRect) {
+        gameModeSelectorFrame = frame
+    }
+
     func updateDragPosition(_ position: CGPoint) {
         dragPosition = position
         
@@ -259,6 +302,11 @@ class GameViewModel: ObservableObject {
         gameStarted = false
         isShowingStartScreen = true
         startNewGame()
+
+        // Auto-launch first-time tutorial on app open
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            self.checkAndLaunchFirstTimeTutorial()
+        }
     }
     
     private func saveProgress() {
@@ -306,7 +354,9 @@ class GameViewModel: ObservableObject {
     func tickTimer() {
         // Easy mode has no time limit
         guard state.difficulty.hasTimeLimit else { return }
-        
+        // Pause timer during tutorial
+        guard !TutorialManager.shared.isActive else { return }
+
         if timeRemaining > 0 {
             timeRemaining -= 1
         } else {
@@ -586,7 +636,7 @@ class GameViewModel: ObservableObject {
     func startGame() {
         // Start statistics tracking
         StatisticsManager.shared.startGame()
-        
+
         if gameMode == .dual {
             // DUAL mode: full pipeline (Time -> Color -> Play)
             showSettingsDialog = true
@@ -599,6 +649,139 @@ class GameViewModel: ObservableObject {
             timeRemaining = state.difficulty.baseTime
             selectedSecretCode = [] // Ensure a random code is generated
             startNewGame()
+        }
+    }
+
+    // MARK: - Tutorial
+
+    func startTutorial() {
+        // Start the tutorial from the current screen (start screen or gameplay)
+        // If on start screen, the tutorial will guide through start-screen elements first,
+        // then transition to gameplay when reaching the objective step.
+        TutorialManager.shared.startTutorial()
+
+        // If already in gameplay, skip the start-screen steps
+        if !isShowingStartScreen {
+            if let objectiveIndex = TutorialStep.allCases.firstIndex(of: .objective) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    TutorialManager.shared.currentStepIndex = objectiveIndex
+                }
+            }
+        }
+    }
+
+    func setupTutorialGame() {
+        // Fixed tutorial secret code using the first 4 colors
+        let tutorialCode = Array(GameColor.allCases.prefix(4))
+
+        // Enable 5 colors so the guess can include one that is not in the secret
+        enabledColorsForCurrentGame = Array(GameColor.allCases.prefix(5))
+
+        state.secretCode = tutorialCode
+
+        // Pre-fill row 1 with a sample guess that shows ALL feedback types:
+        // - Correct (green): red at position 0
+        // - Misplaced (white): blue at position 1 (blue is in secret at position 2)
+        // - Wrong (gray/none): purple at position 2 (not in secret at all)
+        // - Correct (green): yellow at position 3
+        let fifthColor = GameColor.allCases[4]
+        let row1Guess: [GameColor] = [tutorialCode[0], tutorialCode[2], fifthColor, tutorialCode[3]]
+        state.attempts[0].colors = row1Guess
+        state.attempts[0].feedback = calculateFeedback(guess: row1Guess, secret: tutorialCode)
+
+        // Start row 2 completely empty so only the completed example row (row 1) is visible
+        // during the feedback tutorial step
+        state.currentGuess = Array(repeating: nil, count: 4)
+        state.activeIndex = 0
+
+        // Clear fixed slots
+        state.fixedSlots = Array(repeating: false, count: 4)
+    }
+
+    func transitionTutorialToGameplay() {
+        // Called by TutorialOverlayView when advancing from start-screen steps to gameplay steps
+        guard isShowingStartScreen else { return }
+
+        state.mode = .advanced
+        state.difficulty = .normal
+        isShowingStartScreen = false
+        gameStarted = true
+        timeRemaining = state.difficulty.baseTime
+        selectedSecretCode = []
+        startNewGame()
+        setupTutorialGame()
+    }
+
+    func checkAndLaunchFirstTimeTutorial() {
+        guard !TutorialManager.shared.hasCompletedTutorial else { return }
+        guard gameMode == .solo else { return }
+        guard !TutorialManager.shared.isActive else { return }
+
+        // Launch tutorial on the start screen; gameplay transition happens mid-tutorial
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            TutorialManager.shared.startTutorial()
+        }
+    }
+
+    func performDemoAction(_ action: TutorialDemoAction) {
+        guard !state.isGameOver else { return }
+
+        switch action {
+        case .placeColor:
+            // Place the next available tutorial color in the active slot
+            let tutorialColors = Array(GameColor.allCases.prefix(4))
+            if let nextColor = tutorialColors.first(where: { color in
+                !state.currentGuess.contains(color)
+            }) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    state.currentGuess[state.activeIndex] = nextColor
+                }
+                SoundManager.shared.playSelection()
+                SoundManager.shared.hapticLight()
+            }
+
+        case .selectNextSlot:
+            // Move to the next empty slot
+            if let nextEmpty = (state.activeIndex + 1 ..< 4).first(where: { state.currentGuess[$0] == nil }) {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                    state.activeIndex = nextEmpty
+                }
+                SoundManager.shared.playSelection()
+                SoundManager.shared.hapticLight()
+            } else if let firstEmpty = (0 ..< 4).first(where: { state.currentGuess[$0] == nil }) {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                    state.activeIndex = firstEmpty
+                }
+                SoundManager.shared.playSelection()
+                SoundManager.shared.hapticLight()
+            }
+
+        case .advanceSlot:
+            // Simulate dial tap: advance to next slot
+            moveToNextSlot()
+
+        case .toggleFixed:
+            // Lock the currently active slot if it has a color
+            if state.currentGuess[state.activeIndex] != nil {
+                toggleFixed(at: state.activeIndex)
+            } else if let filledIndex = state.currentGuess.firstIndex(where: { $0 != nil }) {
+                toggleFixed(at: filledIndex)
+            }
+
+        case .swapSlots:
+            // Swap the first two filled slots in the active row
+            let filledIndices = state.currentGuess.indices.filter { state.currentGuess[$0] != nil }
+            if filledIndices.count >= 2 {
+                let idx0 = filledIndices[0]
+                let idx1 = filledIndices[1]
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    let temp = state.currentGuess[idx0]
+                    state.currentGuess[idx0] = state.currentGuess[idx1]
+                    state.currentGuess[idx1] = temp
+                }
+                SoundManager.shared.playDrop()
+                SoundManager.shared.hapticMedium()
+            }
         }
     }
 

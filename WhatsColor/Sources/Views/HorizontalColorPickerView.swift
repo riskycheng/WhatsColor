@@ -48,10 +48,21 @@ struct HorizontalColorPickerView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.black.opacity(0.4))
-                
+
                 // Internal shadow/recessed look
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            }
+        )
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear {
+                        viewModel.registerPaletteFrame(geo.frame(in: .global))
+                    }
+                    .onChange(of: geo.frame(in: .global)) { newFrame in
+                        viewModel.registerPaletteFrame(newFrame)
+                    }
             }
         )
     }

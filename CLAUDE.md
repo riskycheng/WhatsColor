@@ -109,6 +109,15 @@ WhatsColor/Sources/
 - Frame registration system for precise drop targeting
 - Toast notification system with auto-dismissal
 
+### Interactive Tutorial System
+- **TutorialManager**: Singleton `@ObservableObject` managing 13 tutorial steps (`welcome` through `complete`)
+- **Auto-launch**: First-time tutorial launches automatically from `GameViewModel.init()`
+- **Mid-tutorial navigation**: Tutorial transitions from start screen to gameplay automatically at the `.objective` step
+- **Spotlight overlay**: Uses `SpotlightShape` with even-odd fill rule to create dimmed-screen cutout holes around highlighted elements
+- **Pointer hints**: For elements prone to frame-alignment issues (dial, top buttons), `BouncingPointer` (animated arrow + dot) replaces precise rectangle spotlights
+- **Non-blocking overlay**: The tutorial overlay must remain interactive underneath; dimmed layers and pointer views use `.allowsHitTesting(false)`, and `FrameReader` tracker views set `isUserInteractionEnabled = false`
+- **Frame tracking**: `FrameReader` (UIKit `UIViewRepresentable` using `convert(_:to: window)`) provides reliable window-coordinate frames, bypassing SwiftUI `.global` coordinate space quirks
+
 ### Game Logic
 - Deterministic secret code generation for Solo mode
 - Advanced feedback calculation (aggregate vs positional)

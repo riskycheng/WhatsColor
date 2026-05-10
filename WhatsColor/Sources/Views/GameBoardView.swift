@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GameBoardView: View {
     @ObservedObject var viewModel: GameViewModel
+    var tutorialManager: TutorialManager? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -86,7 +87,13 @@ struct GameBoardView: View {
             
             // Board panel
             VStack(spacing: 14) {
-                ForEach(viewModel.state.attempts) { row in
+                let visibleAttempts = viewModel.state.attempts.filter { row in
+                    if let tm = tutorialManager, tm.isActive, tm.currentStep == .feedback {
+                        return row.isComplete
+                    }
+                    return true
+                }
+                ForEach(visibleAttempts) { row in
                     GameRowView(
                         row: row,
                         mode: viewModel.state.mode,
@@ -297,7 +304,24 @@ struct SlotView: View {
                                 }
                             }
                         }
-                        
+
+                        // Update position for the global overlay
+                        if viewModel.activeDragColor != nil {
+                            viewModel.updateDragPosition(value.location)
+                        }
+                    } else {
+                        // Inactive (completed) rows: allow drag to copy color to active row
+                        if viewModel.activeDragColor == nil {
+                            if abs(value.translation.width) > 10 || abs(value.translation.height) > 10 {
+                                if let color = color {
+                                    // Don't set sourceSlotRow/sourceSlotIndex so it's treated as a palette drop (copy)
+                                    viewModel.activeDragColor = color
+                                    SoundManager.shared.playDragStart()
+                                    SoundManager.shared.hapticMedium()
+                                }
+                            }
+                        }
+
                         // Update position for the global overlay
                         if viewModel.activeDragColor != nil {
                             viewModel.updateDragPosition(value.location)
@@ -314,7 +338,7 @@ struct SlotView: View {
                             viewModel.endDragging()
                         }
                     } else if viewModel.activeDragColor != nil {
-                        // If dragging started from active row but ended over inactive row, still trigger logic
+                        // Drag ended over an inactive row - still process the drop
                         viewModel.endDragging()
                     }
                 }

@@ -56,17 +56,22 @@ struct GameStartView: View {
                                 .tracking(6)
                                 .foregroundColor(Color(white: 0.3))
                                 .padding(.top, 14)
-                            
+
                             // BRAND THEME GEAR SELECTOR
                             LogoThemeGear(viewModel: viewModel)
                                 .frame(height: 120)
-                            
+
                             // Theme Preview Strip - Shows items from selected theme
                             ThemePreviewStrip(theme: viewModel.state.theme)
                                 .padding(.horizontal, 20)
                                 .padding(.bottom, 12)
                         }
                     }
+                    .overlay(
+                        FrameReader { frame in
+                            viewModel.registerThemeSelectorFrame(frame)
+                        }
+                    )
                 }
                 
                 Spacer(minLength: 12)
@@ -97,7 +102,12 @@ struct GameStartView: View {
                             }
                         }
                     }
-                    
+                    .overlay(
+                        FrameReader { frame in
+                            viewModel.registerDifficultySelectorFrame(frame)
+                        }
+                    )
+
                     // Mission Section
                     VStack(spacing: 20) {
                         HStack(spacing: 8) {
@@ -118,7 +128,7 @@ struct GameStartView: View {
                                 isSelected: viewModel.state.mode == .advanced,
                                 onTap: { viewModel.changeMode(to: .advanced) }
                             )
-                            
+
                             IndustrialSwitch(
                                 title: "DUAL",
                                 isSelected: viewModel.state.mode == .beginner,
@@ -126,6 +136,11 @@ struct GameStartView: View {
                             )
                         }
                     }
+                    .overlay(
+                        FrameReader { frame in
+                            viewModel.registerGameModeSelectorFrame(frame)
+                        }
+                    )
                 }
                 .padding(32)
                 .background(
@@ -283,15 +298,15 @@ struct GameStartView: View {
                 
                 Spacer()
                 
-                // Bottom Action Row: How to Play + Engage Mission (LARGER)
-                HStack(spacing: 16) {
-                    // How to Play Button - More prominent design
+                // Bottom Action Row: Rules + Training + Engage Mission
+                HStack(spacing: 12) {
+                    // Rules Button - Shows static rules reference
                     Button(action: {
                         SoundManager.shared.playSelection()
                         viewModel.showHowToPlay = true
                     }) {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 16)
+                            RoundedRectangle(cornerRadius: 14)
                                 .fill(
                                     LinearGradient(
                                         colors: [Color(white: 0.2), Color(white: 0.12)],
@@ -300,25 +315,61 @@ struct GameStartView: View {
                                     )
                                 )
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
+                                    RoundedRectangle(cornerRadius: 14)
                                         .stroke(Color.white.opacity(0.1), lineWidth: 1)
                                 )
-                            
-                            HStack(spacing: 10) {
+
+                            VStack(spacing: 4) {
                                 Image(systemName: "book.fill")
-                                    .font(.system(size: 18))
+                                    .font(.system(size: 16))
                                     .foregroundColor(.gameGreen)
-                                
+
                                 Text("RULES")
-                                    .font(.system(size: 15, weight: .black, design: .monospaced))
-                                    .tracking(1)
+                                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                                    .tracking(0.5)
                                     .foregroundColor(.white.opacity(0.9))
                             }
                         }
-                        .frame(width: 110, height: 68)
+                        .frame(width: 80, height: 68)
                     }
                     .buttonStyle(PressedButtonStyle())
-                    
+
+                    // Training Button - Launches interactive tutorial (can be hidden via Rules)
+                    if TutorialManager.shared.showTrainingButton {
+                        Button(action: {
+                            SoundManager.shared.playSelection()
+                            viewModel.startTutorial()
+                        }) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color(white: 0.2), Color(white: 0.12)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                    )
+
+                                VStack(spacing: 4) {
+                                    Image(systemName: "graduationcap.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.gameGreen)
+
+                                    Text("TRAINING")
+                                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                                        .tracking(0.5)
+                                        .foregroundColor(.white.opacity(0.9))
+                                }
+                            }
+                            .frame(width: 80, height: 68)
+                        }
+                        .buttonStyle(PressedButtonStyle())
+                    }
+
                     // Engage Mission Button
                     Button(action: {
                         SoundManager.shared.playSuccess()
@@ -329,7 +380,7 @@ struct GameStartView: View {
                     }) {
                         ZStack {
                             // Safety Housing - Deep Metallic
-                            RoundedRectangle(cornerRadius: 16)
+                            RoundedRectangle(cornerRadius: 14)
                                 .fill(
                                     LinearGradient(
                                         colors: [Color(white: 0.12), Color(white: 0.05)],
@@ -338,18 +389,18 @@ struct GameStartView: View {
                                     )
                                 )
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
+                                    RoundedRectangle(cornerRadius: 14)
                                         .stroke(Color.white.opacity(0.1), lineWidth: 1.5)
                                 )
-                            
+
                             // Internal Component Path
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 10)
                                 .fill(Color.black.opacity(0.6))
                                 .padding(4)
-                            
+
                             // The Primary Actuator
                             ZStack {
-                                RoundedRectangle(cornerRadius: 10)
+                                RoundedRectangle(cornerRadius: 8)
                                     .fill(
                                         LinearGradient(
                                             colors: [Color(white: 0.25), Color(white: 0.15)],
@@ -358,23 +409,23 @@ struct GameStartView: View {
                                         )
                                     )
                                     .shadow(color: .gameGreen.opacity(0.15), radius: 10, y: 5)
-                                
-                                HStack(spacing: 14) {
+
+                                HStack(spacing: 10) {
                                     Image(systemName: "power")
-                                        .font(.system(size: 18, weight: .black))
-                                        .foregroundColor(.gameGreen.opacity(0.6))
-                                    
-                                    Text("ENGAGE MISSION")
-                                        .font(.system(size: 18, weight: .black, design: .monospaced))
-                                        .tracking(1.5)
-                                        .foregroundColor(.white)
-                                    
-                                    Image(systemName: "chevron.right.2")
                                         .font(.system(size: 16, weight: .black))
+                                        .foregroundColor(.gameGreen.opacity(0.6))
+
+                                    Text("ENGAGE MISSION")
+                                        .font(.system(size: 15, weight: .black, design: .monospaced))
+                                        .tracking(1)
+                                        .foregroundColor(.white)
+
+                                    Image(systemName: "chevron.right.2")
+                                        .font(.system(size: 14, weight: .black))
                                         .foregroundColor(.gameGreen.opacity(0.6))
                                 }
                             }
-                            .padding(6)
+                            .padding(5)
                         }
                         .frame(height: 68)
                     }

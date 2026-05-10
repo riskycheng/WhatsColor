@@ -118,6 +118,11 @@ struct StatusControlPanelView: View {
                         .offset(y: 55)
 
                     SubmitKnobView(viewModel: viewModel)
+
+                    // Reliable frame tracker for tutorial spotlight
+                    FrameReader { frame in
+                        viewModel.registerDialFrame(frame)
+                    }
                 }
                 .frame(width: 110, height: 110)
                 .padding(.trailing, 16)
@@ -126,6 +131,28 @@ struct StatusControlPanelView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 140) // Reduced from 160 to 140 for a more compact look
         .padding(.horizontal, 4)
+    }
+}
+
+/// A reliable UIKit-based frame reader that reports the view's exact window frame.
+/// Bypasses SwiftUI .global coordinate space quirks.
+struct FrameReader: UIViewRepresentable {
+    let onFrameChange: (CGRect) -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            if let window = uiView.window {
+                let frame = uiView.convert(uiView.bounds, to: window)
+                onFrameChange(frame)
+            }
+        }
     }
 }
 
@@ -213,6 +240,7 @@ struct SubmitKnobView: View {
 
     var body: some View {
         IndustrialRotaryButton(
+            viewModel: viewModel,
             rotation: $rotation,
             isPressed: $isPressed,
             label: "HOLD SUBMIT",
@@ -225,7 +253,7 @@ struct SubmitKnobView: View {
                 if abs(diff) > 28 { // Slightly improved sensitivity
                     viewModel.cycleColor(forward: diff > 0)
                     lastFiredRotation = newRotation
-                    
+
                     // Natural sensory feedback for rotation
                     SoundManager.shared.playSelection()
                     SoundManager.shared.hapticLight()
@@ -233,7 +261,7 @@ struct SubmitKnobView: View {
             },
             onPressStart: {
                 hasTriggeredLongPress = false
-                
+
                 // Create a new work item for long press
                 let workItem = DispatchWorkItem {
                     hasTriggeredLongPress = true
@@ -241,7 +269,7 @@ struct SubmitKnobView: View {
                     SoundManager.shared.hapticSuccess()
                 }
                 longPressWorkItem = workItem
-                
+
                 // Schedule it after 0.5 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
             },
@@ -249,7 +277,7 @@ struct SubmitKnobView: View {
                 // Cancel pending long press if it hasn't fired yet
                 longPressWorkItem?.cancel()
                 longPressWorkItem = nil
-                
+
                 if !hasTriggeredLongPress {
                     // Short press logic: cycle active slot
                     viewModel.moveToNextSlot()
@@ -262,6 +290,7 @@ struct SubmitKnobView: View {
 }
 
 struct IndustrialRotaryButton: View {
+    @ObservedObject var viewModel: GameViewModel
     @Binding var rotation: Double
     @Binding var isPressed: Bool
     let label: String
